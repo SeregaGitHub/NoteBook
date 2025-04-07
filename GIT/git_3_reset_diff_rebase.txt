@@ -1,0 +1,194 @@
+
+                            RESET
+
+git reset --hard                    - удалит сделанные изменения
+git reset --hard HEAD~              - удалит последний коммит
+git reset --hard HEAD~2             - удалит последнии 2 коммита
+       (вместо HEAD~2 можно использовать идентификатор коммита
+         от которого потом пойдёт разработка(он не удалится))
+git reset @~                        - отменит изменения последнего
+                                      коммита, но оставит их в
+                                      рабочей директории.
+                                      (Позволит изменить последний коммит)
+git reset --soft @~                 - отменит изменения последнего
+                                      коммита, но оставит их в
+                                      рабочей директории и индексе.
+                                      (Позволит изменить последний коммит)
+git reset --soft ORIG_HEAD          - отмена команды: git reset --soft @~
+----------------------------------------------------------------------------
+                            DIFF
+
+git diff master branchName       -  отличие между ветками master и branchName
+git diff 54a4 4594               -  сравнение двух коммитов
+git diff 54a4                    -  сравнение раб дир на момент коммита 54a4
+git diff fileName                -  выведет изменения в файле fileName
+                                 (если в индексе много файлов)
+git diff .                       -  выведет изменения в текущей директории
+git diff --no-index file1 file2  -  сравнивает любые два файла
+                                    (даже еслт они не в репозитории !!!)
+
+                                          (или --staged)
+            ------git diff----  ---- git diff --cached ----
+Рабочая директория          Индекс                   Репозиторий
+       -----------------  git diff HEAD ------------------
+
+        4594 - master
+        2fad
+ 2c11    -
+ 2702    -
+   -     -
+     -   -
+         -
+        54a4
+
+git diff master...branchName  -  отличие ветки branchName
+                                 на момент отделения от master
+                                 (сравнивает 54a4 и 2c11)
+git diff branchName...master  -  отличия в master с момента её
+                                 расхождения с веткой branchName
+                                 (54a4 и 4594)
+--------------------------------------------------------------------------------------
+            CHERRY-PICK
+
+        c73b
+        4594 - master
+        2fad
+ 2c11    -
+ 2702    -
+   -     -
+     -   -
+         -
+        54a4
+
+  Находясь на ветке master:
+- git cherry-pick 2702       =>    c73b  -  скопирует коммит
+- git cherry-pick --no-commit 2702       -  скопирует коммит в индекс и
+                     или -n                 раб директорию
+- git cherry-pick -x 2702                -  добавит инф о родителе
+- git cherry-pick 2702 2c11              -  скопирует два коммита
+- git cherry-pick master..branchName     -  скопирует ветку branchName
+                                            (над master будет столько же
+                                            коммитов, сколько в branchName)
+- git cherry-pick --abort                -  отмена копирования
+- git cherry-pick --quit                 -  если скопированно часть коммитов,
+                                            эта команда их оставит, а
+                                            остальные отменит
+  После исправления конфликтов:
+- git add
+- git cherry-pick --continue
+
+- git reset --hard @~     -  отмена cherry-pick
+- git reset --hard @~2    -  отмена cherry-pick,
+                             если было скопировано 2 коммита
+
+                             REBASE
+
+ (Если над веткой работают несколько человек - rebase "неписано" - ЗАПРЕЩЁН !!!)
+      При rebase могут получиться "битые" коммиты, избежать этого можно при
+    помощи автоматизированных тестов
+    - git rebase -x '...' master: -x произвольная команда, обычно
+                                  это запуск автоматизированных тестов
+      Если во время "rebase -x" ошибка то:
+    Новый коммит уже сохранён, надо исправить ошибку и заменить этот коммит:
+    - Исправляем ошибку
+    - Проверяем
+    - git add branchName
+    - git commit --amend --no-edit
+    - git rebase continue
+
+--------------------------------------------------------------------------------
+
+        4594 - master       2c11 - branchName
+        2fad                2702
+ 2c11    -                   -
+ 2702    -                      4594 - master
+   -     -                      2fad
+     -   -                       -
+         -                       -
+        54a4                    54a4
+
+    Находясь на ветке branchName:
+- git rebase master      -  перенос ветки branchName на конец master
+    ИЛИ
+- git rebase master branchName  -  то же самое
+- git rebase --abort     -  отмена переноса
+- git rebase --quit      -  отмена переноса, с оставлением бесконфликтных
+                            переносов (используется редко)
+- git rebase --skip      -  пропуск переноса конфликтного коммита
+                            и продолжение перебазирования
+- git rebase --continue  -  продолжение перебазирования
+
+    (Если после завершения rebase нужно вернуть всё как было:)
+- cat .git/ORIG_HEAD
+- git reset --hard ORIG_HEAD
+    (Но более надёжно)
+- git reflog branchName -1
+- git show --quiet branchName@{1}
+- Найти вершину старой ветки {1} {2} {3}
+- git reset --hard branchName@{1}
+===============================================================================
+            ЕСЛИ СЛОЖНЫЙ ВАРИАН С ПЕРЕБАЗИРОВАНИЕМ
+
+ Если сделать обычный rebase,                         НУЖНО
+      (git rebase master)                 git rebase --rebase-merges master
+коммит D НЕ ВОЙДЁТ в перебазирование                  ТОГДА
+                                                     OK !!!!
+    new
+ branchName E'
+            -
+            C'                                      E'
+            -                                       -
+            Y'                                   - -D'
+            -                                 -     -
+            X'-                           -         C'- -
+                 -                   -                   -
+ branchName E     G master           -   branchName E     G master
+            -     -                  -              -     -
+           -D     F                  -             -D     F
+         -  -     -                      -       -  -     -
+       -    C-    -                         -  -    C-    -
+bName Y         - -                     bName Y         - -
+      -           B                           -           B
+      X- -        -                           X- -        -
+           -      -                                -      -
+             - - -A                                  - - -A
+
+===============================================================================
+-------------------------------------------------------------------------------
+
+        Надо перенести только ветку fix на master:
+ !!! git rebase master: перенесёт коммиты начиная с CCC !!!
+
+       fix - FFF                      |                    fix - FFF
+              -                       |                           -
+             EEE                      |                          EEE
+              -                       |                           -
+branchName - DDD       GGG - master   |   branchName - DDD       GGG - master
+                 -      -             |                    -      -
+                  CCC  BBB            |                     CCC  BBB
+                   -    -             |                      -    -
+                     - AAA            |                        - AAA
+                                        !!! rebase переносит не только коммиты, но и ветку !!!
+        НАДО:
+- git rebase -- onto master branchName
+
+----------------------------------------------------------------------------------------------
+
+        Надо перенести FFF и GGG на branchName:
+
+                       GGG - master   | branchName - GGG
+                        -    HEAD     |    HEAD       -
+                       FFF            |              FFF
+                        -             |               -
+branchName - EEE       CCC            |              EEE       CCC - master
+                 -      -             |                  -      -
+                  DDD  BBB            |                   DDD  BBB
+                   -    -             |                    -    -
+                     - AAA            |                      - AAA
+
+- git checkout branchName           -  переключаемся на branchName
+- git cherry-pick master~2..master  -  копируем FFF и GGG
+- git branch -f master master~2     -  переносим master на 2 коммита назад
+---------------------------------------------------------------------------------------------
+
+

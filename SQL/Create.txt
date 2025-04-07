@@ -1,0 +1,22 @@
+CREATE ROLE some_user_name WITH
+	LOGIN
+	SUPERUSER
+	CREATEDB
+	CREATEROLE
+	INHERIT
+	REPLICATION
+	CONNECTION LIMIT -1
+	PASSWORD 'xxxxxx';
+
+
+  -- DROP DATABASE IF EXISTS some_db_name;
+
+  CREATE DATABASE some_db_name
+      WITH
+      OWNER = some_user_name
+      ENCODING = 'UTF8'
+      LC_COLLATE = 'ru_RU.UTF-8'
+      LC_CTYPE = 'ru_RU.UTF-8'
+      TABLESPACE = pg_default
+      CONNECTION LIMIT = -1
+      IS_TEMPLATE = False;

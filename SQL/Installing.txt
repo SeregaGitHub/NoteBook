@@ -1,0 +1,169 @@
+                          Документация postresql на РУССКОМ языке
+
+https://postgrespro.ru/docs/postgresql/
+
+===================================================================================================
+
+sudo apt update
+sudo apt install postresql postgesql-contrib
+----------------------------------------------
+
+postgresql.org  -  по инструкции
+
+service postgresql status
+        ИЛИ
+sudo systemctl is-active postgresql
+sudo systemctl is-enabled postgresql
+sudo systemctl status postgresql
+sudo pg_isready
+
+● postgresql.service - PostgreSQL RDBMS
+     Loaded: loaded (/lib/systemd/system/postgresql.service; enabled; vendor preset: enabled)
+     Active: active (exited) since Fri 2022-06-24 11:54:07 MSK; 12min ago
+   Main PID: 34726 (code=exited, status=0/SUCCESS)
+      Tasks: 0 (limit: 4523)
+     Memory: 0B
+        CPU: 0
+     CGroup: /system.slice/postgresql.service
+
+июн 24 11:54:07 Serega-HP systemd[1]: Starting PostgreSQL RDBMS...
+июн 24 11:54:07 Serega-HP systemd[1]: Finished PostgreSQL RDBMS.
+
+sudo -i -u postgres  -  вход в учётную запись "postgres"
+exit или ctrl + d    -  выход из учётной записи
+man psql             -  справка
+
+postgres@Serega-HP:~$ psql  -  открытие консоли postgres   (postgres=#)
+
+postgres=# \l  -  просмотр списка баз данных
+q  -  выход
+
+\connect name_db - подключение к базе name_db
+
+postgres=# \q  -  выход из консоли
+
+postgres@Serega-HP:~$ createdb dbName  -  создание базы dbName (выполняется из учётной записи "postgres")
+                         ИЛИ
+                 CREATE DATABASE dbName
+
+\q
+
+postgres@Serega-HP:~$ dropdb dbName  -  удаление базы (выполняется из учётной записи "postgres")
+                         ИЛИ
+                   DROP DATABASE dbName
+
+psql
+postgres=# \du   -   просмотр списка пользователей
+postgres=# ALTER USER userName WITH PASSWORD 'qwerty';     -  задать пароль пользователю
+
+postgres=# CREATE USER userName WITH PASSWORD 'password';  -  создать пользователя
+
+postgres=# ALTER USER userName WITH SUPERUSER;             -  задать права супер пользователя
+
+GRANT ALL PRIVILEGES ON DATABASE name_db to userName;      -  задать все права пользователю userName в базе name_db
+
+postgres=# DROP USER userName;                  - удаление пользователя
+-----------------------------------------------------------------------------------
+
+sudo snap install pgadmin4
+
+-----------------------------------------------------------------------------------
+
+  Разверните вкладку Servers (англ. «Серверы») и щёлкните правой кнопкой мыши на вкладке Login/Group Roles (англ. «Логин/Групповые роли»).
+В появившемся меню выберите Create → Login/Group Role. Назовите пользователя kitty (англ. «котёнок»).
+  Переходите на вкладку Definition (англ. «Определение»). Пользователь — котик, поэтому задайте для него пароль purrrrrr (англ. «мур»).
+На вкладке Privileges (англ. «Права») дайте новому пользователю полный доступ — он понадобится для создания базы данных проекта.
+(Всё кроме - can initiate...)
+Нажмите кнопку Save (англ. «Сохранить»).
+
+
+CREATE ROLE kitty WITH
+	LOGIN
+	SUPERUSER
+	CREATEDB
+	CREATEROLE
+	INHERIT
+	NOREPLICATION
+	CONNECTION LIMIT -1
+	PASSWORD 'xxxxxx';
+
+  Теперь создайте базу данных проекта. Для этого щёлкните правой кнопкой мыши на вкладке Databases (англ. «Базы данных»).
+В появившемся меню выберите Create → Database. Назовите новую базу cats (англ. «кошки»).
+  Не забудьте передать права на базу пользователю kitty.
+
+  CREATE DATABASE cats
+    WITH
+    OWNER = kitty
+    ENCODING = 'UTF8'
+    CONNECTION LIMIT = -1
+    IS_TEMPLATE = False;
+
+
+(  В pgAdmin может понадобиться предварительно настроить путь к файлу psql.exe.
+Если при нажатии на кнопку >_ вы видите сообщение об ошибке, перейдите в меню File → Preferences → Path → Binary paths
+и выберите расположение файлов. Обычно это C:\Program Files\PostgreSQL\bin.  )
+
+create user kitty superuser; -- создать пользователя для проекта
+alter user kitty password 'purrrrrr'; -- задать пароль пользователя
+create database cats with owner kitty; -- создать базу данных проекта и её владельца
+
+-- предыдущие шаги вы выполнили в визуальном клиенте. Попробуйте выполнить дальнейшие шаги в консольном клиенте после нажатия на кнопку >_
+
+create table "cat_user"
+(
+    id varchar(64) not null, -- идентификатор текстовый, соответствует логину
+    username varchar(255) default 'noname cat',
+    nickname varchar(255)
+); -- создайте таблицу пользователей Catsgram
+
+create unique index user_id_uindex
+    on "cat_user" (id); -- индекс, чтобы базе данных было легче искать пользователей
+
+-- наполните таблицу пользователей первыми тестовыми записями
+INSERT INTO public.cat_user (id, username, nickname) VALUES ('tom', 'Thomas C. Andersun', 'neoc@t');
+INSERT INTO public.cat_user (id, username, nickname) VALUES ('grumpy', 'Альфред Хичкот', 'sca_a_a_ry');
+INSERT INTO public.cat_user (id, username, nickname) VALUES ('puss_in_boots', 'Basileus Felis F.', 'under_wood');
+
+create table cat_post
+(
+    id int generated by default as identity primary key, -- идентификатор целочисленный, автоинкрементный
+    author_id     varchar(64) not null,
+    description   varchar(500),
+    photo_url     varchar(1000),
+    creation_date timestamp,
+    CONSTRAINT fk_post_author
+      FOREIGN KEY(author_id)
+      REFERENCES cat_user(id)
+); -- затем создайте таблицу с постами пользователей — это то место, где будут храниться все котики
+
+-----------------------------------------------------------------------------------
+              УСТАНОВКА ГРАФИЧЕСКОЙ ОБОЛОЧКИ
+
+curl https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo apt-key add
+
+(??? sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com EF4186FE247510BE ???)
+
+sudo sh -c 'echo "deb https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" > /etc/apt/sources.list.d/pgadmin4.list && apt update'
+
+sudo apt install pgadmin4
+-----------------------------------------------------------------------------------
+ sudo -H gedit /etc/apt/sources.list.d/pgdg.list
+
+ deb http://apt.postgresql.org/pub/repos/apt focal-pgdg main
+     меняем на
+deb [arch=amd64] http://apt.postgresql.org/pub/repos/apt focal-pgdg main
+
+sudo apt-get update
+
+---------------------------------------------------------------------------------
+
+sudo /usr/pgadmin4/bin/setup-web.sh
+
+sudo ufw allow 'Apache'
+
+sudo ufw enable
+
+sudo ufw status
+
+Чтобы получить доступ к веб-интерфейсу pgAdmin4, откройте браузер и введите адрес в строке навигации:
+http://Your-Server-IP-address/pgadmin4

@@ -1,0 +1,245 @@
+
+		Создание бд:
+		
+    Databases - правой кнопкой => создать бд
+  
+		Удаление бд:
+		
+    Встать на другую бд (postgres)
+    Не открывать сеанс подключения к удаляемой бд
+  (Не нажимать query tool(Запросник))
+  Если сеанс уже открыт:
+  На другой бд => query tool =>
+  
+    SELECT pg_terminate_backend(pg_start_activity.pid)
+    FROM pg_start_activity                                (Удаляет все подключения к бд)
+    WHERE pg_start_activity.datname = 'dbName'
+      AND pid <> pg_backend_pid()
+      
+  => F5 (Execute/Refresh)
+  
+  DROP DATABASE dbName 
+  
+-------------------------------------------------------------------------------------------------------
+  
+                        Создание таблиц:
+              
+  CREATE TABLE book                  -  создание таблицы tableName
+(
+  book_id integer PRIMARY KEY,       -  имя столбца,   тип данных,           уникальность имени столбца
+  title   varchar(128) NOT NULL,     -  имя столбца,   количество символов,  пустой столбец запрещён
+  isbn    text NOT NULL              -  имя столбца,   тип данных,           пустой столбец запрещён
+  
+  (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+  
+  fk_publisher_id integer REFERENCES publisher (publisher_id) NOT NULL
+  
+- если нужно, чтобы в таблице book был столбец, который ссылается на таблицу publisher, столбец publisher_id 
+  
+  )))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+  
+);                                   -  если потом ещё одна таблица, после скобки нужно добавить - ;
+
+	(varchar(128) "в скрипте" == character varying 128 "в графике_pgadmin4")
+	[character varying 128        -  строка не более 128 символов]
+	[char(128) == character(128)  -  строка-фиксированная, 128 символов]
+	[text                         -  строка неограниченной длины]
+
+  (ИЛИ:  dbName => Schemas => schemasName => правой кнопкой, Create => Table)
+    Вкладка Constraints(ограничения) => pk_rowName_id [принято начинать название с pk_]
+
+  DROP TABLE tableName               -  удаление таблицы
+  DROP TABLE IF EXISTS tableName     -  удаление таблицы, если существует
+  
+-------------------------------------------------------------------------------------------------------
+  -- this is commit  (-- потом можно писать комментарий)
+-------------------------------------------------------------------------------------------------------
+
+		   Добавление данных в таблицу:
+
+INSERT INTO book
+VALUES
+(1, 'The Diary of a Young Girl', '0199535566'),
+(2, 'Pride and Prejudice', '9780307594006'),
+(3, 'To Kill a Mokingbird', '0446310786'),
+(4, 'The Book of Gutsy Women: Favorite Stories of Courage and Resilience', '1501178415'),
+(5, 'War and Peace', '1788886526')
+		ИЛИ
+
+INSERT INTO book VALUES (1, 'The Diary of a Young Girl', '0199535566'),
+INSERT INTO book VALUES (2, 'Pride and Prejudice', '9780307594006')
+
+  [Если в тексте присутствует '-кавычка => её надо экранировать второй кавычкой => '']
+  
+-----------------------------------------------------------------------------------------------------
+
+		Выборка данных из таблицы:
+		
+  SELECT * FROM public.tableName  -  выбрать всё(*) из public.tableName
+           ИЛИ
+  SELECT * FROM tableName
+  
+-----------------------------------------------------------------------------------------------------	
+
+	    			ОТНОШЕНИЕ ОДИН КО МНОГИМ	
+
+      Table publisher                                   Table book
+1 "Everyman's Library"	      "NY"              1 "The Diary of a Young Girl"	 "0199535566"
+2 "Oxford University Press"   "NY"              2 "Pride and Prejudice"	         "9780307594006"
+3 "Grand Central Publishing"  "Washington"      3 "To Kill a Mokingbird"	 "0446310786"
+4 "Simon and Schuster"	      "Chicago"         4 "The Book of Gutsy Women"	 "1501178415"
+                                                5 "War and Peace"	         "1788886526"
+                                                
+                            Publisher can publish many books
+                         1 "Oxford University Press"   "NY"   "To Kill a Mokingbird"	 "0446310786"
+                         2 "Oxford University Press"   "NY"   "The Book of Gutsy Women"	 "1501178415"
+                         3 "Oxford University Press"   "NY"   "War and Peace"	         "1788886526"
+
+                           Объединить две таблицы:
+                           
+  Изменение количества столбцов таблицы:
+		
+  ALTER TABLE book                     -  изменение таблицы book
+  ADD COLUMN fk_publisher_id integer;  -  добаление столбца(колонки) fk_tableName_id с типом данных integer 
+                                                                     fk_  -   key внешний ключ, можно не писать - но ЛУЧШЕ
+                                                                     
+         Уточнение, что этот столбец является внешним ключём:
+         
+  ALTER TABLE book
+  ADD CONSTRAINT fk_book_publisher     -  добавить ограничение, его имя (если не указать имя - postges его назначит сам)
+  FOREIGN KEY (fk_publisher_id)        -  указываем столбец, который будет внешнем ключом
+  REFERENCES publisher (publisher_id)  -  указываем на что ссылается внешний ключ (какая таблица, какой столбец)
+  
+--------------------------------------------------------------------------------------------------------------------------
+
+				ОТНОШЕНИЕ ОДИН К ОДНОМУ
+				
+  CREATE TABLE person
+(
+	person_id int PRIMARY KEY,
+	first_name varchar(64) NOT NULL,
+	last_name varchar(64) NOT NULL
+);
+
+  CREATE TABLE passport
+(
+	passport_id int PRIMARY KEY,
+	serial_number int NOT NULL,
+	fk_passport_person int UNIQUE REFERENCES person(person_id)
+)
+                            // UNIQUE  -  гарантия отсутствия дубликатов
+
+  ALTER TABLE passport
+  ADD COLUMN registration text NOT NULL   // Если забыл добавить столбец
+  
+  	Теперь таблицы объдинены с соотношением один к одному:
+  	
+  id   first_name   last_name   serial_number   registration
+  
+-------------------------------------------------------------------------------------------------------------------------
+
+  			ОТНОШЕНИЕ МНОГИЕ КО МНОГИМ
+  			
+  Для этого вида отношений - ОБЯЗАТЕЛЬНО создание третей таблицы !!!
+  
+  CREATE TABLE magazine
+(
+	magazine_id int PRIMARY KEY,
+	title text NOT NULL,
+	isbn int NOT NULL
+);
+
+CREATE TABLE author
+(
+	author_id int PRIMARY KEY,
+	full_name text NOT NULL,
+	rating real
+)
+
+CREATE TABLE magazine_author
+(
+	magazine_id int REFERENCES magazine (magazine_id),
+	author_id int REFERENCES author (author_id),
+	
+	CONSTRAINT magazine_author_pkey	PRIMARY KEY (magazine_id, author_id)  
+)
+
+INSERT INTO magazine
+VALUES
+(1, 'Book for Dummies', 123456),
+(2, 'Book for Smart Guys', 7890123),
+(3, 'Book for Happy People', 4567890),
+(4, 'Book for Unhappy people', 1234567);
+
+INSERT INTO author
+VALUES
+(1, 'Bob', 4.5),
+(2, 'Alice', 4.0),
+(3, 'John', 4.7);
+
+INSERT INTO magazine_author
+VALUES
+(1, 1),
+(2, 1),
+(3, 1),
+(3, 2),
+(4, 1),
+(4, 2),
+(4, 3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  

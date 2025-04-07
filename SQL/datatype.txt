@@ -1,0 +1,38 @@
+integer      -  1
+int          -  1
+int4         -  1
+
+
+
+
+real         -  1.0
+float        -  1.0
+float4       -  1.0
+
+
+
+boolean      -  TRUE и FALSE
+аналоги TRUE : 'true',  't', 'yes', 'y', 'on',  '1'
+аналоги FALSE: 'false', 'f', 'no',  'n', 'off', '0'
+
+
+text        -  содержит строку любой длины
+varchar(n)  -  значение n управляет лимитом строки
+char(3)     -  "aaa"
+
+
+
+
+timestamp                    -  содержит дату и время. Чаще всего дату указывают в международном формате ISO: 'YYYY-MM-DD'.
+                                Например, 30 июня 2010 года записывают так: '2010-06-30'.
+timestamp with time zone     -  включает данные о часовом поясе
+                                Например, значение типа timestamp with time zone: '2004-10-19 10:23:54+02'
+timestamp without time zone  -  данных о часовом поясе не содержит.
+                                Например, значение типа timestamp without time zone: '2004-10-19 10:23:54'
+
+По стандарту SQL обозначение timestamp по умолчанию подразумевает тип timestamp without time zone.
+Для обозначения типа timestamp with time zone в PostgreSQL используют короткую форму timestamptz.
+
+В тип date входит только дата. Дату можно задавать в любом формате — главное, выбрать нужный режим.
+
+interval		                 -  Интервал между датами

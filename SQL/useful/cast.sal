@@ -1,0 +1,42 @@
+            ЯВНОЕ ПРИВЕДЕНИЕ ТИПОВ
+
+=================================================================
+
+- CAST (some_expression AS target_type)
+- some_expression::target_type
+
+=================================================================
+
+CREATE OR REPLACE FUNCTION type_testing(money_val float8) RETURNS void AS
+$$
+BEGIN
+	RAISE NOTICE 'User entered number -  %' , money_val;
+END
+$$ LANGUAGE plpgsql;
+
+SELECT type_testing(0.5);
+SELECT type_testing(CAST (0.5 AS float4));  -- casting OK !!!
+SELECT type_testing(0.5::float4);           -- casting OK !!!
+
+--------------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION type_testing_2(money_val int) RETURNS void AS
+$$
+BEGIN
+	RAISE NOTICE 'User entered number -  %' , money_val;
+END
+$$ LANGUAGE plpgsql;
+
+SELECT type_testing_2(5);
+
+SELECT type_testing_2(0.5);                 -- NO casting !!!
+SELECT type_testing_2(0.5::int);            -- casting OK !!!
+
+SELECT type_testing_2('1.5');               -- NO casting !!!
+SELECT type_testing_2('1.5'::numeric::int); -- casting OK !!!
+
+SELECT 'string' || 5;                       -- string5  (не явное приведение типов)
+SELECT ' 10 ' = 10;                         -- true     (не явное приведение типов)
+
+--------------------------------------------------------------------------------
+

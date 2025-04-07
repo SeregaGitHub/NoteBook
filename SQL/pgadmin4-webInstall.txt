@@ -1,0 +1,92 @@
+
+                              Установка PostgreSQL
+
+sudo apt update
+sudo apt install postgresql
+
+    Данные, необходимые для работы PostgreSQL, будут находится в каталоге /var/lib/postgresql/12/main,
+  а файлы конфигурации – в каталоге /etc/postgresql/12/main.
+
+sudo systemctl is-active postgresql
+sudo systemctl is-enabled postgresql
+sudo systemctl status postgresql
+sudo pg_isready
+
+    Подключитесь к системе с помощью учётной записи postgres
+
+sudo su - postgres
+      ИЛИ
+sudo -i -u postgres
+psql
+
+postgres=#, значит вы находитесь в оболочке СУБД PostgreSQL.
+
+CREATE USER userName WITH PASSWORD 'P@$$w0rd';
+CREATE DATABASE name_db;
+GRANT ALL PRIVILEGES ON DATABASE name_db to userName;
+              И (?!)
+ALTER USER userName WITH SUPERUSER;
+
+Чтобы покинуть оболочку, наберите: \q
+Отключить от системы пользователя postgres: exit
+
+    СУБД PostgreSQL использует клиентскую аутентификацию для того, чтобы решать,
+  какая учётная запись к какой базе данных и с какого хоста может подключаться.
+  Это определяется настройками конфигурационного файла клиентской аутентификации.
+  В Ubuntu таким файлом является файл pg_hba.conf.
+  Он располагается в директории /etc/postgresql/12/main/.
+
+    Откройте этот файл для редактирования, например, с помощью текстового редактора nano:
+
+cd /etc/postgresql/12/main
+sudo nano pg_hba.conf
+
+    PostgreSQL использует много типов методов клиентской аутентификации, таких как
+  peer, ident, password или md5. Тип md5 является наиболее безопасным и рекомендуемым
+  по причине того, что он требует от клиента использовать для аутентификации
+  пароли с двойным md5-хешированием. Поэтому нам остаётся лишь убедиться,
+  что в строках ниже указан именно метод md5:
+
+# IPv4 local connections:
+host    all        all        127.0.0.1/32        md5
+# IPv4 local connections:
+host    all        all        ::1/128             md5
+
+    Если вы произвели в конфигурационном файле какие-либо изменения,
+  не забудьте сохранить их при закрытии файла. В nano для этого необходимо нажать Ctrl X,
+   затем Y и Enter. После чего, перезапустите службу:
+sudo systemctl restart postgresql
+
+
+                      Установка pgAdmin4
+
+curl https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo apt-key add
+sudo sh -c 'echo "deb https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/
+$(lsb_release -cs) pgadmin4 main" > /etc/apt/sources.list.d/pgadmin4.list && apt update'
+sudo apt install pgadmin4
+sudo /usr/pgadmin4/bin/setup-web.sh
+sudo ufw allow 'Apache'
+sudo ufw enable
+sudo ufw status
+
+
+    Чтобы получить доступ к веб-интерфейсу pgAdmin4,
+  откройте браузер и введите адрес в строке навигации:
+
+http://Your-Server-IP-address/pgadmin4
+
+    Для входа используйте адрес электронной почты и пароль,
+  который вы вводили при работе скрипта setup-web.sh:
+
+    Add New Server
+
+    Далее, заполните данные нового сервера на закладке General:
+  name: localhost-пример
+    И перейдите на закладку Connection:
+  В строках Username и Password вы должны указать имя пользователя и его пароль,
+ которые вы ранее добавили в PostgreSQL.
+  ((CREATE USER userName WITH PASSWORD 'P@$$w0rd';))
+
+                ТЁМНАЯ ТЕМА
+
+  File => Preferences => Miscellaneous => Themes => Dark

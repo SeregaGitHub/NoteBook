@@ -1,0 +1,119 @@
+
+@Aspect - класс объявлен как класс AOP
+
+========================================================================================================================
+
+Advice - метод в аспекте, который определяет, что и когда должно происходить
+
+                                            Advice Types
+
+* Before                 - выполнится до метода с основной логикой
+
+* After Returning        - выполнится ТОЛЬКО после корректного завершения метода с основной логикой
+                           (может перехватывать информацию из метода, если у метода есть return)
+
+* After Throwing         - выполнится если будет выброшен Exception
+                           (может перехватывать информацию из Exception)
+
+* After / After finally  - ВСЕГДА выполнится после завершения метода с основной логикой
+                           (если Exception - выполнится перед ним)
+                           (невозможно получить доступ к информации из метода и исключению)
+                           (можно использовать Join Point)
+
+* Around                 - выполнится до и после метода с основной логикой
+                           (обязательно в параметрах Advice прописывать - ProceedingJoinPoint !!!)
+                           (позволяет обрабатывать Exception)
+
+========================================================================================================================
+
+Pointcut - выражение, описывающее где должен быть применён Advice
+           (прописывается в Advice)
+
+? - необязательный параметр
+@Before("
+         execution(
+             модификатор-доступа?
+             тип-возвращаемого-значения
+             класс-в-котором-метод?
+             имя-метода(параметры)
+             исключение-выбрасываемое-методом?
+           )
+       ")
+
+- "execution(public void getBook())"                                       - Без указания класса Advice сработает на название метода из любого класса
+- "execution(public void
+       ru.kraser.spring.aop.library.SchoolLibrary.returnBook())"           - Сработает только в классе SchoolLibrary.class (указывать полное имя класса)
+- "execution(public * getBook())"                                          - Сработает на все методы getBook() с любым типом возвращаемого значения
+- "execution(public void get*())"                                          - Сработает на все методы начинающиеся с get..
+- "execution(* returnBook())"                                              - Сработает на все методы returnBook(),
+                                                                             с любым модификатором доступа и любым типом возвращающегося значения
+- "execution(* *())"                                                       - Сработает на методы с любым названием, без параметров,
+                                                                             с любым модификатором доступа и любым типом возвращающегося значения
+- "execution(public void getNewspaper(String))"                            - Advice для метода с параметром типа String
+- "execution(public void getNewspaper(*))"                                 - Advice для метода с параметром любого типа
+- "execution(public void getNewspaper(..))"                                - Advice для метода с любым количеством параметров любого типа,
+                                                                             в том числе и без параметров
+- "execution(public void getNewspaper(String, ..))"                        - Advice для метода с параметром типа String, и любым количеством параметров любого типа
+- "execution(public void getMagazine(
+      ru.kraser.spring.aop.publishing_house.Magazine))"                    - Advice для метода с параметром в виде своего класса (указывать полное имя класса)
+- @Pointcut("execution(public void getNewspaper(..))")
+  private void allGetNewspaper() {}                                        - Можно вынести Pointcut в метод и переиспользовать (если public - можно исп в других классах)
+
+
+    Комбинирование Pointcut осуществляется с помощью операторов:
+- && - и
+- || - или
+- !  - не
+
+    @Pointcut("execution(* ru.kraser.spring.aop.account_comb_pointcuts.Account.get*())")
+    private void allGetMethodsFromAccount() {}
+
+    @Pointcut("execution(* ru.kraser.spring.aop.account_comb_pointcuts.Account.delete*())")
+    private void allDeleteMethodsFromAccount() {}
+
+    // Комбинированный Pointcut: и get, и return методы
+    @Pointcut("allGetMethodsFromAccount() || allDeleteMethodsFromAccount()")
+    private void allGetAndDeleteMethodsFromAccount() {}
+
+========================================================================================================================
+
+                Join Point - это точка/момент в выполняемой программе, когда следует применять Advice
+
+  Прописав Join Point в параметре метода Advice, можно получить доступ к информации
+о сигнатуре и параметрах метода с бизнес-логикой.
+
+    @Before("ru.kraser.spring.aop.join_point.BookPointcut.allAddMethods()")
+    public void beforeAdd(JoinPoint joinPoint) {
+        MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature(); // Получаем сигнатуру метода (более информативно)
+        Signature signature = joinPoint.getSignature();                               // Получаем сигнатуру метода
+        Object[] args = joinPoint.getArgs();                                          // Получаем аргументы метода
+
+        System.out.println("-----------------------methodSignature--------------------------");
+        System.out.println("From BookAspect:");
+        System.out.println(methodSignature.getName());
+        System.out.println(methodSignature.getDeclaringType());
+        System.out.println(methodSignature.getDeclaringTypeName());
+        System.out.println(methodSignature.getModifiers());
+        System.out.println("-----------------------methodSignature--------------------------");
+        System.out.println(methodSignature.getMethod());
+        System.out.println(methodSignature.getReturnType());
+        System.out.println("-----------------------methodSignature--------------------------");
+
+        System.out.println("-----------------------signature--------------------------");
+        System.out.println("From BookAspect:");
+        System.out.println(signature.getName());
+        System.out.println(signature.getDeclaringType());
+        System.out.println(signature.getDeclaringTypeName());
+        System.out.println(signature.getModifiers());
+        System.out.println("-----------------------signature--------------------------");
+
+        System.out.println("-----------------------args--------------------------");
+        Arrays.stream(args).forEach(System.out::println);
+        System.out.println("-----------------------args--------------------------");
+
+    }
+
+
+
+
+

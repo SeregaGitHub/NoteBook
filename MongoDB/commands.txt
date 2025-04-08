@@ -1,0 +1,225 @@
+mongosh                                       -  запускает Shell, для работы с db через cmd
+
+-----------------------------------------------------------------------------------------------------------------------
+
+help                                          -  документация в mongodb-shell 
+cls                                           -  очистить mongodb-shell (аналог "clear" в терминале)
+db                                            -  вернёт имя активной БАЗЫ
+show dbs                                      -  показать все БД
+show collections                              -  показать все коллекции
+use mydb                                      -  создать БД и переключиться на неё ( если есть - просто переключиться )
+exit                                          -  выйти из mongodb-shell
+
+db.dropDatabase()                             -  удалить базу, которая используется
+
+db.createCollection("collectionName")         -  создать коллекцию
+
+db.createCollection(
+    "collectionName", { 
+        capped: true, 
+        size: 100000,                         -  максимальный размер в байтах
+        max: 100 })                           -  максимальное количество документов
+
+db.collectionName.drop()                      -  удалить коллекцию
+
+-----------------------------------------------------------------------------------------------------------------------
+
+                                            INSERT
+
+db.collectionName.insert({"name": "Bob"})     -  создать объект в коллекции, с полями id и name ( old )
+db.collectionName.insertOne({"name": "Bob"})  -  создать объект в коллекции, с полями id и name
+db.collectionName.insertOne({"name": "Bob",
+                             "age": 25})
+db.collectionName.insertMany(
+    [{"name": "Bob"},{"name": "Tom"}])        -  создать несколько объектов в коллекции
+
+db.collectionName.bulkWrite([{                -  bulkWrite выполняет несколько операций, связанных со вставкой, удалением и обновлением документов
+insertOne: {name: "Michail",
+       patronymic: "Bogdanovich",
+       surname: "Gurov",
+       age: 30,
+       salary: 220000,
+       department: "Tech Support",
+       date_of_birth: "10.01.1992"
+}
+}])
+
+db.students.insertOne({ name: "Larry", 
+                        age: 32, 
+                        gpa: 2.8, 
+                        fullTime: false, 
+                        registerDate: new Date(), 
+                        someDate: new Date("2024-01-20T01:30:00"), 
+                        gradutionDate: null, 
+                        courses: [ "Biology", "Chemistry", "Calculus" ], 
+                        adress: { street: "Fake Str.", 
+                                  city: "Bikini", 
+                                  zip: 12345 } })
+
+-----------------------------------------------------------------------------------------------------------------------
+
+                                            UPDATE
+
+db.collectionName.updateOne(
+    { условие }, { $set: { поле: значение } }
+    )
+db.collectionName.updateMany(
+    { условие }, { $set: { поле: значение } }
+    )
+db.collectionName.findOneAndUpdate(
+    { условие }, { $set: { поле: значение } }, 
+    { returnNewDocument: true }
+    )
+
+db.collectionName.update({name: 'Ivan'},
+{
+$set:{
+name: 'Anatoly',
+age: 50,
+date_of_birth: '15.11.1972'}
+})
+
+
+db.students.updateMany(
+    { fullTime:{$exists: true} },            -  обновление, только если поле "fullTime" существует
+    { $set:{fullTime: true} }                -  обновление на "true"
+    )
+
+db.employees.updateMany({},                  -  Для изменения названия полей используется параметр $rename
+{
+$rename:{
+name: 'first_name'}
+})
+
+db.employees.updateOne({                     -  Для удаления полей используется параметр $unset 
+    { _id: ObjectId('val') }
+},                  
+{$unset:{ {someField: ""} })
+
+-----------------------------------------------------------------------------------------------------------------------
+
+                                            DELETE
+
+db.collectionName.deleteOne({ условие })      - удаление по условию
+db.collectionName.deleteMany({ условие })
+
+db.collectionName.deleteOne(                  - удаление по id
+    {_id: ObjectId('66a9fde9c101b5c746be3e56')})
+
+db.collectionName.deleteMany(                 - удалит если поля someField не существует
+    { someField:{$exists: false} }
+)
+
+-----------------------------------------------------------------------------------------------------------------------
+
+                                            FIND
+
+db.collectionName.find()                      -  получить всю коллекцию (выведет первые 20 документов)
+it                                            -  получить следующие 20 документов коллекции
+
+
+
+                            БД - moviebox, коллекция - movies
+
+db.collectionName.find(
+    {director:  "Quentin Tarantino",          -  фильтрация данных по значениям полей
+     rating: 8.9 })                  
+
+db.movies.find(                               -  поиск фильмов по полю - director
+    {director:  "Quentin Tarantino" },           только полей - title и director
+    { title: 1, director: 1 })                   (1 - означает, что поле требуется в возвращаемом значении)
+
+db.movies.find(                               -  поиск всех фильмов
+    {},                                          только полей - title и director
+    { title: 1, director: 1 })                   (1 - означает, что поле требуется в возвращаемом значении)
+
+db.movies.find(                               -  фильтрация данных по значениям полей
+    {director:  "Quentin Tarantino"}             
+    ).sort({year: 1})                            с сортировкой по полю year(1 или -1: порядок сортировки)
+    ).limit(количество)
+    ).skip(количество)
+
+db.movies.findOne({ _id: ObjectId('val') })   -  в параметры передаётся только id
+db.movies.findOneAndDelete()
+db.movies.findOneAndReplace()
+db.movies.findOneAndUpdate()
+
+db.movies.findOne({ _id: ObjectId('val') },   -  вернёт только поле title
+                  { title: 1 })
+
+                                    LOGICAL QUERY OPERATORS
+
+$and  - и 
+$not  - не 
+$nor  - остаток от запроса с "и"
+$or   - или
+
+db.students.find({ $and: [{fullTime: true}, {age:{$lte:22}}] })
+
+db.students.find({age:{$not:{$gte:30}}})    -    (выдаст в том числе и "age: null")
+
+db.collectionName.find(                       
+    {$or: [{rating: 8.9}, 
+           {director: "Quentin Tarantino"}]})
+
+-----------------------------------------------------------------------------------------------------------------------
+
+                                        Поиск со сравнением
+
+Для сравнения используются следующие операторы сравнения:
+
+    $lt   - less than, меньше;
+    $lte  - less than or equal, меньше или равно;
+    $gt   - greater than, больше;
+    $gte  - greater than or equal, больше или равно;
+    $ne   - not equal.
+
+    $in   - в [..., ..., ...]
+    $nin  - не в [..., ..., ...]
+    db.students.find({ name: {$in: ["Sandy", "Patrick"]} })
+
+                                        ПРИМЕРЫ:
+
+- db.students.find({ name: {$ne: "Sandy"} })   - найти всех кроме "Sandy"
+
+В качестве примера найдем людей с зарплатой больше 100000, меньше 200000 и моложе 30:
+
+- db.employees.find({salary : {$gte: 100000, $lte: 200000},age: {$lt:30}})
+
+-----------------------------------------------------------------------------------------------------------------------
+
+                                        Вывод аналитики
+
+// Получение всех пользователей
+db.users.find()
+
+// Получение всех продуктов в категории "electronics"
+db.products.find({ category: "electronics" })
+
+// Подсчет количества всех заказов
+db.orders.countDocuments()
+
+// Средняя цена продуктов
+db.products.aggregate([
+    { $group: { _id: null, averagePrice: { $avg: "$price" } } }
+])
+
+// Список категорий продуктов и количества продуктов в каждой категории
+db.products.aggregate([
+    { $group: { _id: "$category", count: { $sum: 1 } } }
+])
+
+-----------------------------------------------------------------------------------------------------------------------
+
+db.students.getIndexes()                                         -  проверить наличие индексов
+db.students.find({ name: "Larry" }).explain("executionStats")    -  отчёт о запросе
+
+db.students.createIndex({ name: 1 })                             -  создание индекса в таблице students, поля name, (1 - natural order, -1 - reversed order)
+db.students.dropIndex("name_1")                                  -  удалить индекс с именем "name_1"
+
+=======================================================================================================================
+
+                                            COMPASS
+
+{ director:  "Quentin Tarantino" }                 ->  find
+{ director:  "Quentin Tarantino", rating: 8.9 }    ->  find

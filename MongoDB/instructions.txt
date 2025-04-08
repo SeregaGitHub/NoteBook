@@ -1,0 +1,64 @@
+sudo systemctl status mongod  -  узнать статус БД ( запущена или нет )
+sudo systemctl start mongod   -  запустить БД
+db.shutdownServer()           -  остановка БД (необходимо находиться на используемой БД)
+
+-----------------------------------------------------------------------------
+=============================================================================
+=============================================================================
+
+                                    INSTALL
+
+                                    MongoDB
+
+https://www.mongodb.com/try/download/community
+
+Select package ->
+
+    Version   -  current
+    Platform  -  Ubuntu 22.04 x64
+    Package   -  server
+
+-> Download ->
+
+sudo dpkg -i fileName.deb
+
+=============================================================================
+
+                                    Shell
+
+https://www.mongodb.com/try/download/shell
+
+Version   -  2.1.1
+Platform  -  Ubuntu x64
+Package   -  deb
+
+-> Download ->
+
+sudo dpkg -i fileName.deb
+
+-----------------------------------------------------------------------------
+
+mongosh
+
+=============================================================================
+
+                                  Compass
+
+https://www.mongodb.com/try/download/compass
+
+Version   -  stable
+Platform  -  Ubuntu 64-bit
+Package   -  deb
+
+-> Download ->
+
+sudo dpkg -i fileName.deb
+
+=============================================================================
+
+
+                        MongoDB for VSCode
+
+install in VSCode 
+
+пкм -> launch MongoDB Shell

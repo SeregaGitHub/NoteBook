@@ -1,0 +1,150 @@
+
+import java.io.Serializable;
+
+((( Настройки => Editor => Inspections => Java =>
+       => Serialization issues =>
+       => Serializable class without 'SerialVersionUID'
+Теперь можно автоматически добавлять SerialVersionUID
+     или можно прописать вручную                        )))
+
+public class Person implements Serializable {
+// private static final long serialVersionUID = 352637653498764784L;
+//     (Можно прописать serialVersionUID)
+
+private transient int age;  -  если transient, то поле не будет сериализовано
+                               age будет = 0, String = null, и т.п.
+private int id;
+private String name;
+
+public Person(int id, String name) {
+    this.id = id;
+    this.name = name;
+}
+
+public int getId() {
+    return id;
+}
+
+public void setId(int id) {
+    this.id = id;
+}
+
+public String getName() {
+    return name;
+}
+
+public void setName(String name) {
+    this.name = name;
+}
+
+@Override
+public String toString() {
+    return "Person{" +
+            "id=" + id +
+            ", name='" + name + '\'' +
+            '}';
+}
+}
+
+-----------------------------------------------------------------------------------
+
+Запись объектов в файл
+
+public static void main(String[] args) throws IOException {
+Person person_1 = new Person(1, "Bob");
+Person person_2 = new Person(2, "Mike");
+FileOutputStream fos = new FileOutputStream("/home/serega/Java/Study/people.bin");
+ObjectOutputStream oos = new ObjectOutputStream(fos);
+oos.writeObject(person_1);
+oos.writeObject(person_2);
+oos.close();
+}
+}
+Считывание объектов из файла
+
+public static void main(String[] args) {
+try {
+FileInputStream fis = new FileInputStream("/home/serega/Java/Study/people.bin");
+ObjectInputStream ois = new ObjectInputStream(fis);
+Person person_1 = (Person) ois.readObject();
+Person person_2 = (Person) ois.readObject();
+System.out.println(person_1);
+System.out.println(person_2);
+ois.close();
+} catch (IOException e) {
+e.printStackTrace();
+} catch (ClassNotFoundException e) {
+e.printStackTrace();
+}
+}
+}
+
+-------------------------------------------------------------------------------------
+
+Запись массива в файл
+
+Person person_1 = new Person(1, "Bob");
+Person person_2 = new Person(2, "Mike");
+Person[] people = {person_1, person_2, new Person(3,"Tom")};
+FileOutputStream fos = new FileOutputStream("/home/serega/Java/Study/masPeople.bin");
+ObjectOutputStream oos = new ObjectOutputStream(fos);
+-------------------------------------------------------------------------
+oos.writeInt(people.length);  // Записываем длинну массива
+
+for (Person p: people        // Записывам массив
+) {
+oos.writeObject(p);
+}
+------------------------------------------------------------------------
+            ЛУЧШЕ
+oos.writeObject(people);     // Запись массива как объект
+-------------------------------------------------------------------------
+oos.close();                 // Закрыть поток
+}
+}
+
+Считывание массива из файла
+
+try {
+FileInputStream fis = new FileInputStream("/home/serega/Java/Study/masPeople.bin");
+ObjectInputStream ois = new ObjectInputStream(fis);
+-----------------------------------------------------------------------------------
+int personCount = ois.readInt();            // Считываем число (длину массива)
+Person[] people = new Person[personCount];  // Создаём массив
+for (int i = 0; i < personCount; i++) {     // Заполняем массив
+people[i] = (Person) ois.readObject();  // Даункаст !!!
+}
+-----------------------------------------------------------------------------------
+            ЛУЧШЕ
+// Считываем массив из объекта
+
+Person[] people = (Person[]) ois.readObject(); // Даункастинг
+-----------------------------------------------------------------------------------
+ois.close();                                // Закрываем поток
+System.out.println(Arrays.toString(people));
+} catch (FileNotFoundException e) {
+e.printStackTrace();
+} catch (IOException e) {
+e.printStackTrace();
+} catch (ClassNotFoundException e) {
+e.printStackTrace();
+}
+
+-----------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------
+
+// try with resourses:  -  сам закрывает поток !!!
+
+    String fileName = "/home/serega/Java/Study/masPeopleObject.bin";
+    try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
+        // Создаём объект ois, в него помещаем: new FileInputStream(fileName)
+
+        // Считываем массив из объекта
+        Person[] people = (Person[]) ois.readObject(); // Даункастинг
+
+        System.out.println(Arrays.toString(people));
+    } catch (ClassNotFoundException | IOException e) {
+        e.printStackTrace();
+    }
+
+    

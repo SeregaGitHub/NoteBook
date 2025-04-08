@@ -1,0 +1,39 @@
+
+Вместо часов, минут и секунд, он оперирует секундами, миллисекундами и наносекундами.
+
+Instant timestamp = Instant.now();
+
+Также можно создать новый объект с помощью разновидностей метода of(), если передать в него время, прошедшее с 1 января 1970 года:
+- ofEpochMilli(long milliseconds)          -  Нужно передать количество миллисекунд
+- ofEpochSecond(long seconds)              -  Нужно передать количество секунд
+- ofEpochSecond(long seconds, long nanos)  -  Нужно передать секунды и наносекунды
+
+
+У класса Instant есть два метода, которые возвращают его значения:
+
+long getEpochSecond()             -  Количество секунд, прошедшее с 1 января 1970 года
+int getNano()                     -  Наносекунды.
+long toEpochMilli()               -  Количество миллисекунд, прошедшее с 1 января 1970 года
+
+
+Instant plusSeconds(long)         -  Добавляет секунды к текущему моменту времени
+Instant plusMillis(long)          -  Добавляет миллисекунды
+Instant plusNanos(long)           -  Добавляет наносекунды
+Instant minusSeconds(long)        -  Вычитает секунды
+Instant minusMillis(long)         -  Вычитает миллисекунды
+Instant minusNanos(long)          -  Вычитает наносекунды
+
+- isAfter(Instant otherInstant)   - возвращает true, если время в экземпляре Instant, у которого вызывается метод,
+                                    находится на временной шкале позже, чем otherInstant; и false — в противоположном случае;
+- isBefore(Instant otherInstant)  - возвращает true, если время в экземпляре Instant, у которого вызывается метод,
+                                    находится на временной шкале раньше, чем otherInstant; и false — в противоположном случае;
+- equals(Object otherInstant)     - возвращает true, если оба экземпляра указывают на один и тот же момент во времени.
+
+---------------------------------------------------------------------------------------------------
+
+Instant timestamp = Instant.now();
+System.out.println(timestamp);
+
+long n = timestamp.toEpochMilli();
+Instant time = Instant.ofEpochMilli(n);
+System.out.println(time);

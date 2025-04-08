@@ -1,0 +1,176 @@
+
+                                  PATHS
+
+  Paths — это совсем простой класс с единственным статическим методом get().
+Его создали исключительно для того, чтобы из переданной строки или URI получить объект типа Path
+
+- Path testFilePath = Paths.get("C:\\Users\\Username\\Desktop\\testFile.txt");
+
+                                  PATH
+
+- Path имя = Path.of(путь);                       -  создание объекта
+- Path file = Path.of("c:\\projects\\note.txt");  -  Путь к файлу
+- Path directory = Path.of("c:\\projects\\");     -  Путь к директории
+
+- getParent()                     -  Возвращает родительскую директорию
+- Path getFileName()              -  Возвращает имя файла без директории
+- Path getRoot()                  -  Возвращает корневую директорию из пути
+- boolean isAbsolute()            -  Проверяет, что текущий путь — абсолютный
+- Path toAbsolutePath()           -  Преобразует путь в абсолютный
+- Path normalize()                -  Убирает шаблоны в имени директории
+- Path resolve(Path other)        -  Строит новый абсолютный путь из абсолютного и относительного
+- Path relativize(Path other)     -  Получает относительный путь из двух абсолютных путей
+- boolean startsWith(Path other)  -  Проверяет, что текущий путь начинается с пути
+- boolean endsWith(Path other)    -  Проверяет, что текущий путь заканчивается на путь
+- int getNameCount()              -  Дробит путь на части с помощью разделителя /
+                                     (Возвращает количество частей)
+- Path getName(int index)         -  Дробит путь на части с помощью разделителя /
+                                     (Возвращает часть по ее номеру)
+- File toFile()                   -  Преобразует объект Path в устаревший объект File
+- URI toUri()                     -  Преобразует объект Path в объект типа URI
+
+
+- Path subpath(int beginIndex, int endIndex)  -  Дробит путь на части с помощью разделителя /
+                                                 (Возвращает часть пути, заданную интервалом)
+
+----------------------------------------------------------------------------------------------------
+File folder = new File("pathToDir");                                    -  количество файло в папке
+int filesQuantity = Objects.requireNonNull(folder.listFiles()).length;
+----------------------------------------------------------------------------------------------------
+
+                                         FILES
+
+    /home/serega/readme.txt  -  LINUX
+    c:\\readme.txt           -  WINDOWS
+
+------------------------------------------------------------------------------------------------------------------------
+* Path copy(Path source, Path target, CopyOption... options)
+
+CopyOption... options:
+
+- REPLACE_EXISTING           -  указывает, что если в директории назначения уже есть такой файл, то нужно его заменить;
+- COPY_ATTRIBUTES            -  указывает, что нужно скопировать атрибуты оригинального файла в его копию;
+- ATOMIC_MOVE                -  указывает, что необходимо переместить файл атомарно.
+                                Это значит, что перемещение или выполнится целиком, или не выполнится вообще.
+
+------------------------------------------------------------------------------------------------------------------------
+
+- Path createFile(Path path)                          -  Создает новый файл с путем path
+- Path createDirectory(Path path)                     -  Создает новую директорию
+- Path createDirectories(Path path)                   -  Создает несколько директорий
+- Path createTempFile(prefix, suffix)                 -  Создает временный файл
+- Path createTempDirectory(prefix)                    -  Создает временную директорию
+- void delete(Path path)                              -  Удаляет файл или директорию, если она пуста
+- deleteIfExists(Path path)                           -  Удаляет файл или директорию, если она существует
+- Files.copy(Path src, Path dest)                     -  Копирует файл (абсолютный путь файла, абсолютный путь папки + имя файла)
+                                                                                              (Если указать другое имя файла - переименует)
+                        (При копировании папки таким способом - файлы внутри папки НЕ скопируются !!!)
+
+- Files.copy(Path src, Path dest, StandardCopyOption.REPLACE_EXISTING) - При копировании перезапишет уже существующий файл
+
+- Files.move(Path src, Path dest)                     -  Перемещает файл (абсолютный путь файла, абсолютный путь файла)
+
+      (Можно переименовать файл - указав абсолютный путь файла в одну и ту же папку, но во второй раз другое имя)
+                                                  ИЛИ
+                Files.move(path, path.resolveSibling(newName), StandardCopyOption.REPLACE_EXISTING);
+
+
+- boolean isDirectory(Path path)                      -  Проверяет, что путь — это директория, а не файл
+- boolean isRegularFile(Path path)                    -  Проверяет, что путь — это файл, а не директория
+- Files.isReadable(filePath))                         -  Проверяет, можем ли читать
+- Files.isWritable(filePath))                         -  Проверяет, можем ли записывать
+- Files.isExecutable(filePath))                       -  Проверяет, можем ли запускать
+- Files.isSameFile(filePath, filePath2)               -  Проверяет, указывают ли два пути на один и тот же файл
+- boolean exists(Path path)                           -  Проверяет, что объект по заданному пути существует
+- Files.size(Path path)                               -  Возвращает размер файла
+- Files.getAttribute(filePath, "creationTime")        -  Узнать какой-либо атрибут (Список атрибутов надо гуглить !!!)
+- Files.readAttributes(filePath, "*")                 -  Узнать все атрибуты (если только часть: перечислить через запятую)
+                                                         (Возвращает Map<String, Object> !!!)
+- byte[] readAllBytes(Path path)                      -  Возвращает все содержимое файла в виде массива байт
+- String readString(Path path)                        -  Возвращает все содержимое файла в виде строки
+- List<String> readAllLines(Path path)                -  Возвращает все содержимое файла в виде списка строк
+- Path write(Path path, byte[])                       -  Записывает в файл массив байт
+- Path writeString(Path path, String str)             -  Записывает в файл строку
+- DirectoryStream<Path> newDirectoryStream(Path dir)  -  Возвращает коллекцию файлов (и поддиректорий)
+                                                         из заданной директории
+- sout Files.list(path).collect(Collectors.toList())  -  Для перечисления всех файлов в директории
+
+
+List<String> lines = Files.readAllLines(Paths.get("C:\\Users\\Username\\Desktop\\pushkin.txt"), UTF_8);
+
+       for (String s: lines) {
+           System.out.println(s);
+       }
+
+            Создание папки, файла и запись в файл:
+
+        String fileName = "/home/serega/ForPathTesting/PathTest.txt";
+        String str = "Path study.\n";
+        String str2 = "Path study_2.\n";
+        String str3 = "Path study_3.\n";
+        Files.createDirectory(Path.of("/home/serega/ForPathTesting"));
+        Files.createFile(Path.of("/home/serega/ForPathTesting/PathTest.txt"));
+
+        Files.writeString(Path.of(fileName), str);
+    //      Files.writeString(Path.of(fileName), str2); - перезапишет файл !!!
+        Files.write(Paths.get(fileName), str2.getBytes(), StandardOpenOption.APPEND);
+        Files.writeString(Paths.get(fileName), str3, StandardOpenOption.APPEND);
+----------------------------------------------------------------------------------------------------------
+
+- Files.createFile(Path.of("c:\\readme.txt"));            -  Создает файл
+- Files.createDirectory(Path.of("c:\\test"));             -  Создает директорию
+- Files.createDirectories(Path.of("c:\\test\\1\\2\\3"));  - Создает директорию и все нужные поддиректории
+                                                            (если их не существует)
+- Path path1 = Path.of("c:\\readme.txt");                 -  Копирует файл
+  Path path2 = Path.of("c:\\readme-copy.txt");
+  Files.copy(path1, path2);
+
+- Path path1 = Path.of("c:\\readme.txt");                 -  Перемещает и переименовывает файл
+  Path path2 = Path.of("d:\\readme-new.txt");
+  Files.move(path1, path2);
+
+- Path path = Path.of("d:\\readme-new.txt");              -  Удаляет файл
+  Files.delete(path);
+
+- Files.isRegularFile(Path.of("c:\\readme.txt"));         -  Это файл ?      (true)
+- Files.isDirectory(Path.of("c:\\test"));                 -  Это папка?      (true)
+- Files.exists(Path.of("c:\\test\\1\\2\\3"));             -  Существует ли ? (false)
+- Files.size(Path.of("c:\\readme.txt"));                  -  Длина файла     (10112)
+
+- Path path = Path.of("c:\\readme.txt");                  -  Читаем содержимое файла в виде списка строк
+  List<String> list = Files.readAllLines(path);
+- for (String str : list)                                 -  Выводим строки на экран
+  System.out.println(str);
+------------------------------------------------------------------------------------------------------------------
+- Path path = Path.of("c:\\windows");
+                                                                         -  Получаем объект со списком файлов
+  try (DirectoryStream<Path> files = Files.newDirectoryStream(path)) {      Цикл по списку файлов
+     for (Path path : files)
+        System.out.println(path);
+  }
+        Объект DirectoryStream<Path> является потоком данных, и его нужно закрывать с помощью метода close(),
+                               ну или использовать внутри try-with-resources
+-------------------------------------------------------------------------------------------------------------------
+- Замена и для FileInputStream:
+
+Было
+
+String src = "c:\\projects\\log.txt";
+InputStream input = new FileInputStream( src );
+
+Стало
+
+String src = "c:\\projects\\log.txt";
+InputStream input = Files.newInputStream( Path.of( src ) );
+
+- Аналогично замена и для FileOutputStream:
+
+Было
+
+String src = "c:\\projects\\log.txt";
+OutputStream  output = new FileOutputStream( src );
+
+Стало
+
+String src = "c:\\projects\\log.txt";
+OutputStream  output = Files.newOutputStream( Path.of( src ) );

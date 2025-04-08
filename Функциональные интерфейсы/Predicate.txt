@@ -1,0 +1,66 @@
+public class PredicateExample {
+    public static void main(String[] args) {
+/*        Student st1 = new Student("Ivan", 'M', 22, 3, 8.3);
+        Student st2 = new Student("Nikolay", 'M', 28, 2, 6.4);
+        Student st3 = new Student("Elena", 'F', 19, 1, 8.9);
+        Student st4 = new Student("Petr", 'M', 35, 4, 7);
+        Student st5 = new Student("Mariya", 'F', 23, 3, 9.1);
+
+        List<Student> students = new ArrayList<>();
+        students.add(st1);
+        students.add(st2);
+        students.add(st3);
+        students.add(st4);
+        students.add(st5);
+
+        StudentsInfo info = new StudentsInfo();
+        System.out.println();
+
+        info.testStudents(students, student -> student.getAvgGrade() > 8);
+        //StudentCheck studentCheck = student -> student.getAvgGrade() > 8;
+        System.out.println("-------------------------------------------------");
+        //info.testStudents(students, studentCheck);  // то же самое
+        System.out.println("-------------------------------------------------");
+
+        info.testStudents(students, (Student student) -> student.getAge() < 30);
+        System.out.println("-------------------------------------------------");
+
+        info.testStudents(students, (Student student) -> {return student.getAge() > 20 && student.getAvgGrade() < 9.3
+                && student.getSex() == 'F';});
+        System.out.println("-------------------------Predicate------------------------");
+        Predicate<Student> studentPredicate1 = student -> student.getAvgGrade() > 7.5;
+        Predicate<Student> studentPredicate2 = student -> student.getSex() == 'M';
+        info.testStudents(students, studentPredicate1);
+        System.out.println("-------------------------------------------------");
+        info.testStudents(students, studentPredicate2);
+        System.out.println("-------------------------------------------------");
+        // Выведет всех кто не соответствует условию
+        info.testStudents(students, studentPredicate2.negate());
+        System.out.println("-------------------------------------------------");
+        // Объединение двух проверок (оба условия должны быть - true)
+        info.testStudents(students, studentPredicate1.and(studentPredicate2));
+        System.out.println("-------------------------------------------------");
+        // Объединение двух проверок (любое из условий может быть - true)
+        info.testStudents(students, studentPredicate1.or(studentPredicate2));
+        System.out.println("-------------------------Predicate------------------------");*/
+
+        List<String> stringList = new ArrayList<>();
+        stringList.add("Privet");
+        stringList.add("Poka");
+        stringList.add("OK");
+        stringList.add("Uchim Java");
+        stringList.add("A imenno lyambdas");
+
+        System.out.println(stringList);
+
+        stringList.removeIf(predicate -> predicate.length() < 5);
+        // удалить если, произв-ная пер-я,    какой-то тест
+
+                         // ИЛИ
+        Predicate<String> ps = predicate -> predicate.length() < 5;
+        stringList.removeIf(ps);
+
+        System.out.println(stringList);
+
+    }
+}

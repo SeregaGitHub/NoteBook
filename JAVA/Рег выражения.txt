@@ -1,0 +1,294 @@
+
+Pattern - опредяляет рег выражения
+Matcher - определяет связь между символами и шаблоном
+
+Метасимволы:
+
+Внутри []   ] \ ^ -   специальные символы, которые надо экранировать
+
+Pattern pattern = Pattern.compile("[a-z]");
+Pattern.compile("[abcd]")             - поиск символов a, b, c, d
+Pattern.compile("[^a-z]") [^ ]        - поиск любого символа вне [ ]
+Pattern.compile("[a-z]+") +           - поиск одного и более символов
+Pattern.compile("^[a-z]") ^           - поиск в начале строки
+Pattern.compile("[a-z]$") $           - поиск в конце строки
+Pattern.compile(".[1-3] | .[7-9]") |  - или
+Pattern.compile(\+7 | 8) |            - или
+                                        (запоминает текст для сравнивания)
+Pattern.compile(?: \+7 | 8)           - НЕ +7 или 8
+                                        (НЕ запоминает текст для сравнивания)
+Pattern.compile("\\d") \d             - поиск цифрового символа
+Pattern.compile("\\D") \D             - поиск не цифрового символа
+Pattern.compile("\\s") \s             - поиск пробела
+Pattern.compile("\\S") \S             - поиск НЕ пробела
+Pattern.compile("\\w") \w             - поиск буквенно-цифрового символа
+                                        или _
+Pattern.compile("\\W") \W             - поиск НЕ буквенно-цифрового символа
+                                        или _
+                       \b             - Соответствует границе слова,
+                                        где символом слова является [a-zA-Z0-9_]
+                       \B             - Соответствует границам символов,
+                                        не являющихся словами
+                       \A             - началу строки
+                       \Z             - концу строки. Если новая строка существует,
+                                        она совпадает непосредственно
+                                        перед новой строкой.
+                       \z             - концу строки
+                       \G             - Точка предыдущего соответствия
+                         .            - соответствие ЛЮБОМУ одиночному символу
+Pattern.compile(".[0-9]") .           - поиск в любом месте строки
+               "\\Q...\\E"            - поиск от \\Q до \\E, дословно
+--------------------------------------------------------------------------
+                        \t            - поиск символа табуляции
+                        \n            - поиск символа новой строки
+                        \r            - поиск символа возврата каретки
+                        \f            - поиск символа перехода на
+                                        новую страницу
+---------------------------------------------------------------------------
+                        ?             - количество символов 0 или 1
+                        *             - количество символов 0 и более
+                        *?            - Это останавливает регулярное выражение
+                                        при первом совпадении
+                        +             - количество символов 1 и более
+                        {n}           - n символов
+                        {n,}          - n и более символов
+                        {,n}          - не менене n символов
+                        {n,m}         - количество символов от n до m
+----------------------------------------------------------------------------
+Жадный режим
+  “A.+a”// Ищет максимальное по длине совпадение в строке:
+  --Pattern pattern = Pattern.compile("A.+a");
+  --Matcher matcher = pattern.matcher("A__aA---a");
+  --0 A__aA---a
+Сверхжадный режим
+  "А.++а"?// Работает также как и жадный режим,
+   но не производит реверсивный поиск при захвате строки.
+ Ленивый режим
+  “A.+?a”// Ищет самое короткое совпадение:
+  --Pattern pattern = Pattern.compile("A.+?a");
+  --Matcher matcher = pattern.matcher("A__aA---a");
+  --0 A__a 4 A---a
+-----------------------------------------------------------------------------
+?????????????????????????????????????????????????????????????????????????????
+http://jregex.sourceforge.net/
+download
+File => Project Structure => SDKs => ClassPath => Добавить fileName.jar
+?????????????????????????????????????????????????????????????????????????????
+-----------------------------------------------------------------------------
+1	public int start()
+Возвращает начальный индекс предыдущего match.
+2	public int start(int group)
+Возвращает начальный индекс подпоследовательности, захваченной данной группой
+во время предыдущей операции сопоставления.
+3	public int end()
+Возвращает смещение после последнего совпадения символов.
+4	public int end(int group)
+Возвращает смещение после последнего символа подпоследовательности,
+захваченной данной группой во время предыдущей операции сопоставления.
+
+1	public boolean lookingAt()
+Пытается сопоставить входную последовательность, начиная с начала, с шаблоном.
+2	public boolean find()
+Пытается найти следующую подпоследовательность входной последовательности,
+которая соответствует шаблону.
+3	public boolean find(int start)
+Сбрасывает это сопоставление и затем пытается найти следующую подпоследовательность
+входной последовательности, которая соответствует шаблону,
+начиная с указанного индекса.
+4	public boolean matches()
+Попытки сопоставить весь регион с паттерном.
+
+1	public Matcher appendReplacement(StringBuffer sb, String replacement)
+Реализует нетерминальный шаг добавления и замены.
+2	public StringBuffer appendTail(StringBuffer sb)
+Реализует шаг добавления и замены терминала.
+3	public String replaceAll(String replacement)
+Заменяет каждую подпоследовательность входной последовательности,
+которая соответствует шаблону с данной строкой замены.
+4	public String replaceFirst(String replacement)
+Заменяет первую подпоследовательность входной последовательности,
+которая соответствует шаблону с данной строкой замены.
+5	public static String quoteReplacement(String s)
+Возвращает буквенную замещающую строку для указанной строки.
+Этот метод создает строку, которая будет работать в качестве литеральной замены
+в методе appendReplacement класса Matcher.
+
+      PatternSyntaxException – это непроверенное исключение,
+    которое указывает на синтаксическую ошибку в шаблоне.
+    Класс PatternSyntaxException предоставляет следующие методы,
+    чтобы помочь вам определить, что пошло не так:
+
+1	public String getDescription()
+Получает описание ошибки.
+2	public int getIndex()
+Получает индекс ошибки.
+3	public String getPattern()
+Извлекает ошибочный шаблон регулярного выражения.
+4	public String getMessage()
+Возвращает многострочную строку, содержащую описание синтаксической ошибки
+и ее индекс, ошибочный шаблон регулярного выражения и визуальную индикацию
+индекса ошибки в шаблоне.
+-----------------------------------------------------------------------------
+#Коментарий
+
+private static final String LOGIN_PATTERN = ".*[\\s].*";               // Строка с пробелами
+private static final String LOGIN_PATTERN3 = "[^\\s]*";  // Строка без пробелов
+
+String tel = "((?#Коментарий)\\+7|8)?(\\s?-?\\s?\\d{3}){2}" +
+             "(\\s?-?\\s?\\d\\d){2}"; // Если подключен пакет JRegex
+
+Pattern pattern = Pattern.compile("(\\+7|8)?(\\s?-?\\s?\\d{3}){2}" +
+             "(\\s?-?\\s?\\d\\d){2}#checking number", Pattern.COMMENTS);
+                 // Pattern.COMMENTS - позволяет добавлять коментарии
+
+              (\+7|8)-\d{3}-\d{3}-\d{2}-\d{2}     - проверка номера телефонв
+String tel = "(\\+7|8)?(\\s?-?\\s?\\d{3}){2}" +
+                 "(\\s?-?\\s?\\d\\d){2}";
+\w{3,}@\w+.\w{2}                                  - проверка email
+
+           Check - IP;
+
+    public static void main(String[] args) {
+    String ip = "127.0.0.1";
+        НЕВЕРНО
+    //String patt = "((0|1\\d{0,2}|2([0-4][0-9]|5[0-5]))\\.){3}(0|1\\d{0,2}|2([0-4][0-9]|5[0-5]))";
+        ВЕРНО
+    String patt = "((([0-9]{1,2})|0\\d{2}|1\\d{2}|(2([0-4][0-9])|25[0-5]))\\.){3}" +
+                   "(([0-9]{1,2})|(0\\d{2}|1\\d{2})|(2([0-4][0-9])|25[0-5]))";
+    Pattern pattern = Pattern.compile(patt);
+    Matcher matcher = pattern.matcher(ip);
+    boolean checkIp = matcher.matches();
+    System.out.println(checkIp);
+}
+}
+
+      String str = "Hello. I am antivirus clam !!!";
+    Pattern patternName = Pattern.compile("am");
+    Matcher matcher = patternName.matcher(str);
+      while (matcher.find()) {
+        System.out.print(matcher.start() + " " + matcher.group() + " ");
+    }  // 9 am 24 am
+
+public static boolean ivan(String s) {
+
+    Pattern patternName = Pattern.compile("Ivan");
+    Matcher m = patternName.matcher(s);
+    return m.matches();
+}
+---------------------------------------------------------------------------------------------------------
+
+- String str = "Hello. I am antivirus clam !!!";
+  Pattern patternName = Pattern.compile("am");
+  Matcher matcher = patternName.matcher(str);
+  // 9 am 24 am
+- Pattern patternName = Pattern.compile("[0-5a-z]");
+  Matcher matcher = patternName.matcher("298swNбющ");
+  // 0 2 3 s 4 w
+- Pattern patternName = Pattern.compile("gr[ea]y");
+  Matcher matcher = patternName.matcher("grey");
+  Matcher matcher2 = patternName.matcher("gray");
+  // 0 grey   0 gray
+- Pattern patternName = Pattern.compile("m[^o]");
+  Matcher matcher = patternName.matcher("mother mam");
+  // 7 ma, mo - не найдёт !!!
+- Pattern patternName = Pattern.compile("\\Q[-]\\E");
+  Matcher matcher = patternName.matcher("(+)[-]{*}");
+  // 3 [-]
+- Pattern patternName = Pattern.compile("[\\Q[-]\\E]");
+  Matcher matcher = patternName.matcher("(+)[-]{*}");
+  // 3 [ 4 - 5 ]
+- Pattern patternName = Pattern.compile("[0-9]");    // 0 1 2 1 3 2
+  Pattern patternName_2 = Pattern.compile("[0-9]+"); // 0 1 2 12
+  Matcher matcher = patternName.matcher("1 12");
+  Matcher matcher_2 = patternName_2.matcher("1 12");
+
+- Pattern patternName = Pattern.compile("\\b[1-9][0-9]{2,4}\\b"); // 0 100 4 99999
+  // ищем цифру [1-9], ищем цифру [0-9], повторяющуюся от/до {2,4} раз
+  Matcher matcher = patternName.matcher("100 99999");
+
+- Pattern patternName = Pattern.compile("\\bis\\b");  // 12 is
+  Matcher matcher = patternName.matcher("This island is good");
+- Pattern patternName = Pattern.compile("T[a-z]+s");  // 4 This 9 Thous
+  Matcher matcher = patternName.matcher("The This Thous Is");
+- Pattern patternName = Pattern.compile("\\bT[a-z]+s\\b"); // 4 This 22 Thous
+  Matcher matcher = patternName.matcher("Ts The This ThisCheck Thous Is");
+- Pattern patternName = Pattern.compile("colo[uy]?r"); // 0 color 6 colour
+  Matcher matcher = patternName.matcher("color colour");
+- Pattern patternName = Pattern.compile("dad[\\w]*"); // 0 dad 4 daddy 10 daddy85
+  Matcher matcher = patternName.matcher("dad daddy daddy85");
+- Pattern patternName = Pattern.compile("cat|dog");  // 9 cat 19 dog
+  Matcher matcher = patternName.matcher("I have a cat and a dog");
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+- Pattern patternName = Pattern.compile("ne$");
+  Matcher matcher = patternName.matcher("first line\nsecond line");
+  // 20 ne
+- Pattern patternName = Pattern.compile("ne$", Pattern.MULTILINE);
+  Matcher matcher = patternName.matcher("first line\nsecond line");
+  // 8 ne 20 ne
+
+- Pattern patternName = Pattern.compile("Get|GetValue|Set|SetValue");
+  Matcher matcher = patternName.matcher("I am Set letter and SetValue number");
+  // 5 Set 20 Set
+- Pattern patternName = Pattern.compile("Get|GetValue|Set(Value)?");
+  Matcher matcher = patternName.matcher("I am Set letter and SetValue number");
+  // 5 Set 20 SetValue
+
+- Pattern patternName = Pattern.compile("([abc]+)=\\1");
+      // 0 cab=cab (\\1  =  cab)
+  Pattern patternName = Pattern.compile("([abc])+=\\1");
+      //           (\\1  =  b)  =  (c)(a)(b)
+  Matcher matcher = patternName.matcher("cab=b");
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+- Pattern patternName = Pattern.compile("([0-9]{3})[a-z]+\\1"); // 0 127qwerty127
+   // \\1  -  поиск ТОЧНО ТАКОГО ЖЕ набора символов, что найдётся первой группе ().
+  Matcher matcher = patternName.matcher("127qwerty127");
+- Pattern patternName = Pattern.compile("<([A-Z][A-Z0-9]*)[^>]*>.*?</\\1>");
+   // 8 <B><I>bold italic</I></B>
+  Matcher matcher = patternName.matcher("Testing <B><I>bold italic</I></B> text");
+- Pattern pattern = Pattern.compile("([A-Z][a-z]+)(\\d+)\\2");
+  Matcher matcher = pattern.matcher("Dad123123");
+   // 0 Dad123123
+
+- Pattern pattern = Pattern.compile("(?<name>[A-Z][a-z]+)\\d+\\k<name>");
+  Matcher matcher = pattern.matcher("Dad123Dad");
+  Matcher matcher = pattern.matcher("Dad123Daddy"); - не найдёт !!!
+                                                   группа должна быть эдентична !!!
+   // 0 Dad123Dad  -  Группам можно давать имена ?<name> и потом вызывать \\k<name>
+
+- Pattern patternName = Pattern.compile("Set(?:Value)?");  // 0 Set 7 SetValue
+  // ?:  -  означает, что выражение в скобках не запомнится в backreferences !!!
+  Matcher matcher = patternName.matcher("Set or SetValue");
+- Pattern pattern = Pattern.compile("QwErTy", Pattern.CASE_INSENSITIVE);
+          ИЛИ       Pattern.compile("(?i)QwErTy");
+  Matcher matcher = pattern.matcher("qwerty");  // 0 qwerty
+
+                         LookAround
+- Pattern pattern = Pattern.compile("Dad(?=dy)"); - ищу Dad после которого dy
+  Matcher matcher = pattern.matcher("Dad Daddy Dads"); // 4 Dad
+- Pattern pattern = Pattern.compile("Dad(?!dy)"); - ищу Dad после которого НЕТ dy
+  Matcher matcher = pattern.matcher("Dad Daddy Dads"); // 0 Dad 10 Dad
+- Pattern pattern = Pattern.compile("(?<=Dad)dy"); - ищу dy перед которой Dad
+  Matcher matcher = pattern.matcher("Dad Daddy Dads"); // 7 dy
+- Pattern pattern = Pattern.compile("(?<!d)d"); - ищу d перед которой нет d
+  Matcher matcher = pattern.matcher("Dad Daddy Dads"); // 2 d 6 d 12 d
+- Pattern pattern = Pattern.compile("(?=\\b\\w{6}\\b)\\w{0,3}(Dad|Mot)\\w{0,3}");
+  Matcher matcher = pattern.matcher("Dad Daddys Mot Mother")
+   // 4 Daddys 15 Mother
+
+--- while (matcher.find()) {
+      System.out.print(matcher.start() + " " + matcher.group() + " ");
+  }
+------------------------------------------------------------------------------------------
+          Atomic Groups
+- System.out.println("abc".matches("a(bc|b)c"));   // true
+- System.out.println("abc".matches("a(?>bc|b)c")); // false
+- System.out.println("abc".matches("a(?>b|bc)c")); // true
+
+- System.out.println("EditPat Lite".replaceAll("EditPat (Lite|Pro)", "$1 version"));
+// Lite version
+- System.out.println("EditPat Lite".replaceAll("EditPat (Lite|Pro)", "$1 version").toUpperCase());
+// LITE VERSION
+-

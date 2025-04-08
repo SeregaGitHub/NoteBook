@@ -1,0 +1,137 @@
+
+                                                         Mockito
+
+https://site.mockito.org/  --  официальная документация
+
+  Если вы используете Spring Boot, вам достаточно добавить зависимость spring-boot-starter-test для того, чтобы подключить библиотеку Mockito.
+
+================================================================================================================================================
+
+                                                      Mockito.verify()
+
+Расскажем о достаточно часто используемых методах семейства verify: verifyNoInteractions и verifyNoMoreInteractions.
+Каждый из них принимает на вход список моков. Метод verifyNoInteractions проверяет,
+что во время работы теста не происходило никаких вызовов к мокам из списка,
+а verifyNoMoreInteractions — что не происходило других вызовов, кроме тех, которые были проверифицированы ранее.
+Чаще всего метод verifyNoMoreInteractions используется в конце теста, после всех остальных проверок
+
+Mockito.verifyNoMoreInteractions(@Mock_1, @Mock_2, @Mock_3);
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+                                                      ReflectionTestUtils
+
+  Spring предоставляет вспомогательный класс ReflectionTestUtils. Он позволяет в тестовых целях получать доступ к приватным полям и методам.
+
+  @Test
+  void testSaveOrder() {
+          OrderService orderService = new OrderService();
+
+          BookService bookService = Mockito.mock(BookService.class);
+          OrderDao orderDao = Mockito.mock(OrderDao.class);
+
+          ReflectionTestUtils.setField(orderService, "bookService", bookService);
+          ReflectionTestUtils.setField(orderService, "orderDao", orderDao);
+  }
+
+================================================================================================================================================
+
+                                                      MockMvc фреймворк
+
+  https://docs.spring.io/spring-framework/reference/testing/spring-mvc-test-framework.html
+
+    Это ещё один мощный инструмент из тестовой поддержки Spring. MockMvc имитирует выполнение http-запроса по определённому URL и проверяет корректность ответа.
+
+  package ru.practicum.user;
+
+  import com.fasterxml.jackson.databind.ObjectMapper;
+  import org.junit.jupiter.api.BeforeEach;
+  import org.junit.jupiter.api.Test;
+  import org.junit.jupiter.api.extension.ExtendWith;
+  import org.mockito.InjectMocks;
+  import org.mockito.Mock;
+  import org.mockito.junit.jupiter.MockitoExtension;
+  import org.springframework.http.MediaType;
+  import org.springframework.test.web.servlet.MockMvc;
+  import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+  import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+  import java.nio.charset.StandardCharsets;
+
+  import static org.hamcrest.Matchers.is;
+  import static org.mockito.ArgumentMatchers.any;
+  import static org.mockito.Mockito.when;
+  import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+  import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+  import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+  @ExtendWith(MockitoExtension.class)
+  class UserControllerTest {
+      @Mock
+      private UserService userService;
+
+      @InjectMocks
+      private UserController controller;
+
+      private final ObjectMapper mapper = new ObjectMapper();
+
+      private MockMvc mvc;
+
+      private UserDto userDto;
+
+      @BeforeEach
+      void setUp() {
+          mvc = MockMvcBuilders
+              .standaloneSetup(controller)
+              .build();
+
+          userDto = new UserDto(
+              1L,
+              "john.doe@mail.com",
+              "John",
+              "Doe",
+              "2022.07.03 19:55:00",
+              UserState.ACTIVE);
+      }
+
+      @Test
+      void saveNewUser() throws Exception {
+          when(userService.saveUser(any()))
+              .thenReturn(userDto);
+
+          mvc.perform(post("/users")
+                  .content(mapper.writeValueAsString(userDto))
+                  .characterEncoding(StandardCharsets.UTF_8)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .accept(MediaType.APPLICATION_JSON))
+              .andExpect(status().isOk())
+              .andExpect(jsonPath("$.id", is(userDto.getId()), Long.class))
+              .andExpect(jsonPath("$.firstName", is(userDto.getFirstName())))
+              .andExpect(jsonPath("$.lastName", is(userDto.getLastName())))
+              .andExpect(jsonPath("$.email", is(userDto.getEmail())));
+      }
+  }
+
+  Сначала создаём экземпляр MockMvc. Для этого используем один из двух статических методов класса MockMvcBuilders:
+standaloneSetup  либо webAppContextSetup. Метод standaloneSetup означает, что объект MockMvc создаётся сам по себе, не на основе Spring-контекста,
+что и требуется в конкретном случае. Метод webAppContextSetup работает со Spring web-контекстом, его мы рассмотрим чуть позже.
+
+  При создании объекта MockMvc в качестве параметра передаётся объект контроллера, который вы хотите тестировать. В нашем примере это экземпляр UserController.
+Метод mvc.perform имитирует выполнение запроса к эндпоинту, при обработке которого в дальнейшем вызывается соответствующий метод контроллера.
+Обязательно указывается путь эндпоинта — /users и его тип — post.
+Строка mvc.perform(post("/users"))  означает, что к тестируемому контроллеру UserController будет выполнен post-запрос по адресу /users.
+
+  Данные в запрос можно передать с помощью метода content. В примере кода передаётся сереализованный в JSON-объект userDto.
+Также при создании запроса можно указать http-заголовки с помощью методов с соответствующим названием, например, characterEncoding, contentType, accept.
+Методы andExpect при работе с MockMvc работают аналогично методам семейства assert в обычных тестах.
+То есть с их помощью проверяется ответ, который возвратил контроллер. Например, можно проверить статус ответа  — status().isOk(),
+его тип —content().contentType("application/json;charset=UTF-8"), а также содержимое ответа.
+
+  В данном случае в качестве ответа возвращается JSON, который можно проверить при помощи специальных матчеров — JsonPathResultMatchers.
+  https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/test/web/servlet/result/JsonPathResultMatchers.html
+Они позволяют использовать различные выражения для извлечения данных из JSON.
+Посмотреть информацию о том, как составлять такие выражения, можно в документации библиотеки JsonPath.
+================================================================================================================================================
+
+  Spring Boot предоставляет набор аннотаций, предназначенных для создания контекста для тестирования определённого слайса приложения.
+Кроме уже знакомых вам @WebMvcTest и @DataJpaTest, сюда входят, например, @JdbcTest, @DataMongoTest и другие.

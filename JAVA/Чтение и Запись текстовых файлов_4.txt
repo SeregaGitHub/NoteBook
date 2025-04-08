@@ -1,0 +1,155 @@
+
+                Files.walkFilesTree
+
+ - Files.walkFilesTree(Path start, FileVisitor visitor)  -  файл с которого стартует метод, метод ФИ FileVisitor
+
+ - preVisitDirectory   -  срабатывает перед обращением к элементам папки
+ - visitFile           -  срабатывает при обращении к папке
+ - postVisitDirectory  -  срабатывает после обращения ко всем элементам папки
+ - visitFileFailed     -  срабатывает когда файл недоступен
+
+     Любой из этих методов вернёт enum FileVisitResult
+   надо выбрать одно из действий:
+
+ -  CONTINUE       - продлжать обход по файлам
+ -  TERMINATE      - прекратить обход по файлам
+ -  SKIP_SUBTREE   - не заходить в данную папку
+ -  SKIP_SUBLINKS  - в данной папке продолжать обход не нужно (после обхода части файлов)
+
+  Перед работой необходимо создать класс и либо имплиментироваться от интерфейса FileVisitor:
+               (Тогда необходимо переопределить все четыре метода !!!)
+
+class MyFileVisitor implements FileVisitor<Path>
+
+  Либо создать класс и наследоваться от класса SimpleFileVisitor:
+          (Тогда можно переопределить не все методы !!!)
+
+class MyFileVisitorCopy extends SimpleFileVisitor<Path>
+=========================================================================================================================
+                          ОБХОД ПО ПАПКАМ
+
+                          public static void main(String[] args) throws IOException {
+                              String mainPath = "/home/serega/Atom_NoteBook/Lessons/ForFileStudy/FileTreeStudy";
+                              Path path = Path.of(mainPath);
+
+                              Files.walkFileTree(path, new MyFileVisitor());
+
+                              /*
+                          Enter to Directory: /home/serega/Atom_NoteBook/Lessons/ForFileStudy/FileTreeStudy          preVisitDirectory
+                          Enter to Directory: /home/serega/Atom_NoteBook/Lessons/ForFileStudy/FileTreeStudy/Y2       preVisitDirectory
+                          File name is: test4.tx                                                                   visitFile
+                          Exit from Directory: /home/serega/Atom_NoteBook/Lessons/ForFileStudy/FileTreeStudy/Y2        postVisitDirectory
+                          Enter to Directory: /home/serega/Atom_NoteBook/Lessons/ForFileStudy/FileTreeStudy/Y1       preVisitDirectory
+                          File name is: test2.txt                                                                  visitFile
+                          File name is: test3.txt                                                                  visitFile
+                          File name is: test1.txt                                                                  visitFile
+                          Enter to Directory: /home/serega/Atom_NoteBook/Lessons/ForFileStudy/FileTreeStudy/Y1/O     preVisitDirectory
+                          Exit from Directory: /home/serega/Atom_NoteBook/Lessons/ForFileStudy/FileTreeStudy/Y1/O      postVisitDirectory
+                          Exit from Directory: /home/serega/Atom_NoteBook/Lessons/ForFileStudy/FileTreeStudy/Y1        postVisitDirectory
+                          Enter to Directory: /home/serega/Atom_NoteBook/Lessons/ForFileStudy/FileTreeStudy/Z        preVisitDirectory
+                          Exit from Directory: /home/serega/Atom_NoteBook/Lessons/ForFileStudy/FileTreeStudy/Z         postVisitDirectory
+                          Exit from Directory: /home/serega/Atom_NoteBook/Lessons/ForFileStudy/FileTreeStudy           postVisitDirectory
+                               */
+
+                          }
+                      }
+
+                      class MyFileVisitor implements FileVisitor<Path> {
+
+                          @Override
+                          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                              System.out.println("Enter to Directory: " + dir);
+                              return FileVisitResult.CONTINUE;
+                          }
+
+                          @Override
+                          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                              System.out.println("File name is: " + file.getFileName());
+                              return FileVisitResult.CONTINUE;
+                          }
+
+                          @Override
+                          public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                              System.out.println("Error visiting file: " + file.getFileName());
+                              return FileVisitResult.TERMINATE;
+                          }
+
+                          @Override
+                          public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                              System.out.println("Exit from Directory: " + dir);
+                              return FileVisitResult.CONTINUE;
+                          }
+                      }
+
+=============================================================================================================================================
+
+                                        КОПИРОВАНИЕ ПАПОК
+
+                                        public static void main(String[] args) throws IOException {
+
+                                            Path source = Path.of("/home/serega/Atom_NoteBook/Lessons/ForFileStudy/FileTreeStudy");
+                                            Path destination = Path.of("/home/serega/Atom_NoteBook/Lessons/ForFileStudy/FileTreeStudy_Copy");
+
+                                            MyFileVisitorCopy myFileVisitorCopy  = new MyFileVisitorCopy(source, destination);
+
+                                            Files.walkFileTree(source, myFileVisitorCopy);
+
+                                        }
+                                    }
+
+                                    class MyFileVisitorCopy extends SimpleFileVisitor<Path> {
+                                        Path source;
+                                        Path destination;
+
+                                        public MyFileVisitorCopy(Path source, Path destination) {
+                                            this.source = source;
+                                            this.destination = destination;
+                                        }
+
+                                        @Override
+                                        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+
+                                            Path newDestination = destination.resolve(source.relativize(dir));
+                                    // построение нового пути     куда     новы путь      относительный путь конечной папки для копирования
+                                            Files.copy(dir, newDestination, StandardCopyOption.REPLACE_EXISTING);
+                                                                           // Дописывается при копировании папок, чтобы они могли перезаписываться !!!
+                                            return FileVisitResult.CONTINUE;
+                                        }
+
+                                        @Override
+                                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                            Path newDestination = destination.resolve(source.relativize(file));
+                                    // построение нового пути     куда     новы путь      относительный путь конечной папки для копирования
+                                            Files.copy(file, newDestination);
+                                            return FileVisitResult.CONTINUE;
+                                        }
+                                    }
+
+=============================================================================================================================================
+
+                                      УДАЛЕНИЕ папок
+
+                                      public static void main(String[] args) throws IOException {
+                                          Path path = Path.of("/home/serega/Atom_NoteBook/Lessons/ForFileStudy/FileTreeStudy_Copy");
+
+                                          Files.walkFileTree(path, new DeleteFileVisitor());
+
+                                          // Папка FileTreeStudy_Copy так же будет удалена !!!
+                                      }
+                                  }
+
+                                  class DeleteFileVisitor extends SimpleFileVisitor<Path> {
+
+                                      @Override
+                                      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                          Files.delete(file);
+                                          System.out.println("File - " + file.getFileName() + " - was deleted.");
+                                          return FileVisitResult.CONTINUE;
+                                      }
+                                      @Override
+                                      public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                                          Files.delete(dir);
+                                          System.out.println("Directory - " + dir.getFileName() + " - was deleted.");
+                                          return FileVisitResult.CONTINUE;
+                                      }
+                                  }

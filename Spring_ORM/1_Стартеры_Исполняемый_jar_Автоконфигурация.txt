@@ -1,0 +1,31 @@
+
+                                    Стартеры, исполняемый jar и автоконфигурация
+
+  Сверять совместимости версии стартера с версией Spring Boot необязательно, если проект наследует от специального стартера — spring-boot-starter-parent.
+Его версия всегда соответствует одной из версий Spring Boot. А сам стартер содержит набор настроек сборки и версии большинства других стартеров.
+Обновляя версию spring-boot-starter-parent, вы обновляете версии стартеров и их зависимостей одновременно.
+  Это окончательно снимает проблемы совместимости, упрощает добавление новых возможностей приложение, а также его поддержку и обновление.
+
+  <?xml version="1.0" encoding="UTF-8"?>
+  <project ...>
+      <parent>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-parent</artifactId>
+          <version>2.6.7</version>
+          <relativePath/> <!-- lookup parent from repository -->
+      </parent>
+
+      <!-- тут пропущены другие настройки pom.xml -->
+
+      <dependencies>
+          <dependency>
+              <groupId>org.springframework.boot</groupId>
+              <artifactId>spring-boot-starter-web</artifactId>
+          </dependency>
+    </dependencies>
+  </project>
+
+
+  Фреймворк предоставляет специальный плагин для системы сборки — для Maven это spring-boot-maven-plugin.
+Плагин запаковывает все jar-файлы используемых зависимостей в один jar-файл приложения.
+https://docs.spring.io/spring-boot/docs/current/reference/html/executable-jar.html

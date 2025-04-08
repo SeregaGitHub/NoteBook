@@ -1,0 +1,227 @@
+
+public class Main {
+    public static void main(String[] args) {
+
+        Info<String> stringInfo = new Info<>("Hello");
+        System.out.println(stringInfo);
+        String str = stringInfo.getInfo();
+        System.out.println(str);
+
+        Info<Integer> integerInfo = new Info<>(18);
+        System.out.println(integerInfo);
+        Integer i = integerInfo.getInfo();
+        System.out.println(i);
+    }
+}
+
+class Info<T> {
+    private T value;
+
+    public Info(T values) {
+        this.value = values;
+    }
+
+    @Override
+    public String toString() {
+        return "{[ " + value + " ]}";
+    }
+    public T getInfo() {
+        return value;
+    }
+}
+
+/* {[ Hello ]}
+   Hello
+   {[ 18 ]}
+   18  */
+
+====================================================================================================================
+
+public class Pair<K, V> {
+    public final K key;
+    public final V value;
+}
+
+Pair<Integer, String> pair = new Pair<>(10, "Десять");
+
+===================================================================================================================
+
+                          Параметризированные методы
+
+    ArrayList<Integer> arrayList = new ArrayList<>();
+        arrayList.add(100);
+        arrayList.add(200);
+        arrayList.add(300);
+        System.out.println(getSecondElement(arrayList));              // 200
+
+    LinkedList<String> linkedList = new LinkedList<>();
+        linkedList.add("aaa");
+        linkedList.add("bbb");
+        linkedList.add("ccc");
+        System.out.println(getSecondElement(linkedList));             // bbb
+
+    public static <T> T getSecondElement(List<T> list) {
+        return list.get(1);
+    }
+
+    public static <T extends Number> T getSecondNumberElement(List<T> list) {          // Только List из чисел !!!
+        return list.get(1);
+    }
+
+    public static <T extends Number & Interface1> T getSecondElement(List<T> list) {   // Только List из чисел + имплиментируемый от Interface1 !!!
+            return list.get(1);
+        }
+
+
+interface Interface1{
+}
+
+===================================================================================================================
+
+<T extends Number> void writeToFile(List<T> numberList) (
+
+)
+===================================================================================================================
+
+                                            Wildcard
+
+          При использовании Wildcard компилятор не даёт применить методы, которые изменяют объект !!!
+
+    List<Integer> integerList = new ArrayList<>();
+        integerList.add(10);
+        integerList.add(20);
+        showList(integerList);
+
+    List<String> stringList = new LinkedList<>();
+        stringList.add("Hello");
+        stringList.add("Java");
+        showList(stringList);
+
+
+        List<?> list = new ArrayList<>();                      // Лист любых объектов
+        List<? extends Number> numbers = new ArrayList<>();    // Лист только объектов класса Number и его классов наследников
+        List<? super Number> numbers = new ArrayList<>();      // Лист только объектов класса Number и его супер классов
+
+    public static void showList (List<?> list) {               //  Такой метод <?> выведет любой List
+        System.out.println("This is my list: " + list);
+    }
+
+===================================================================================================================
+
+                      Дженерики и интерфейсы
+
+  Дженерики можно использовать не только с классами, но с интерфейсами.
+Для этого после имени интерфейса в угловых скобках необходимо указать параметр типа T
+(или несколько параметров через запятую, если интерфейс должен использовать несколько дженериков):
+
+public interface Printer<T> {
+    public void print(T value);
+}
+
+    В этом случае класс, который реализует интерфейс, может объявить себя типизированным или
+указать конкретный тип параметра при объявлении.
+В первом случае после имени класса потребуется указать угловые скобки и имя параметра типа внутри,
+затем написать ключевое слово implements и указать, какой интерфейс реализует класс.
+Так как мы используем типизированный интерфейс,
+то после имени интерфейса также необходимо будет указать угловые скобки и имя параметра типа:
+
+public class GeneralPrinter<Type> implements Printer<Type> {
+    @Override
+    public void print(Type value) {
+        System.out.printf("%s имеет тип %s", value, value.getClass());
+    }
+}
+
+    Во втором случае класс будет нетипизированным, но будет использовать типизированный интерфейс,
+поэтому указывать угловые скобки и имя параметра типа после имени класса не нужно,
+а после имени интерфейса в угловых скобках необходимо указать конкретный тип, с которым будет работать этот класс:
+
+public class IntegerPrinter implements Printer<Integer> {
+    @Override
+    public void print(Integer value) {
+        System.out.printf("%d имеет тип Integer", value);
+    }
+}
+
+                    ВЕРХНЯЯ ГРАНИЦА ДЖЕНЕРИКА
+
+    Чтобы задать верхнюю границу дженерика, необходимо в угловых скобках указать имя параметра типа T,
+ключевое слово extends и класс, который будет задавать верхнюю границу:
+
+public class BoundedBox<T extends Number> {
+    public T number; // Переменная number всегда будет иметь тип одного из наследников класса Number
+
+    public BoundedBox(T number) {
+        this.number = number;
+    }
+}
+
+    Запись T extends Number можно прочитать как «любой тип T, который наследуется от класса Number».
+В приведённом выше примере переменная number всегда будет только числом,
+но может быть целым Integer либо вещественным Double — оба типа наследуются от класса Number.
+ этом она не может быть строкой — String не наследуется от класса Number:
+
+BoundedBox<Integer> i = new BoundedBox<>(10); // Ок
+BoundedBox<Double> d = new BoundedBox<>(5.4); // Ок
+BoundedBox<String> s = new BoundedBox<>("Привет!"); // Ошибка компиляции
+
+==================================================================================================================
+import java.util.ArrayList;
+import java.util.List;
+
+public class Practicum {
+
+    public static void main(String[] args) {
+        // Первый магазин продает дорогие товары и хочет передавать копейки типом Long
+        List<Long> longList = new ArrayList<>();
+        longList.add(Long.MAX_VALUE);
+
+        new Printer<>(longList).print();
+
+        // Второй магазин продает товары подешевле и использует для передачи копеек тип Integer
+        List<Integer> intList = new ArrayList<>();
+        intList.add(100000);
+
+        new Printer<>(intList).print();
+
+        List<String> stringList = new ArrayList<>();
+        stringList.add("Hello");
+
+        // Этот вариант должен вызывать ошибку компиляции
+        //new Printer<>(stringList).print();
+    }
+
+}
+
+class Printer<T extends Number> {
+    private final List<T> list;
+
+    public Printer(List<T> list) {
+        this.list = list;
+    }
+
+    public void print() {
+        for (int i = 0; i < list.size(); i++) {
+            double price = list.get(i).doubleValue() / 100;
+            System.out.println("Цена товара: " + price + " руб.");
+        }
+    }
+}
+
+             ИЛИ (Так верхний main работать НЕ БУДЕТ !!!)
+
+class Printer<T extends List<Number>> {
+    private final T list;
+
+    public Printer(T list) {
+        this.list = list;
+    }
+
+    public void print() {
+        for (int i = 0; i < list.size(); i++) {
+            double price = list.get(i).doubleValue() / 100;
+            System.out.println("Цена товара: " + price + " руб.");
+        }
+    }
+}
+==================================================================================================================

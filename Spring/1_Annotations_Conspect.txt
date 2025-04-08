@@ -1,0 +1,284 @@
+                                                      Аннотации Спринг
+
+@SpringBootApplication                         //   основной класс с конфигурацией приложения (main)
+public class App {
+
+	public static void main(String[] args) {
+		SpringApplication.run(App.class, args);
+	}
+}
+--------------------------------------------------------------------------------------------------------------
+  В качестве единого API мы будем использовать фреймворк The Simple Logging Facade for Java (англ. «Простой фасад логирования для Java»),
+или сокращённо SLF4J.
+  А в качестве конкретной реализации — фреймворк Logback.
+
+  log.info("Фильм \"" + film.getName() + "\" добавлен.");
+
+
+  logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG   // Установка уровня значимости в application.properties
+--------------------------------------------------------------------------------------------------------------
+@Data                                                 // Аннотации библиотеки Lombok
+public class Film {
+    private Integer id;
+    @NonNull                                          // Аннотации библиотеки Valid
+    @NotBlank
+    private String name;
+    @NonNull
+    @Size(max = 200)
+    private String description;
+    @NonNull
+    private LocalDate releaseDate;
+    @NonNull
+    private int duration;
+    private Set<Integer> likes;
+
+    {
+        likes = new HashSet<>();
+    }
+}
+--------------------------------------------------------------------------------------------------------------
+  @RestController, в отличии от @Controller, автоматически добавляет аннотацию @ResponseBody для каждого метода.
+@RequestBody надо добавлять самому.
+                                               @PostMapping
+                                               public Film addFilm(@Valid @RequestBody Film film) {
+--------------------------------------------------------------------------------------------------------------
+  Чтобы классы автоматически добавлялись в контекст, их нужно помечать специальными аннотациями.
+Базовая аннотация — @Component (англ. «компонент)».
+Также класс добавят в контекст аннотации @(Rest)Controller и @Service
+--------------------------------------------------------------------------------------------------------------
+@RestControllerAdvice
+@ExceptionHandler      -  обработка ошибок
+--------------------------------------------------------------------------------------------------------------
+Перенес валидацию из контроллера в сервис (@Valid), 
+но из-за этого перестали отлавливаться исключения и отправляться правильные статусы
+
+Возможно у тебя заработает как надо - добавь аннотацию @Validated на класс сервиса
+--------------------------------------------------------------------------------------------------------------
+
+@RestController                                   //   класс-контроллер: содержит методы для обработки запросов к эндпоинтам API
+@RequestMapping("/films")                         //   по какому пути можно будет отправить запрос к этому методу контроллера
+@Slf4j                                            //   фреймворк для логирования: конкретная реализация — фреймворк Logback (Аннотация Lombok)
+public class FilmController {
+    private final FilmService filmService;
+    private final FilmValidator filmValidator;
+    private final ControllerUtil controllerUtil;
+
+
+    @Autowired                                    //   Для всех классов контекста автоматическое внедрение зависимостей
+                                                  //   @Autowired(required = false)  -  необязательная зависимость (обрабатывается через if (зависимость != null))
+    public FilmController(FilmService filmService, FilmValidator filmValidator, ControllerUtil controllerUtil) {
+        this.filmService = filmService;
+        this.filmValidator = filmValidator;
+        this.controllerUtil = controllerUtil;
+    }
+
+    @PostMapping                                                      //   для отображения каких HTTP-методов применяются методы контроллера
+    public Film addFilm(@Valid @RequestBody Film film) {              //   @RequestBody - начение аргумента нужно взять из тела запроса.
+        filmValidator.filmValidator(film);                            // При этом объект, который пришёл в теле запроса, например, в виде JSON,
+        filmService.addFilm(film);                                    // будет автоматически сконвертирован в Java-объект
+        log.info("Фильм \"" + film.getName() + "\" добавлен.");
+        return film;
+    }
+
+    @PutMapping
+    public Film updateFilm(@Valid @RequestBody Film film) {                                 //  @Valid - будет валидировать по аннотациям в конструкторе
+        filmValidator.filmValidator(film);
+        if (filmService.getFilm(film.getId()) == null) {
+            log.warn("Ошибка пользователя: Фильм " + film.getName() + " не найден.");
+            throw new FilmNotFoundException("Фильм " + film.getName() + " не найден.");
+        } else {
+            filmService.updateFilm(film);
+            log.info("Фильм \"" + film.getName() + "\" обновлён.");
+            return film;
+        }
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    public String putLike(@PathVariable("id") Integer id, @PathVariable("userId") Integer userId) {
+        controllerUtil.isFilmAndUserExists(filmService, id, userId);
+        filmService.putLike(id, userId);
+        log.info("Пользователь с id-" + userId + " поставил лайк фильму с id-" + id + ".");
+        return "Пользователь с id-" + userId + " поставил лайк фильму с id-" + id + ".";
+    }
+
+    @GetMapping
+    public List<Film> getFilmsList() {
+        return filmService.getFilmsList();
+    }
+
+    @GetMapping("/{id}")
+    public Film getFilm(@PathVariable("id") Integer id) {                                       //   @PathVariable("id") - если "/films/12"
+        if (filmService.getFilm(id) == null) {
+            log.warn("Ошибка пользователя: Фильм с id-" + id + " не найден.");
+            throw new FilmNotFoundException("Фильм с id-" + id + " не найден.");
+        } else {
+            return filmService.getFilm(id);
+        }
+    }
+
+    @GetMapping("/popular")
+    @ResponseBody
+    public List<Film> getBestFilms(@RequestParam(defaultValue = "10") Integer count) {          //   @RequestParam - если "/films/popular?count=15"
+        if (count <= 0) {
+            log.warn("Ошибка пользователя: Число " + count + " - некорректно. Оно должно быть положительное.");
+            throw new IncorrectParameterException("Число " + count + " - некорректно. " +
+                                                  "Оно должно быть положительное.");
+        }
+        return filmService.getBestFilms(count);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public String deleteLike(@PathVariable("id") Integer id, @PathVariable("userId") Integer userId) {
+        controllerUtil.isFilmAndUserExists(filmService, id, userId);
+        log.info("Пользователь с id-" + userId + " удалил лайк у фильма с id-" + id + ".");
+        filmService.deleteLike(id, userId);
+        return "Пользователь с id-" + userId + " удалил лайк у фильма с id-" + id + ".";
+    }
+}
+--------------------------------------------------------------------------------------------------------------
+@Service                                                                                 //  Класс с бизнес-логикой (@Service внутри как @Component)
+public class FilmService {
+    private static int filmId = 0;
+    private final FilmStorage filmStorage;
+
+    @Autowired
+    public FilmService(FilmStorage filmStorage) {
+        this.filmStorage = filmStorage;
+    }
+
+    public List<Film> getFilmsList() {
+        return filmStorage.getFilmsList();
+    }
+
+    public Film addFilm(Film film) {
+        film.setId(++filmId);
+        filmStorage.addFilm(film);
+        return film;
+    }
+
+    public Film updateFilm(Film film) {
+        filmStorage.addFilm(film);
+        return film;
+    }
+
+    public void putLike(Integer filmId, Integer userId) {
+        filmStorage.putLike(filmId, userId);
+    }
+
+    public void deleteLike(Integer filmId, Integer userId) {
+        filmStorage.deleteLike(filmId, userId);
+    }
+
+    public List<Film> getBestFilms(Integer count) {
+        return filmStorage.getBestFilms(count);
+    }
+
+    public Film getFilm(Integer filmId) {
+        return filmStorage.getFilm(filmId);
+    }
+}
+--------------------------------------------------------------------------------------------------------------
+@Component                                                                               //   Spring просматривает этот класс
+public class InMemoryFilmStorage implements FilmStorage {
+    private final Map<Integer, Film> filmHashMap = new HashMap<>();
+
+    @Override
+    public List<Film> getFilmsList() {
+        return new ArrayList<>(filmHashMap.values());
+    }
+
+    @Override
+    public void addFilm(Film film) {
+        filmHashMap.put(film.getId(), film);
+    }
+
+    @Override
+    public void putLike(Integer filmId, Integer userId) {
+        filmHashMap.get(filmId).getLikes().add(userId);
+    }
+
+    @Override
+    public void deleteLike(Integer filmId, Integer userId) {
+        filmHashMap.get(filmId).getLikes().remove(userId);
+    }
+
+    @Override
+    public List<Film> getBestFilms(int count) {                                       //   В сторадже только CRUD методы !!!
+        if (count > filmHashMap.size()) {
+            count = filmHashMap.size();
+        }
+        List<Film> bestFilmList = new ArrayList<>(filmHashMap.values().stream().sorted(
+                        Comparator.comparingInt(v -> v.getLikes().size()))
+                                                                 .skip(filmHashMap.size() - count)
+                                                                 .collect(Collectors.toList()));
+        Collections.reverse(bestFilmList);
+        return bestFilmList;
+    }
+
+    @Override
+    public Film getFilm(Integer id) {
+        return filmHashMap.get(id);
+    }
+
+}
+--------------------------------------------------------------------------------------------------------------
+                                                ObjectMapper
+
+  Зависимость Spring Web. Она содержит настройки и библиотеки, необходимые для быстрого создания и конфигурирования веб-сервисов,
+— в том числе и библиотеку Jackson. В ней есть класс ObjectMapper, который умеет сериализовать и десериализовать JSON.
+Spring Boot настраивает объект ObjectMapper и преобразует его в бин. Разработчику не приходится ничего делать самостоятельно.
+Преимущество библиотеки Jackson в том, что с ней не нужно писать код сериализации и десериализации объектов.
+Магия произойдёт благодаря применению аннотаций.
+
+"{\"sort\":\"desc\",\"size\":3,\"friends\":[\"puss@boots.com\",\"cat@dogs.net\",\"purrr@luv.me\"]}"
+
+@RestController()
+public class PostFeedController {
+
+    private final PostService postService;
+
+    public PostFeedController(PostService postService){
+        this.postService = postService;
+    }
+
+    @PostMapping("/feed/friends")
+    List<Post> getFriendsFeed(@RequestBody String params){
+        ObjectMapper objectMapper = new ObjectMapper();
+        FriendsParams friendsParams;
+        try {
+            String paramsFromString = objectMapper.readValue(params, String.class);
+            friendsParams = objectMapper.readValue(paramsFromString, FriendsParams.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("невалидный формат json", e);
+        }
+
+        if(friendsParams != null){
+            List<Post> result = new ArrayList<>();
+            for (String friend : friendsParams.friends) {
+                result.addAll(postService.findAllByUserEmail(friend, friendsParams.size, friendsParams.sort));
+            }
+            return result;
+        } else {
+            throw new RuntimeException("неверно заполнены параметры");
+        }
+    }
+
+    static class FriendsParams {
+        private String sort;
+
+        private Integer size;
+
+        private List<String> friends;
+
+        // Getters and Setters
+    }
+}
+--------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------

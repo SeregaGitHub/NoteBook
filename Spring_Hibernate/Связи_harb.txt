@@ -1,0 +1,189 @@
+https://habr.com/ru/articles/542328/
+                                                    OneToOne - один к одному
+
+                                                    OneToMany - один ко многим
+
+                                                    ManyToOne - многие к одному
+
+                                                    ManyToMany - многие ко многим
+
+
+  Для примера возьмем две простейшие сущности: пользователь и контакт.
+
+                                                      Односторонние отношения
+
+  Односторонним называется отношение, владельцем которого является только одна из двух сторон.
+Следует заметить, что при этом вторая сторона об этом отношении ничего не знает.
+Hibernate будет считать владельцем отношения ту сущность, в которой будет поставлена аннотация отношения.
+
+Давайте попробуем сделать владельцем отношения сторону контакта.
+
+@Entity
+@Table(name = "contacts")
+public class Contact {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column
+    private String type;
+
+    @Column
+    private String data;
+
+    @ManyToOne
+    private User user;
+
+    // Конструктор по умолчанию, геттеры, сеттеры и т.д.
+}
+
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column
+    private String username;
+
+    // Конструктор по умолчанию, гетеры, сеттеры и т.д.
+}
+
+create table contacts (
+    id bigint not null auto_increment,
+    data varchar(255),
+    type varchar(255),
+    user_id bigint,
+    primary key (id)
+) engine=InnoDB;
+
+create table users (
+    id bigint not null auto_increment,
+    username varchar(128) not null,
+    primary key (id)
+) engine=InnoDB
+
+
+  Но выбор сущности Contact в качестве стороны владельца отношений в данном случае не очень удачен.
+Очевидно, что нам чаще нужна информация обо всех контактах пользователя чем о том, какому пользователю принадлежит контакт.
+
+@Entity
+@Table(name = "contacts")
+public class Contact {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column
+    private String type;
+
+    @Column
+    private String data;
+
+    // Конструктор по умолчанию, геттеры, сеттеры и т.д.
+}
+
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column
+    private String username;
+
+    @OneToMany
+    private List<Contact> contacts;
+
+    // Конструктор по умолчанию, гетеры, сеттеры и т.д.
+}
+
+create table contacts (
+    id bigint not null auto_increment,
+    data varchar(255),
+    type varchar(255),
+    primary key (id)
+) engine=InnoDB;
+
+create table users (
+    id bigint not null auto_increment,
+    username varchar(128) not null,
+    primary key (id)
+) engine=InnoDB;
+
+create table users_contacts (
+    User_id bigint not null,
+    contacts_id bigint not null
+) engine=InnoDB;
+
+  Если не хотим связующую таблицу добавим аннотацию JoinColumn к полю contacts:
+
+  @OneToMany
+  @JoinColumn(name = "user_id")
+  private List<Contact> contacts;
+
+=====================================================================================================================
+
+                                                    Двусторонние отношения
+
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column
+    private String username;
+
+    @ManyToMany
+    private List<Role> roles;
+
+    // Конструктор по умолчанию, гетеры, сеттеры и т.д.
+}
+
+@Entity
+@Table(name = "roles")
+public class Role {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column
+    private String name;
+
+    @ManyToMany
+    private List<User> users;
+
+    // Конструктор по умолчанию, гетеры, сеттеры и т.д.
+}
+
+  Запускаем код и смотрим на структуру таблиц. Помимо таблиц для пользователей и ролей Hibernate создаст две таблицы связи, хотя нам хватило бы и одной.
+
+create table roles_users (
+    Role_id bigint not null,
+    users_id bigint not null
+) engine=InnoDB;
+
+create table users_roles (
+    User_id bigint not null,
+    roles_id bigint not null
+) engine=InnoDB;
+
+  Дело в том, что вместо одного двустороннего отношения мы с вами сейчас создали два односторонних.
+Тоже самое произойдет и для отношения один ко многим.
+Чтобы Hibernate понял, что мы хотим создать именно двустороннее отношение нам нужно указать,
+какая из сторон является владельцем отношений, а какая является обратной стороной. Это делается при помощи атрибута mappedBy.
+Важно отметить, что указывается этот атрибут в аннотации, которая находится на противоположной стороне отношения.
+
+  Для отношения многие ко многим любая из сторон может быть владельцем.
+В случае с ролями и пользователями выберем сущность ПОЛЬЗОВАТЕЛЯ в качестве владельца.
+Для этого изменим описание поля users в классе Role следующим образом.
+
+    // значение атрибута mappedBy - имя поля связи в классе сущности-владельца отношений
+    @ManyToMany(mappedBy = "roles")
+    private List<User> users;
+
+Теперь Hibernate создаст только одну таблицу связи users_roles.

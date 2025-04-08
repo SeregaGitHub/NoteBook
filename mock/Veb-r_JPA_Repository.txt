@@ -1,0 +1,38 @@
+
+@DataJpaTest                                                  -- необходима, чтобы поднять только часть контекста
+class UserRepositoryTest {
+    @Autowired
+    private UserRepository userRepository;
+
+    @BeforeEach                                               -- ОБЯЗАТЕЛЬНО !!!
+    void createUser() {
+        userRepository.save(User.builder()
+                        .name("name")
+                        .email("user@email.ru")
+                        .build());
+
+        userRepository.save(User.builder()
+                .name("UserName")
+                .email("user@yandex.ru")
+                .build());
+    }
+
+    @AfterEach                                                -- ОБЯЗАТЕЛЬНО !!!
+    void deleteUsers() {
+        userRepository.deleteAll();
+    }
+
+    @Test
+    void findByName() {
+        Optional<User> actualUser = userRepository.findByName("name");
+
+        assertTrue(actualUser.isPresent());
+    }
+
+    @Test
+    void getUsersOfAParticularEmail() {
+        List<User> usersOfAParticularEmail = userRepository.getUsersOfAParticularEmail("user@");
+
+        assertEquals(2, usersOfAParticularEmail.size());
+    }
+}

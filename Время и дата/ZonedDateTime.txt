@@ -1,0 +1,122 @@
+
+Для хранения временной зоны в Java используется класс ZoneId из пакета java.time.
+
+У него есть статический метод getAvailableZoneIds(), который возвращает множество всех известных на текущий момент временных зон.
+Чтобы получить список всех зон, нужно написать такой код:
+
+for (String s: ZoneId.getAvailableZoneIds())           // Asia/Aden
+   System.out.println(s);                                 America/Cuiaba
+                                                          Etc/GMT+9
+                                                          Etc/GMT+8
+
+Чтобы получить объект ZoneId по его имени, нужно воспользоваться статическим методом of();
+ZoneId zone = ZoneId.of("Africa/Cairo");
+
+ZoneId zoneUtc = ZoneId.of("UTC-03:45");
+ZoneId zoneUtc = ZoneId.of("UTC-3");
+
+------------------------------------------------------------------------------------------------------------------------
+                                    ZonedDateTime
+
+  При создании объекта ZonedDateTime нужно вызвать у него статический метод now() и передать в него объект ZoneId
+
+ZoneId zone = ZoneId.of("Africa/Cairo");
+ZonedDateTime time = ZonedDateTime.now(zone);
+System.out.println(time);
+                ИЛИ
+ZonedDateTime time = ZonedDateTime.now();      // Тогда временная зона будет определена автоматически: на основе настроек компьютера
+System.out.println(time);
+
+
+Одной из интересных особенностей ZonedDateTime является возможность его преобразования в локальную дату и время:
+
+ZoneId zone = ZoneId.of("Africa/Cairo");
+ZonedDateTime cairoTime = ZonedDateTime.now(zone);
+
+LocalDate localDate = cairoTime.toLocalDate();
+LocalTime localTime = cairoTime.toLocalTime();
+LocalDateTime localDateTime = cairoTime.toLocalDateTime();
+
+Создать ZonedDateTime можно с помощью метода of(LocalDateTime localDateTime, ZoneId zone):
+  LocalDateTime dateTime = LocalDateTime.now();
+  ZoneId zone = ZoneId.of("Europe/Moscow");
+  ZonedDateTime zonedDateTime = ZonedDateTime.of(dateTime, zone);
+
+
+На конкретный момент времени указывает класс Instant. Значит, получив от внешней системы временную метку,
+можно перевести её в экземпляр ZonedDateTime с конкретной временной зоной —
+с помощью статического метода ofInstant(Instant instant, ZoneId zone);
+
+public static void main(String[] args) {
+        // сохраняем временную отметку запуска первого искусственного спутника
+        Instant moment = Instant.ofEpochSecond(-386310686L);
+        System.out.println("Timestamp: " + moment);
+
+        // сохраняем её как московское время:
+        ZoneId zone = ZoneId.of("Europe/Moscow");
+        ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(moment, zone);
+
+        System.out.println(zonedDateTime);
+    }
+------------------------------------------------------------------------------------------------------------------------
+
+                Для создания экземпляра с изменением временной зоны есть два метода.
+
+- withZoneSameInstant(ZoneId zone) — метод, аналогичный переводу часов: момент времени, на который указывает экземпляр,
+                                     остаётся неизменным, меняется LocalDateTime и ZoneId
+
+ Instant now = Instant.now();
+ // сохраняем московское время:
+ ZoneId moscowZone = ZoneId.of("Europe/Moscow");
+ ZonedDateTime moscowDateTime = ZonedDateTime.ofInstant(now, moscowZone);
+
+ // узнаём время в Нью-Йорке:
+ ZoneId newYorkZone = ZoneId.of("America/New_York");
+ ZonedDateTime newYorkDateTime = moscowDateTime.withZoneSameInstant(newYorkZone);
+
+- withZoneSameLocal(ZoneId zone) — метод, аналогичный выбору другого часового пояса при настройке телефона:
+                                   часы будут показывать то же самое время, но зона будет другой.
+
+  Instant now = Instant.now();
+
+  // сохраняем московское время:
+  ZoneId moscowZone = ZoneId.of("Europe/Moscow");
+  ZonedDateTime moscowDateTime = ZonedDateTime.ofInstant(now, moscowZone);
+
+  // меняем регион на Нью-Йорк
+  ZoneId newYorkZone = ZoneId.of("America/New_York");
+  ZonedDateTime newYorkDateTime = moscowDateTime.withZoneSameLocal(newYorkZone);
+------------------------------------------------------------------------------------------------------------------------
+
+  Форматирование для ZonedDateTime идентично LocalDateTime, с той лишь разницей, что можно отобразить:
+
+    VV     —  название временной зоны,
+    ZZZZZ  —  смещение в формате +03:00
+
+------------------------------------------------------------------------------------------------------------------------
+
+- int getYear()             -  Возвращает год из конкретной даты
+- Month getMonth()          -  Возвращает месяц даты: одну из специальных констант JANUARY, FEBRUARY, ...;
+- int getMonthValue()       -  Возвращает номер месяца из даты. Январь == 1
+- int getDayOfMonth()       -  Возвращает номер дня в месяце
+- DayOfWeek getDayOfWeek()  -  Возвращает день недели: одну из специальных констант MONDAY, TUESDAY, ...;
+- int getDayOfYear()        -  Возвращает номер дня в году
+- int getHour()             -  Возвращает часы
+- int getMinute()           -  Возвращает минуты
+- int getSecond()           -  Возвращает секунды
+- int getNano()             -  Возвращает наносекунды
+
+- plusYears(int)            -  Добавляет годы к дате
+- plusMonths(int)           -  Добавляет месяцы к дате
+- plusDays(int)             -  Добавляет дни к дате
+- plusHours(int)            -  Добавляет часы
+- plusMinutes(int)          -  Добавляет минуты
+- plusSeconds(int)          -  Добавляет секунды
+- plusNanos(int)            -  Добавляет наносекунды
+- minusYears(int)           -  Отнимает годы от даты
+- minusMonths(int)          -  Отнимает месяцы от даты
+- minusDays(int)            -  Отнимает дни от даты
+- minusHours(int)           -  Вычитает часы
+- minusMinutes(int)         -  Вычитает минуты
+- minusSeconds(int)         -  Вычитает секунды
+- minusNanos(int)           -  Вычитает наносекунды

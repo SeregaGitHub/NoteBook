@@ -1,0 +1,92 @@
+                                    Versions Maven Plugin
+
+<plugin>
+    <groupId>org.codehaus.mojo</groupId>
+    <artifactId>versions-maven-plugin</artifactId>
+    <version>2.18.0</version>
+</plugin>
+
+
+- mvn versions:display-dependency-updates  - показывает список зависимостей, для которых доступны более новые версии
+- mvn versions:update-properties           - обновляет версии зависимостей в pom.xml до последних стабильных версий
+
+====================================================================================================================================================
+
+                                    Maven Dependency Plugin
+
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>3.8.1</version>
+        </plugin>
+    </plugins>
+</build>
+
+                            Что добавляет Maven Dependency Plugin?
+
+    Команды для управления зависимостями:
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+
+- dependency:copy                      — копирует конкретные зависимости и их транзитивные зависимости в указанную директорию. Например, после выполнения команды
+
+mvn dependency:copy -Dartifact=org.apache.commons:commons-lang3:3.12.0 -DoutputDirectory=./libs 
+
+в папке libs появится файл commons-lang3-3.12.0.jar.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+
+- dependency:purge-local-repository    — очищает локальный Maven-репозиторий от определённых зависимостей. Например, после выполнения команды
+
+mvn dependency:purge-local-repository -Dinclude=org.apache.commons:commons-lang3 
+
+зависимость commons-lang3 удалится из локального репозитория. Maven загрузит её снова при следующей сборке.
+----------------------------------------------------------------------------------------------------------------------------------------------------
+
+- dependency:resolve                   — загружает и проверяет конкретную зависимость вместе с её транзитивными зависимостями. Например, после выполнения команды
+
+mvn dependency:resolve -Dartifact=org.apache.commons:commons-lang3:3.12.0 
+
+Maven загрузит зависимость commons-lang3 версии 3.12.0 и её транзитивные зависимости. В выводе будет указано, какие артефакты были успешно загружены.
+
+[INFO] commons-lang3:commons-lang3:jar:3.12.0 (compile)
+[INFO] org.apache.commons:commons-parent:pom:52 (compile) 
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+
+    Более детальный анализ зависимостей.
+
+Расширенная проверка конфликтов версий с указанием возможных дублирующих зависимостей.
+Возможность фильтрации зависимостей по областям видимости (scope) или типам артефактов.
+Интеграцию с процессом сборки.
+
+====================================================================================================================================================
+
+                                                    Maven Enforcer Plugin
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>3.5.0</version>
+            <executions>
+                <execution>
+                    <id>enforce-dependency-versions</id>
+                    <goals>
+                        <goal>enforce</goal>
+                    </goals>
+                    <configuration>
+                        <rules>
+                            <dependencyConvergence />
+                        </rules>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+

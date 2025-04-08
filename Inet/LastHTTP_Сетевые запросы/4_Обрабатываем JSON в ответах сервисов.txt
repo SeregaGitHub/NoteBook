@@ -1,0 +1,108 @@
+
+                      Обрабатываем JSON в ответах сервисов
+
+  В этом уроке мы покажем, как работать с API, возвращающим данные в формате JSON.
+Для этого потребуется библиотека GSON. Сперва следует импортировать необходимые классы.
+Они хранятся в пакете com.google.gson.
+
+import com.google.gson.JsonArray; // описывает JSON-массив
+import com.google.gson.JsonElement; // описывает любой тип данных JSON
+import com.google.gson.JsonObject; // описывает JSON-объект
+import com.google.gson.JsonParser; // разбирает JSON-документ на элементы
+
+  Чтобы получить доступ к элементам JSON-документа,
+понадобится метод parseString(String json) класса JsonParser.
+В качестве параметра в метод передаётся текст в формате JSON.
+В данном случае это будет тело ответа сервера.
+JsonParser разбирает текст на составные элементы и возвращает объект класса JsonElement.
+
+// разбираем строку в формате JSON на элементы
+JsonElement jsonElement = JsonParser.parseString(response.body());
+
+  JsonElement может представлять любой из типов данных JSON.
+Мы рассказывали, что примитивные типы не используются в этом формате сами по себе.
+Они входят в состав объекта или массива. API возвращает одну из этих структур,
+содержащую искомые значения. Чтобы убедиться, что полученный JsonElement является объектом,
+нужен метод isObject(). Чтобы преобразовать JsonElement в объект или массив,
+понадобятся методы getAsJsonObject() и getAsJsonArray().
+
+if(jsonElement.isJsonObject()) { // проверяем, является ли элемент JSON-объектом
+    // преобразуем в JSON-объект
+    JsonObject jsonObject = jsonElement.getAsJsonObject();
+} else {
+    // преобразуем в JSON-массив
+    JsonArray jsonArray = jsonElement.getAsJsonArray();
+}
+
+  Для работы с полями JSON-объекта используется метод get(String).
+Он принимает название поля и возвращает его значение в виде JsonElement.
+У JsonElement есть набор методов, позволяющих приводить его к одному из типов Java.
+Вот некоторые из них:
+
+- getAsString()   -  преобразует JSON-элемент в строку;
+- getAsLong()     -  преобразует JSON-элемент в число;
+- getAsBoolean()  -  преобразует JSON-элемент в логическое значение.
+
+  Теперь можно поработать с конкретным API.
+Сервис https://ipwhois.io/ позволяет узнать географическое положение по IP-адресу.
+Из документации следует, что для этого нужно отправить GET-запрос по адресу http://ipwhois.app/json/{IP}.
+Вместо {IP} необходимо подставить интересующий IP-адрес.
+  Характеристики ответа настраиваются при помощи параметров строки запроса.
+Например, параметр lang поможет настроить локализацию некоторых полей.
+В документации сервиса также указаны поля и значения, которые возвращает API.
+
+Попробуем отправить запрос по адресу https://ipwhois.app/json/46.226.227.20?lang=ru и вывести значения полей:
+
+    country — название страны;
+    city — город;
+    latitude — широта.
+
+    class Practicum {
+
+        public static void main(String[] args) {
+            HttpClient client = HttpClient.newHttpClient();
+
+            URI url = URI.create("https://ipwhois.app/json/46.226.227.20?lang=ru");
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(url)
+                    .GET()
+                    .build();
+
+            try {
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                // проверяем, успешно ли обработан запрос
+                if (response.statusCode() == 200) {
+                    // передаем парсеру тело ответа в виде строки, содержащей данные в формате JSON
+                    JsonElement jsonElement = JsonParser.parseString(response.body());
+                    if(!jsonElement.isJsonObject()) { // проверяем, точно ли мы получили JSON-объект
+                        System.out.println("Ответ от сервера не соответствует ожидаемому.");
+                        return;
+                    }
+                    // преобразуем результат разбора текста в JSON-объект
+                    JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+                    // получаем название страны
+                    String country = jsonObject.get("country").getAsString();
+                    // получаем название города
+                    String city = jsonObject.get("city").getAsString();
+                    // получаем значение широты
+                    double latitude = jsonObject.get("latitude").getAsDouble();
+
+                    System.out.println("Страна: " + country);
+                    System.out.println("Город: " + city);
+                    System.out.println("Широта: " + latitude);
+                } else {
+                    System.out.println("Что-то пошло не так. Сервер вернул код состояния: " + response.statusCode());
+                }
+            } catch (IOException | InterruptedException e) { // обрабатываем ошибки отправки запроса
+                System.out.println("Во время выполнения запроса возникла ошибка.\n" +
+                        "Проверьте, пожалуйста, адрес и повторите попытку.");
+            }
+        }
+    }
+                 // Страна: Россия
+                 // Город: Краснодар
+                 // Широта: 45.0392674
+
+  Программа выводит значения нужных полей. С такими данными проще работать.
+  

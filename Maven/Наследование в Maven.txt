@@ -1,0 +1,151 @@
+                                        Наследование в Maven
+
+  Запускать новый проект с Maven легко — сразу готовы структура и пустой POM-файл, всё компилируется одной командой и собирается в jar-архив.
+Команда Maven позаботилась об удобных настройках и проработала многие нюансы. Однако такая лёгкость создания пустого проекта объясняется тем,
+что он вовсе не пустой. Проект сразу обеспечен компилятором, анализатором и упаковщиком.
+Всё это он унаследовал либо от parent-проекта (англ. «родитель»), либо от проекта, по умолчанию добавленного в Maven — super-POM.
+Отличие в том, что информацию о parent-проекте можно найти в файле pom.xml. А super-POM расширяет модули неявно — он не указывается в pom.xml.
+
+  Его структуру можно посмотреть, например, тут.
+https://maven.apache.org/ref/3.8.4/maven-model-builder/super-pom.html
+
+Наследовать от развитого parent-проекта, где решена большая часть задач по сборке и управлению зависимостями, это один из способов переиспользования кода.
+Для этого нужно добавить блок <parent> в pom.xml и указать координаты проекта-родителя.
+
+<project>
+    <parent>
+      <groupId>ru.yandex.practicum</groupId>
+      <artifactId>hello-bom</artifactId>
+      <version>1.0</version>
+    </parent>
+</project>
+
+  Создать parent-проект тоже несложно. Достаточно сменить формат его упаковки в секции <packaging>.
+Вместо формата по умолчанию, jar, указать формат pom. Этот формат не предполагает никаких дополнительных установочных файлов кроме pom.xml.
+То есть проект-предок становится абстракцией, которая будет реализована в рамках проекта-наследника.
+
+<project>
+    <groupId>ru.yandex.practicum</groupId>
+    <artifactId>hello-bom</artifactId>
+    <version>1.0</version>
+    <packaging>pom</packaging>
+</project>
+
+  Внутри проекта-наследника можно свободно менять свойства и версии зависимостей или цепочки сборки.
+Эти изменения всегда будут иметь приоритет над тем, что указано в parent-проекте.
+Наследование проектов в Maven даёт ряд преимуществ. Одно из них — переиспользование зависимостей.
+Унаследовав проект, вы наследуете все его зависимости, но при этом можете не указывать их версию.
+Достаточно указать в блоке <dependency> имя организации <groupId> и артефакта <artifactId>.
+Кроме зависимостей ваш проект-наследник получает сборочный блок <build> и блок основных свойств проекта <properties>.
+И на этом месте мы можем снова вернуться к файлу BOM.
+
+                                                        Файл BOM
+
+  BOM — это специальный файл-предок POM. В блоке <packaging> файла BOM указывается тип сборки pom как у любого parent-проекта.
+Однако его отличает наличие секции <dependencyManagement>, где находится список всех зависимостей.
+Идентификаторы и версия каждой зависимости отражены внутри отдельных блоков <dependency>. К примеру, BOM может выглядеть так.
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>ru.yandex.practicum</groupId>
+    <artifactId>hello-bom</artifactId>
+    <version>1.0</version>
+    <!-- Тип сборки: pom -->
+    <packaging>pom</packaging>
+    <name>Example: Bill Of Material</name>
+    <!-- Подключённые зависимости -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>2.8.8</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>1.15</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>
+
+  Так как BOM контролирует все зависимости, то в остальных POM-файлах при подключении артефактов можно обойтись без указания версий.
+Подключать зависимости в этом случае проще. Это будет выглядеть так.
+
+<dependencies>
+    <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+    </dependency>
+</dependencies>
+
+  В этом и заключается магия BOM — вся ответственность за выбор версий лежит на разработчиках проекта-предка.
+Такое разделение позволяет сохранять совместимость библиотек и тем самым избегать ада зависимостей.
+
+
+                                                Настройка зависимостей в BOM
+
+  На тот случай, если нужна конкретная версия зависимости, но не та, что указана в BOM, разработчики придумали лайфхак.
+Проект-наследник всегда получает от parent-проекта блок основных свойств <properties>.
+Внутри этого блока можно указать версию зависимости, которая вам требуется. Например:
+
+<!-- объявляем проект-предок, мы знаем, внутри есть 'sql.version' -->
+<parent>
+    <groupId>org.query.sql</groupId>
+    <artifactId>sql-query-parent</artifactId>
+    <version>1.5.22.RELEASE</version>
+</parent>
+
+<!-- здесь переопределяем версию sql, и она становится приоритетной -->
+<properties>
+  <sql.version>2021.0.1</sql.version>
+</properties>
+
+<dependencies>
+    <dependency>
+        <groupId>org.query.sql</groupId>
+        <artifactId>sql</artifactId>
+        <!-- в наследнике ничего не указываем - используется версия sql из <properties> -->
+    </dependency>
+</dependencies>
+
+  Здесь мы унаследовали проект, обеспечивающий удобную работу с SQL, и уточнили (на свой страх и риск),
+что хотим работать с самой свежей версией SQL-библиотеки.
+Если в секции<properties> были переопределены версии зависимостей, именно они будут в дальнейшем использоваться в проектах-наследниках.
+
+                                                  BOM как зависимость
+
+  Использование наследования имеет ограничение — может быть только один родительский проект и нельзя подключить второй файл BOM.
+Обойти это ограничение можно, подключив BOM как зависимость.
+При подключении BOM в секции dependencyManagement нужно указать тип pom — <type>pom</type> и область использования import — <scope>import</scope>.
+
+<dependencyManagement>
+      <dependencies>
+          <dependency>
+              <groupId>ru.yandex.practicum</groupId>
+              <artifactId>hello-bom</artifactId>
+              <version>1.0</version>
+              <type>pom</type>
+              <scope>import</scope>
+          </dependency>
+          <dependency>
+              <groupId>ru.yandex.practicum</groupId>
+              <artifactId>hello-bom-different</artifactId>
+              <version>1.0</version>
+              <type>pom</type>
+              <scope>import</scope>
+          </dependency>
+      </dependencies>
+</dependencyManagement>
+
+Такой способ подключения BOM не меняет поведение Maven при поиске зависимостей или parent-проектов, он лишь позволяет обойти ограничение блока <parent>.

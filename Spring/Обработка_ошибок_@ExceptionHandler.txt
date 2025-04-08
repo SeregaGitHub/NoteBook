@@ -1,0 +1,151 @@
+                                Обработка ошибок с помощью @ExceptionHandler
+
+  Чтобы ответ на запрос, в процессе выполнения которого возникает ошибка, менялся в зависимости от пробрасываемого исключения,
+в Spring Boot используется аннотация @ExceptionHandler (англ. «обработчик исключений»).
+  Метод, помеченный аннотацией @ExceptionHandler, добавляется в контроллер. В аргументах к методу указывается отлавливаемое исключение.
+Когда исключение пробрасывается, метод перехватывает его и возвращает описанный разработчиком ответ.
+Принцип похож на try-catch, но только на уровне REST-API.
+
+  В качестве возвращаемого значения можно указать Map<...> — так как над контроллером стоит аннотация @RestController (@RestControllerAdvice !!!),
+ответ по умолчанию будет сконвертирован в JSON. Например, метод, помеченный аннотацией @ExceptionHandler
+для обработки исключения IllegalArgumentException и возвращающий в случае ошибки тело
+"error": "Передан отрицательный параметр count.",
+будет выглядеть так:
+
+@ExceptionHandler
+// отлавливаем исключение IllegalArgumentException
+public Map<String, String> handleNegativeCount(final IllegalArgumentException e) {
+    // возвращаем сообщение об ошибке
+    return Map.of("error", "Передан отрицательный параметр count.");
+}
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+                                    Как ещё можно обрабатывать ошибки
+
+  Так как исключение передаётся в метод с аннотацией @ExceptionHandler в качестве аргумента, его можно использовать при обработке.
+Например, добавить в сообщение об ошибке значение поля message  из пойманного исключения:
+
+@ExceptionHandler
+public Map<String, String> handleNegativeCount(final IllegalArgumentException e) {
+    return Map.of(
+            "error", "Передан отрицательный параметр count.",
+            "errorMessage", e.getMessage()
+    );
+}
+
+Для примера с отрицательным count ответ будет следующим:
+
+{
+  "error": "Передан отрицательный параметр count.",
+  "errorMessage": "count is negative: -1"
+}
+
+
+  Можно обрабатывать сразу несколько исключений, если они наследуются от одного родителя.
+Для этого нужно перечислить их в параметрах аннотации — в фигурных скобках через запятую, а в аргументах метода — указать родительское исключение:
+
+// перечисление обрабатываемых исключений
+@ExceptionHandler({IllegalArgumentException.class, NullPointerException.class})
+// в аргументах указывается родительское исключение
+public Map<String, String> handleIncorrectCount(final RuntimeException e) {
+    return Map.of(
+            "error", "Ошибка с параметром count.",
+            "errorMessage", e.getMessage()
+    );
+}
+
+  Исключения в параметрах аннотации — своего рода фильтр для исключения, переданного в аргументах метода.
+
+=====================================================================================================================================
+
+@ExceptionHandler
+public Map<String, String> handleIncorrectCount(IncorrectCountException e) {
+    return Map.of(
+            "error", "Ошибка с параметром count.",
+            "errorMessage", e.getMessage()
+    );
+}
+
+
+@GetMapping("/pet")
+public Map<String, String> pet(@RequestParam(required = false) final Integer count) {
+    if (count == null) {
+        throw new IncorrectCountException("Параметр count равен null.");
+    }
+    if (count <= 0) {
+        throw new IncorrectCountException("Параметр count имеет отрицательное значение.");
+    }
+
+    happiness += count;
+    return Map.of("talk", "Муррр. ".repeat(count));
+}
+
+=====================================================================================================================================
+                                                          Возвращаемый тип
+
+  Если на контроллере стоит аннотация @ResponseBody, то возвращаемый тип может быть любым: по умолчанию Spring Boot сконвертирует его в JSON.
+Частая практика — создание специального объекта для универсального формата ошибки. Например, ErrorResponse:
+
+package ru.yandex.practicum.controllers;
+
+public class ErrorResponse {
+    // название ошибки
+    String error;
+    // подробное описание
+    String description;
+
+    public ErrorResponse(String error, String description) {
+        this.error = error;
+        this.description = description;
+    }
+
+    // геттеры необходимы, чтобы Spring Boot мог получить значения полей
+    public String getError() {
+        return error;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+}
+
+Тогда обработчик ошибок будет выглядеть, например, так:
+
+@ExceptionHandler
+public ErrorResponse handle(final RuntimeException e) {
+    return new ErrorResponse(
+            "Ошибка данных", "Подробное описание, где именно произошла ошибка"
+    );
+}
+
+  Этот метод удобен для построения API: клиент, который вызывает серверное приложение, знает, какой формат ответа может быть в случае ошибки.
+Это позволит корректнее построить алгоритм взаимодействия. Например, фронт сможет вывести сообщение об ошибке пользователю в корректном формате.
+
+=====================================================================================================================================
+
+Код с @ControllerAdvice:
+
+@ControllerAdvice
+public class ErrorHandler {
+
+    @ExceptionHandler
+    public ResponseEntity<Map<String, Integer>> handleHappinessOverflow(final HappinessOverflowException e) {
+        return new ResponseEntity<>(
+                Map.of("happinessLevel", e.getHappinessLevel()),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+}
+
+Код с @RestControllerAdvice:
+
+@RestControllerAdvice
+public class ErrorHandler {
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, Integer> handleHappinessOverflow(final HappinessOverflowException e) {
+        return Map.of("happinessLevel", e.getHappinessLevel());
+    }
+}

@@ -1,0 +1,274 @@
+Сериализуем и десериализуем объекты
+
+  В реальных проектах эндпоинты обычно возвращают не строку или число, а достаточно большие объёмы информации и сложные структуры данных.
+В этом уроке разберём, как преобразовывать Java-объекты в формат JSON для передачи клиентам.
+Описание объектов API
+Представьте, что вы работаете над бэкендом для социальной сети. Неотъемлемая часть такого проекта — лента постов.
+Каждый пост включает фотографию и дополнительные атрибуты — подпись, имя автора, количество лайков.
+Чтобы отобразить ленту, HTTP-клиент — например, браузер или мобильное приложение — запрашивает новые посты у сервера через API.
+Класс UserPost описывает структуру данных, которую сервер вернёт в ответ на запрос клиента.
+
+---------------------------------------------------------------------------------------------------------------------------------
+import java.time.LocalDate;
+
+public class UserPost {
+    // URL-адрес, по которому можно скачать фото
+    private String photoUrl;
+
+    // Дата публикации
+    private LocalDate publicationDate;
+
+    // Уникальный идентификатор автора поста
+    private int userId;
+
+    // Текстовой комментарий к фото
+    private String description;
+
+    // Сколько людей поставило лайк этому посту
+    private int likesQuantity;
+
+
+    // Геттеры и сеттеры для обращения к данным:
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
+    // геттеры и сеттеры для других полей ...
+}
+---------------------------------------------------------------------------------------------------------------------------------
+
+  Когда приложение-клиент получит эту структуру данных, оно выведет на экран всё необходимое:
+фотографию поста, его описание, количество лайков и прочее.
+Объекты таких классов, как UserPost, ещё называют POJO (от англ. Plain Old Java Object — «простой классический Java-объект»).
+Слово «простой» здесь означает, что эти классы не наследуют поведение от классов сторонних библиотек.
+В проектах часто есть класс, описывающий данные, хранящиеся в базе данных, и несколько POJO, по-разному компонующих эти данные для ответов на запросы к API.
+Сериализация и десериализация
+У каждого Java-объекта можно вызвать метод toString(), который превратит его в строку.
+В теории этого достаточно, чтобы передать объект по сети с помощью протокола HTTP.
+Однако toString() можно переопределить самыми разными способами,
+поэтому перед отправкой данных Java-объекта их нужно привести к одному из общепринятых форматов, которые поддерживаются всеми устройствами,
+операционными системами и языками программирования.
+Процесс трансформации Java-объекта в какой-то другой формат называется сериализация (англ. serialization).
+Обратный процесс — десериализация (англ. deserialization). Эти термины произошли от слова «серия».
+Точно так же как телесериалы разбиваются на серии, данные, передаваемые по сети,
+тоже разбиваются на серию или последовательность бит — нолей и единиц.
+
+  Термины «сериализация» и «десериализация» используют не только Java-программисты. Их применяют разработчики и на других языках.
+Есть несколько популярных форматов, в которые можно сериализовать данные, например, JSON, XML, Protobuf, YAML и другие.
+JSON является наиболее распространённым из них — его структура схожа со структурами большинства языков программирования,
+а также его удобно читать человеку. Мы будем работать именно с этим форматом.
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+                                          «сериализация»
+import com.google.gson.Gson;
+
+class Practicum {
+    public static void main(String[] args) {
+        // создайте экземпляр класса Owner (владелец)
+        Owner owner = new Owner("Sergei", "Kraev");
+
+        // создайте экземпляр класса Dog (собака)
+        Dog dog = new Dog("Jack", owner, 4);
+
+        Gson gson = new Gson();
+        // сериализуйте объект класса Dog в JSON
+        String jsonString = gson.toJson(dog);
+
+        System.out.println(jsonString);
+    }
+}
+
+
+
+class Dog {
+    private String name;
+
+    public Dog(String name, Owner owner, int age) {
+        this.name = name;
+        this.owner = owner;
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Owner getOwner() {
+        return owner;
+    }
+
+    public void setOwner(Owner owner) {
+        this.owner = owner;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    private Owner owner;
+    private int age;
+}
+
+class Owner {
+    public Owner(String name, String surname) {
+        this.name = name;
+        this.surname = surname;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getSurname() {
+        return surname;
+    }
+
+    public void setSurname(String surname) {
+        this.surname = surname;
+    }
+
+    private String name;
+    private String surname;
+}
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+                                                    «десериализация»
+
+import com.google.gson.Gson;
+
+class Practicum {
+public static void main(String[] args) {
+String jsonString = "{\"name\":\"Тузик\",\"owner\":{\"name\":\"Игорь\",\"surname\":\"Петров\"},\"age\":3}";
+Gson gson = new Gson();
+Dog dog = gson.fromJson(jsonString, Dog.class);
+
+System.out.println("Собака:");
+System.out.println("Кличка: " + dog.getName());
+System.out.println("Возраст: " + dog.getAge());
+System.out.println("Владелец:");
+Owner owner = dog.getOwner();
+System.out.println("Имя: " + owner.getName());
+System.out.println("Фамилия: " + owner.getSurname());
+  }
+}
+
+
+class Dog {
+    private String name;
+    public Dog(String name, Owner owner, int age) {
+    this.name = name;
+    this.owner = owner;
+    this.age = age;
+}
+
+                                                        public String getName() {
+                                                            return name;
+                                                        }
+
+                                                        public void setName(String name) {
+                                                            this.name = name;
+                                                        }
+
+                                                        public Owner getOwner() {
+                                                            return owner;
+                                                        }
+
+                                                        public void setOwner(Owner owner) {
+                                                            this.owner = owner;
+                                                        }
+
+                                                        public int getAge() {
+                                                            return age;
+                                                        }
+
+                                                        public void setAge(int age) {
+                                                            this.age = age;
+                                                        }
+
+                                                        private Owner owner;
+                                                        private int age;
+                                                    }
+
+class Owner {
+      public Owner(String name, String surname) {
+      this.name = name;
+      this.surname = surname;
+  }
+
+                                                        public String getName() {
+                                                            return name;
+                                                        }
+
+                                                        public void setName(String name) {
+                                                            this.name = name;
+                                                        }
+
+                                                        public String getSurname() {
+                                                            return surname;
+                                                        }
+
+                                                        public void setSurname(String surname) {
+                                                            this.surname = surname;
+                                                        }
+
+                                                        private String name;
+                                                        private String surname;
+                                                    }
+---------------------------------------------------------------------------------------------------------------------------------
+                                       Из массива Json в List
+
+public class KVTaskClient {
+
+public String load(String key) {
+    URI uri = URI.create(url + "/load/" + key + "?API_TOKEN=" + apiToken);
+    HttpRequest request = HttpRequest.newBuilder()
+            .GET()
+            .uri(uri)
+            .version(HttpClient.Version.HTTP_1_1)
+            .header("Accept", "application/json")
+            .build();
+
+    HttpClient client = HttpClient.newHttpClient();
+    HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
+    HttpResponse<String> response;
+    try {
+        response = client.send(request, handler);
+        return response.body();
+    } catch (IOException | InterruptedException e) {
+        throw new RuntimeException(e);
+    }
+  }
+}
+
+  client  = new KVTaskClient(url);
+  Task    - имя класса
+  "tasks" - эндпоинт
+
+  Type taskType = new TypeToken<List<Task>>(){}.getType();
+  List<Task> taskList = gson.fromJson(client.load("tasks"), taskType);

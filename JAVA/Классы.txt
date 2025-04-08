@@ -1,0 +1,308 @@
+
+Значения переменных по умолчанию:
+- Числа --------------- 0;
+- Логические ------ false;
+- Ссылка на объект - null;
+
+- Вложенный класс, объявленный с модификатором static,
+теряет возможность обращаться к нестатическим членам внешнего класса.
+
+public class Family {
+  String name;
+  int age;
+  String professional;
+  final String sex; - (final - менять значение можно ТОЛЬКО один раз !!!)
+
+  (переменные static могут быть применимы не только к объекту)
+   (переменные static НЕЛЬЗЯ переопределять у наследников !!!)
+  static int countOfPeople = 0;
+
+  public Family(String name, int age, String professional) {     // Конструктор !!!
+      this.name = name;
+      this.age = age;
+      this.professional = professional;
+  }
+  public Family(String n, int a) {       // Конструктор можно создать не один!!!
+      this.name = n;                     // (Например, у ребёнка нет профессии.)
+      this.age = a;
+  }
+-------------------------------------------------------------------------------------------
+public class Family {
+    protected String name;
+    protected int age;
+    protected String professional;
+
+    public Family(String name, int age, String professional) {
+        this.name = name;
+        this.age = age;
+        this.professional = professional;
+    }
+
+    public Family() {
+        System.out.println("Появился член семьи.");
+    }
+
+    public Family(String name, int age) {
+        this();                    <=        // Вызван конструктор без параметров
+        this.name = name;
+        this.age = age;
+    }
+}
+
+class Man {
+    private String manName;
+    private int manAge;
+    private String manProfessional;
+    private double weight;
+    private double strong;                 // В конструктор можно передать объект
+
+    public Man(Family family, double weight, double strong) {        <=
+        this.manName = family.name;
+        this.manAge = family.age;
+        this.manProfessional = family.professional;
+        this.weight = weight;
+        this.strong = strong;
+    }
+}
+
+class Woman extends Family{
+    private int titsSize;          // В конструктор подкласса можно передавать объект класса-родителя
+
+    public Woman(String name, int age, String professional, int titsSize) {
+        super(name, age, professional);          <=
+        this.titsSize = titsSize;
+    }
+}
+-------------------------------------------------------------------------------------------
+  DogsExemple middleDvor = new DogsExemple(|); курсор между () и + Ctrl + p или + q
+                                                    и увидишь, что
+                                                     писать по конструктору
+
+  public Family() {                       // Дефолтный конструктор !!!
+                           // (Без него не создать объект не по шаблону конструктора !!!)
+  }                              // Если шаблон обязателен - то создавать не надо !!!
+  public void Umenie1() {
+      System.out.println("Он умеет стрелять !!!");
+  }
+  public void Umenie2() {                               // Метод !!!
+      System.out.println("Она умеет учить !!!");
+  }
+  public final void Umenie2() {          // Метод (final) не может быть переопределен !!!
+      System.out.println("Умеет говоить !!!");
+  }
+
+  private Family () {} - приватный конструктор,
+                         запрещает создание объектов класса
+
+  public static void main(String[] args) {
+      // Новый объект, Без конструктора !!!
+      Family father = new Family();
+      father.name = "Ivan";
+      father.age = 29;
+      father.professional = "Sniper";
+      countOfPeople++;
+      System.out.println("Имя члена семьи " + father.name + ". Его профессия " + father.professional +
+              ". Ему " + father.age + " лет.");
+      // Новый объект, С конструктором !!!
+      Family mother = new Family("Nastya", 24, "Teacher");
+      countOfPeople++;
+  }
+}
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+                         ИНИЦИАЛИЗАТОР
+    Инициализатор выполняется до любого конструктора.
+То есть в инициализатор мы можем поместить код, общий для всех конструкторов
+
+String name;    // имя
+  int age;        // возраст
+
+  (начало блока инициализатора)
+  {
+      name = "Undefined";
+      age = 18;
+  }
+  (конец блока инициализатора)
+
+                        Может быть статическим.
+               Используется для инициализации статических переменных
+       static {
+
+         }
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+public abstract class Car {
+
+   private String model;
+   private String color;
+   private int maxSpeed;
+
+   // Может иметь конструкторы !!! - Тогда при создании объекта в наследниках
+                                     необходимо будет указывать эти переменные !!!
+
+   public Car(String model, String color, int maxSpeed) {
+   this.model = model;
+   this.color = color;
+   this.maxSpeed = maxSpeed;
+   }
+
+   public void gas() {                // обычный метод
+       System.out.println("Газуем!");
+   }
+
+   public abstract void brake();      // абстрактный метод
+
+   public String getModel() {
+       return model;
+   }
+
+   public void setModel(String model) {
+       this.model = model;
+   }
+
+   public String getColor() {
+       return color;
+   }
+
+   public void setColor(String color) {
+       this.color = color;
+   }
+
+   public int getMaxSpeed() {
+       return maxSpeed;
+   }
+
+   public void setMaxSpeed(int maxSpeed) {
+       this.maxSpeed = maxSpeed;
+   }
+}
+
+public class Sedan extends Car {
+
+   @Override
+   public void brake() {
+       System.out.println("Седан тормозит!");
+   }
+
+}
+
+public class Main {
+
+   public static void main(String[] args) {
+
+       Sedan sedan = new Sedan();
+       sedan.gas();
+   }
+}
+      Если метод помечен словом abstract, каждый класс-наследник
+    должен его реализовать или быть объявленным как абстрактный.
+    Иначе компилятор выбросит ошибку !!!
+
+* В абстрактном классе в Java можно объявить и определить конструкторы
+* Абстрактные классы могут реализовывать интерфейсы
+* Абстрактные классы не обязаны реализовывать все методы интерфейсов
+* Абстрактные классы могут объявлять и определять статические методы.
+* В абстрактном классе (в принцыпе) может не быть ни одного абстрактного метода
+     "Спорный вопрос !!!"
+  (в абстрактном классе желательны абстрактные методы,
+  поскольку это первое, о чем думает программист, видя абстрактный класс)
+* Мы можем наследовать только один класс,
+  а реализовать интерфейсов — сколько угодно.
+* Абстрактный класс в Java может содержать метод main.
+* Абстрактный метод – это метод без тела.
+  Для реализации этого метода необходимо расширить абстрактный класс
+  и этот метод переопределить.
+* Интерфейс описывает только поведение. У него нет состояния.
+  А у абстрактного класса состояние есть.
+
+** Используйте абстрактные классы, если:
+   - Вы хотите поделиться кодом между несколькими тесно связанными классами.
+   - Вы ожидаете, что классы, которые расширяют ваш абстрактный класс,
+     имеют много общих методов или полей, или требуют других
+     модификаторов доступа, кроме public (например, protected и private).
+   - Вы хотите объявить нестатические или не-final поля.
+     Это позволяет вам определять методы, которые могут
+     получить доступ и изменить состояние объекта, которому они принадлежат.
+
+** Используйте интерфейсы, если:
+   - Вы ожидаете, что несвязанные классы будут реализовывать ваш интерфейс.
+     Например, интерфейсы Comparable и Cloneable реализуются многими
+     несвязанными классами.
+   - Вы хотите определить поведение конкретного типа данных,
+     но вам не важно, кто его реализует.
+   - Вы хотите использовать множественное наследование типа.
+
+----------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
+
+Анонимные внутренние классы всегда используются,
+как расширения обычных классов или интерфейсов !!!
+
+public static void main(String[] args) {
+DogsExemple.Predator tReks = new DogsExemple.Predator() {
+@Override
+public void startHunting() {
+ TReks.out.println("Выход на охоту !!!");
+}
+public void infDinner () {
+ TReks.out.println(eatMeat); // ???
+}
+void zasada () {
+ System.out.println("Тирранозавр затаился..."); // ???
+}
+};
+tReks.startHunting();
+// ???
+}
+}
+
+public class Car {
+
+private int id;
+
+private class Motor {  // Вложенные классы обычно - private
+private void startMotor() {
+System.out.println("Motor" + id + "is starting...");
+}
+}
+public static class Batary { // Статические обычно - public
+public void Charge() {
+System.out.println("Batary is charging...");
+}  // Объекты создаются в psvm
+}    // Car.Batary batary= new Car.Batary();
+// Используются для логики программы, понятно что батарея в машине
+// Не имеет доступа к полям Car
+
+public Car(int id) {
+this.id = id;
+}
+public void start() {  // Объекты вложенных классов можно создать
+Motor motor = new Motor();  // в методе и использовать
+motor.startMotor();         // их методы !!!
+System.out.println("Car" + id + "is starting...");
+}
+public void gaz() {
+System.out.println("Gaz...");
+final int minuts = 60;
+int hour = 1;
+// Локальные вложенные классы
+class Spidometr{
+public void speed() {
+ System.out.println(minuts);
+ System.out.println(id);
+ System.out.println(hour);
+}
+}
+Spidometr spidometr = new Spidometr();
+
+}
+public int getId() {
+return id;
+}
+
+public void setId(int id) {
+this.id = id;
+}
+}

@@ -1,0 +1,117 @@
+
+  Если в одном месте хранится и описание формата запросов (путь /post(s) и методы GET, POST),
+и информация о постах (хранится в списке List<Post> posts), и методы для работы с постами - это не правильно !!!
+В реальных проектах считается хорошим тоном это разделять.
+  Предполагается, что код приложения делится на три части:
+
+-  логика работы (часто ещё называют «бизнес-логикой»);
+-  хранение данных;
+-  обработка запросов (или API).
+
+===========================================================================================================================================
+
+                                    Плохо:
+
+@RestController
+public class PostController {
+
+    private final List<Post> posts = new ArrayList<>();
+
+    @GetMapping("/posts")
+    public List<Post> findAll() {
+        return posts;
+    }
+
+    @PostMapping(value = "/post")
+    public Post create(@RequestBody Post post) {
+        posts.add(post);
+        return post;
+    }
+}
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+                                              Разделим PostController
+
+  В контроллере оставим только обработку HTTP-запросов.
+Всё остальное (поле posts и методы findAll и create) перенесём в отдельный класс PostService.
+Классы и пакеты, в которых происходит обработка логики приложения, принято называть через service (от англ. обслуживание).
+Поэтому создадим также пакет ru.yandex.practicum.catsgram.service.
+
+package ru.yandex.practicum.catsgram.service;
+
+import org.springframework.stereotype.Service;
+import ru.yandex.practicum.catsgram.model.Post;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class PostService {
+
+    private final List<Post> posts = new ArrayList<>();
+
+    public List<Post> findAll() {
+        return posts;
+    }
+
+    public Post create(Post post) {
+        posts.add(post);
+        return post;
+    }
+}
+
+  Обратите внимание, аннотация @RequestBody имеет смысл только в классах-контроллерах (@RestController),
+то есть в методы класса-сервиса её не стоит добавлять. Также мы использовали новую аннотацию @Service
+— она делает то же самое, что @Component.
+
+  Разные названия @Service и @Component были придуманы для большей понятности кода и улучшения читаемости.
+Аннотация @Service дополнительно сообщает, что класс, который добавляется в контекст приложения,
+это именно класс с логикой, а не контроллер или что-то ещё.
+При этом Spring по отношению к классам с @Component и @Service ведёт себя одинаково.
+
+  Теперь PostService будет делать всю работу по обработке постов Котограма,
+а PostController будет проверять корректность запроса и вызывать методы PostService.
+
+
+                                            Организуем доступ к PostService
+
+  Чтобы вызывать методы из контроллера, у него должен быть доступ к классу с логикой.
+То есть PostService должен стать зависимостью для PostController.
+Для этого добавим в PostController поле postService и конструктор, принимающий сервис как параметр.
+Конструктор пометим аннотацией @Autowired. Это значит, что здесь произойдёт внедрение зависимостей —
+создание PostService и его передача в PostContoller произойдёт автоматически.
+
+package ru.yandex.practicum.catsgram.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.catsgram.model.Post;
+import ru.yandex.practicum.catsgram.service.PostService;
+
+import java.util.List;
+
+@RestController
+public class PostController {
+    private final PostService postService;
+
+    @Autowired
+    public PostController(PostService postService) {
+        this.postService = postService;
+    }
+
+    @GetMapping("/posts")
+    public List<Post> findAll() {
+        return postService.findAll();
+    }
+
+    @PostMapping(value = "/post")
+    public Post create(@RequestBody Post post) {
+        return postService.create(post);
+    }
+}
+
+  Теперь код приложения в двух разных классах.

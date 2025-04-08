@@ -1,0 +1,27 @@
+
+  Существует популярный архитектурный шаблон API-шлюз (англ. API gateway).
+Согласно ему один сервис принимает все запросы от клиентов и перенаправляет (раскидывает) их по другим сервисам —
+то есть фактически выступает в качестве шлюза. Такой сервис-шлюз проверяет, залогинен ли пользователь, и если да,
+то добавляет в перенаправленные запросы заголовок с его идентификатором.
+
+  Наше приложение считает, что работает с таким шлюзом и ожидает, что в заголовке X-Later-User-Id будет правильный ID пользователя.
+Префикс X- принято добавлять к нестандартным HTTP-заголовкам, чтобы случайно не использовать один из стандартных и не сломать что-нибудь.
+
+
+@RestController
+@RequestMapping("/items")
+@RequiredArgsConstructor
+public class ItemController {
+
+    private final ItemService itemService;
+
+    @PostMapping
+    public Item add(@RequestHeader("X-Later-User-Id") Long userId,
+                    @RequestBody Item item) {
+        return itemService.addNewItem(userId, item);
+    }
+}
+
+
+  @RequestHeader("X-Later-User-Id"), которая позволяет вытащить значение из заголовка HTTP-запроса и передать его в параметр long userId.
+При этом X-Later-User-Id — это название заголовка.

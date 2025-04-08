@@ -1,0 +1,63 @@
+
+  Чтобы обойти ограничения синтаксиса запросных методов, авторы Spring предлагают несколько возможных путей.
+Первый вариант — запросы на языке JPQL (Java Persistence Query Language).
+Язык JPQL является частью JPA. Он похож на SQL, но привязан не к таблицам и колонкам, а к сущностям JPA и к полям этих сущностей.
+Вот пример запроса на JPQL, привязанного к сущности Item.
+
+-   select it.userId, count(it.id) as count from Item as it where it.url like ?1 group by it.userId order by count(it.id) desc
+
+  Запросы на JPQL преобразуются в запросы на диалекте используемой базы данных, а результат запроса преобразуется в экземпляры сущностей или простых Java-классов.
+Разберём на примере. В качестве класса для маппинга результата запроса используем простой класс ItemCountByUser.
+
+package ru.practicum.item;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.AllArgsConstructor
+
+@Getter
+@Setter
+@AllArgsConstructor
+public class ItemCountByUser {
+
+    private Long userId;
+
+    private Long count;
+
+}
+
+  В интерфейсе ItemRepository оформим запрос на JPQL с помощью аннотации @Query — она используется для того,
+чтобы отметить метод репозитория, который должен выполнять особый запрос.
+В методе с @Query нет необходимости возвращать объекты того типа данных, который соответствует сущности репозитория или её проекции.
+Так решается проблема обработки результатов в виде агрегатов.
+
+interface ItemRepository extends JpaRepository<Item, Long> {
+    @Query("select new ru.practicum.item.ItemCountByUser(it.userId, count(it.id))" +
+            "from Item as it "+
+            "where it.url like ?1 "+
+            "group by it.userId "+
+            "order by count(it.id) desc")
+    List<ItemCountByUser> countItemsByUser(String urlPart);
+}
+
+  Таким способом можно получить любой нужный результат любого запроса.
+Параметр метода передаётся в запрос через вопросительный знак ? и его номер по порядку — к примеру ?1.
+Обратите внимание, что для получения результата запроса вместо интерфейса мы использовали класс.
+Поэтому в самом запросе нам нужен был конструктор new ItemCountByUser(user_id, count).
+
+                                                              А если усложнить
+
+  Для аннотации @Query также существует возможность описать запрос непосредственно на языке используемой БД — так называемый нативный запрос.
+Этот способ менее универсален, чем запрос на JPQL, но его иногда можно использовать для решения задач, специфических для выбранной базы данных.
+Для использования нативных запросов нужно указать параметр аннотации @Query(nativeQuery = true).
+
+  Реализуем сложный нативный запрос к таблице сущностей для проекта Later — посчитаем топ пользователей по количеству закладок определённого типа.
+Параметры запроса ?1 и ?2 получим через параметры метода dateFrom и dateTo.
+
+@Query(value = "select it.user_id, count(it.id) as count "+
+        "from items as it left join users as us on it.user_id = us.id "+
+        "where (cast(us.registration_date as date)) between ?1 and ?2 "+
+                "group by it.user_id", nativeQuery = true)
+List<ItemCountByUser> countByUserRegistered(LocalDate dateFrom, LocalDate dateTo);
+
+  Нативные запросы используются, к примеру, для работы с особыми операторами преобразования данных, которые присутствуют только в PostgreSQL.

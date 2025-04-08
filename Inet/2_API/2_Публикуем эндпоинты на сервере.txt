@@ -1,0 +1,142 @@
+
+Мы показали, как написать HTTP-сервер, но у него пока нет эндпоинтов, он не запущен и не обрабатывает запросы клиента. Пора это исправить!
+Создаём HelloHandler
+В этом уроке создадим простой HTTP-сервер, обрабатывающий запросы только по одному пути — /hello. Пока что мы не будем добавлять обработку методов — и на GET /hello, и на POST /hello реакция сервера будет одинаковой. Зато можно считать, что эндпоинтов не один, а несколько!
+Создадим класс HelloHandler — реализацию интерфейса HttpHandler(от англ. handler — «обработчик, проводник»).
+
+import com.sun.net.httpserver.HttpHandler;
+
+class HelloHandler implements HttpHandler {
+}
+
+Внутри класса HelloHandler необходимо переопределить метод public void handle(HttpExchange httpExchange). В этом методе будет находиться код, который определяет логику работы эндпоинта.
+В качестве аргумента метод handle() принимает объект класса HttpExchange (от англ. exchange — «обмен»), через который можно получить информацию о запросе (HTTP-метод, HTTP-заголовки, тело запроса) и работать с ответом.
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+
+class HelloHandler implements HttpHandler {
+    @Override
+    public void handle(HttpExchange httpExchange) throws IOException {
+    }
+}
+
+Хотя этот метод уже начнёт обрабатывать запросы, клиент ничего не узнает о реакции сервера на них. Не возвращать код сообщения в ответ — плохая практика, и зачастую такой ответ будет считаться некорректным.
+Добавим вызов метода httpExchange.sendResponseHeaders (int rCode, long responseLength). Метод отправляет ответ, который можно сформировать заранее. Аргумент rCode определяет код ответа, а responseLength — длину ответа в байтах. Если размер сообщения будет отличаться, оно не отправится. Можно передать в качестве этого параметра 0, тогда размер ответа учитываться не будет.
+Теперь в ответ на запрос сервер будет возвращать код 200.
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+
+import java.io.IOException;
+
+class HelloHandler implements HttpHandler {
+    @Override
+    public void handle(HttpExchange httpExchange) throws IOException {
+        httpExchange.sendResponseHeaders(200, 0);
+    }
+}
+
+Сейчас сервер возвращает только код. Этого достаточно, чтобы сообщить, что запрос успешно обработан, поэтому ответ на запрос к эндпоинту может не содержать тело ответа. Если вместе с ответом необходимо передать какие-либо данные, нужно получить экземпляр класса OutputStream, связанный с телом ответа. Чтобы это сделать, необходимо вызвать метод getResponseBody() класса HttpExchange. Класс OutputStream позволяет записывать данные в виде массива байтов. Для этого нужно вызвать метод write(byte b[]).
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+
+import java.io.IOException;
+import java.io.OutputStream;
+
+class HelloHandler implements HttpHandler {
+    @Override
+    public void handle(HttpExchange httpExchange) throws IOException {
+        // сформируем ответ клиенту в виде простой строки и кода ответа 200
+        String response = "Hey! Glad to see you on our server.";
+        httpExchange.sendResponseHeaders(200, 0);
+
+        try (OutputStream os = httpExchange.getResponseBody()) {
+            os.write(response.getBytes());
+        }
+    }
+}
+
+Теперь сервер сможет вежливо поприветствовать пользователя.
+Связываем путь и обработчик запроса
+Чтобы сервер понимал, как обрабатывать запросы по конкретному пути, нужно связать путь и обработчик запроса.
+Делается это при помощи метода createContext(String path, HttpHandler handler). Он принимает следующие параметры:
+
+    String path — это путь, запросы к которому нужно обработать. В нашем примере это строка "/hello".
+    HttpHandler handler — экземпляр класса, реализующего интерфейс HttpHandler. В этом классе должна содержаться логика обработки запросов. В нашем примере это класс HelloHandler.
+
+HttpServer httpServer = HttpServer.create(); // создали веб-сервер
+httpServer.bind(new InetSocketAddress(8080), 0); // привязали его к порту
+httpServer.createContext("/hello", new HelloHandler()); // определили эндпоинт
+
+Пользователи смогут обратиться к созданному эндпоинту по адресу http://server-address:8080/hello в браузере.
+
+http://server-adress:8080/hello
+  |         |          |     |
+протокол    |          |     |
+      базовый адрес    |     |
+                      порт   |
+                             |
+                            путь
+
+
+  Обратите внимание, в коде веб-сервера указывается только путь. Базовый адрес может быть доменом или IP-адресом.
+Такой подход позволяет избежать жёсткой привязки сервера к какому-то конкретному IP-адресу или домену.
+Если позже нужно будет запустить веб-сервер на другом базовом адресе, то вносить изменения в код не потребуется.
+
+==========================================================================================================================================================
+
+Запускаем HTTP-сервер
+Необходимые для работы сервера элементы описаны, и его можно запускать! Чтобы запустить сервер, нужно вызвать метод start().
+
+httpServer.start();
+
+Итак, код веб-сервера с эндпоинтом /hello получился таким.
+
+-------------------------------------------------------------------------------------------
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
+public class Practicum {
+    private static final int PORT = 8080;
+
+    // IOException могут сгенерировать методы create() и bind(...)
+    public static void main(String[] args) throws IOException {
+        HttpServer httpServer = HttpServer.create();
+
+        httpServer.bind(new InetSocketAddress(PORT), 0);
+        httpServer.createContext("/hello", new HelloHandler());
+        httpServer.start(); // запускаем сервер
+
+        // http://localhost:8080/hello  -  в браузере появится: Hey! Glad to see you on our server.
+
+        System.out.println("HTTP-сервер запущен на " + PORT + " порту!");
+    }
+
+    static class HelloHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+            System.out.println("Началась обработка /hello запроса от клиента.");
+
+            String response = "Hey! Glad to see you on our server.";
+            httpExchange.sendResponseHeaders(200, 0);
+
+            try (OutputStream os = httpExchange.getResponseBody()) {
+                os.write(response.getBytes());
+            }
+        }
+    }
+}
+-------------------------------------------------------------------------------------------

@@ -1,0 +1,106 @@
+
+От класса enum НЕЛЬЗЯ наследоваться !!!
+  enum МОЖНО использовать в switch !!!
+
+public enum Season
+   {
+       WINTER,
+       SPRING,
+       SUMMER,
+       AUTUMN
+   }
+
+   SeasonEnum.Season s = SeasonEnum.Season.SPRING;
+   System.out.println(s);  // SPRING
+   // Статический метод values() - возвращает массив всех значений типа enum
+   SeasonEnum.Season sn[] = SeasonEnum.Season.values();
+   System.out.println(sn[2]);  // SUMMER
+   // Метод ordinal() - возвращает порядковый номер константы.
+   // Вызывать его нужно не у класса enum, а у значения enum
+   System.out.println(s.AUTUMN.ordinal()); // 3
+   // Чтобы преобразовать объект типа enum в строку,
+   // у него нужно вызвать метод - toString()
+   String str = SeasonEnum.Season.WINTER.toString();  // str = WINTER
+   System.out.println(str);
+   // Для обратного преобразования (строки в объект SeasonEnum.Season)
+   // можно воспользоваться статическим методом - valueOf()
+   // SeasonEnum.Season sss = SeasonEnum.Season.valueOf("AUTUMN");
+
+   int index = SeasonEnum.Season.SPRING.ordinal();
+   // index = 1;
+   // Для обратного преобразования (числа в объект SeasonEnum.Season)
+   // SeasonEnum.Season seas = SeasonEnum.Season.values()[4];
+
+   // Добавление своих методов в enum
+public static <SeasonEnum.Season> List<SeasonEnum.Season> asList() {
+
+   return null;
+}
+    В enum можно добавлять конструкторы
+
+public enum Season {
+
+WINTER("зима"),
+SPRING("весна"),
+SUMMER("лето"),
+AUTUMN("осень");
+
+private String transletion;
+
+Season(String transletion) {
+   this.transletion = transletion;
+}
+
+public String getTransletion() {
+   return transletion;
+}
+
+@Override
+public String toString() {
+   return "Season{" +
+           "transletion='" + transletion + '\'' +
+           '}';
+}
+}
+
+public static void main(String[] args) {
+   Season season = Season.SUMMER;
+   System.out.println(season.getTransletion());
+   System.out.println(season);
+
+=================================================================================================
+
+    Сравнивть через == , если через equlas - на null выпадет исключение
+  if (light == TrafficLight.GREEN)
+
+enum TrafficLight {
+  RED,
+  YELLOW,
+  GREEN;
+}
+
+public class Main {
+public static void main(String[] args) {
+
+  -  String colour = String.valueOf(TrafficLight.RED);
+     System.out.println(colour);                          // RED
+
+  -  TrafficLight yellow = TrafficLight.YELLOW;
+     System.out.println(yellow);                          // YELLOW
+
+  -  for (TrafficLight light: TrafficLight.values()      // RED
+              ) {                                        // YELLOW
+             System.out.println(light);                  // GREEN
+         }                                               // .values() - выведет все значения TrafficLight
+
+  -  System.out.println(TrafficLight.valueOf("RED"));    // RED   Находит и возвращает константу перечисления.
+                                                         //      Если элемент не будет найден, выполнение метода завершится с ошибкой
+                                                         //       Такой метод будет полезен, когда одному приложению
+                                                         //      нужно принять константу перечисления от другого приложения.
+
+  - TrafficLight trafficLight = TrafficLight.RED;        // RED  Предаёт имя константы
+    System.out.println(trafficLight.name());
+
+
+  }
+}

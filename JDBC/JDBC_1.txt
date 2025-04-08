@@ -1,0 +1,172 @@
+
+                                    Механизм JDBC состоит из двух частей:
+
+-  Драйвер, который взаимодействует с конкретной базой данных. Обычно его предоставляют разработчики базы,
+   но бывают и открытые реализации от OpenSource-сообщества.
+-  Клиентская часть, с которой взаимодействует программист.
+
+  Внутри фреймворка Spring применяется реализация JDBC JdbcTemplate (англ. «шаблон JDBC»).
+Этот класс создали разработчики Spring на основе оригинальной библиотеки JDBC из Java Core (пакет java.sql).
+Мы будем говорить только о JdbcTemplate — как о компоненте, используемом внутри Sprin
+
+                                        Работа с БД через JDBC
+
+  Работа с базами данных через JDBC делится на два этапа. Первый этап — подключение приложения к СУБД.
+Оно происходит через драйвер JDBC. На этом этапе настраивается соединение с базой,
+а также подбирается и устанавливается нужный драйвер в виде зависимости проекта.
+  Для настройки подключения JDBC используется URL. Этот формат универсален и легко считывается человеком.
+Он позволяет описать адрес и параметры подключения к БД в виде одной строки.
+Строка относится к примитивным типам данных, поэтому её удобно хранить в файлах настройки и использовать программно.
+
+  Второй и основной этап — маппинг (от англ. mapping — «отображение»). Это преобразование полученных из БД данных в типы Java по определённым правилам.
+Данные в реляционных БД хранятся и обрабатываются в таблицах, состоящих из строк и столбцов.
+Данные в столбцах обычно имеют базовые типы — строка, число, дата и другие. Результат их преобразования зависит от конкретной задачи.
+В большинстве случаев наиболее удобный и простой способ — представить эти данные в виде объектов и коллекций Java.
+  Преобразованные данные уже не связаны с выбранной БД. Поэтому их можно передавать для обработки в стандартные и сторонние библиотеки,
+сохранять в других форматах и так далее.
+
+  Обычно классы по работе с базой данных выносят в отдельный пакет и создают для них интерфейсы,
+которые скрывают детали работы с конкретной базой данных.
+Так образуется слой приложения, который называют DAL (от англ. Data Access Layer — «слой доступа к данным»).
+  Реализация DAL может состоять из одного или нескольких классов и включать в себя множество DAO (от англ. Data Access Object — «объект доступа к данным»).
+DAO — это класс, в котором содержится логика работы с БД для конкретной таблицы.
+  Использование этих архитектурных решений позволяет избежать дублирования кода подключения, убрать из реализации высокоуровневых алгоритмов всё лишнее.
+Детали процесса будут скрыты, и программист получит простой интерфейс для работы с данными в БД.
+  Например, программист пишет простой мессенджер. В коде есть следующие классы: User для пользователей, Message для сообщений и Chat для чатов.
+Для каждого из них понадобится свой DAO-класс:
+
+-  UserDao для доступа к пользователям мессенджера;
+-  MessageDao для доступа ко всем сообщениям;
+-  ChatDao для доступа к чатам, в которых пользователи обмениваются сообщениями.
+
+==========================================================================================================================================================
+
+                            Как настроить подключение см. в feature-jdbc.txt
+
+==========================================================================================================================================================
+
+                                    Альтернативный механизм подключения
+
+  Описанный выше способ подключения не единственный. Часто нужно задать сразу несколько подключений к нескольким базам одновременно.
+Сделать это в файле application.properties с помощью одного URL не получится.
+  Допустим, вы хотите скачать данные из MySQL базы allcats в PostgreSQL базу cats вашего проекта. Потребуется два подключения к БД.
+Если одно из них уже настроено с помощью Spring Boot, второе можно сконфигурировать вручную через объекты DataSource (англ. «источник данных»).
+Эти объекты предоставляют прямой доступ к драйверу JDBC и параметрам подключения.
+Для реализации альтернативного способа объявим тестовый класс ManualJdbcConnectService и отметим его аннотацией @Component.
+
+@Component
+public class ManualJbdcConnectService {
+
+}
+
+  Внутри этого класса необходимо описать константы с адресом и параметрами подключения. Например, вот так.
+
+import org.springframework.stereotype.Component;
+
+@Component
+public class ManualJdbcConnectService {
+
+    public static final String JDBC_URL="jdbc:mysql://cat.world:3306/allcats";
+    public static final String JDBC_USERNAME="iamacat";
+    public static final String JDBC_PASSWORD="iamapet";
+    public static final String JDBC_DRIVER="org.mysql.jdbc.Driver";
+
+}
+
+Затем нужно вызвать метод, например JdbcTemplate getTemplate(). А внутри него создать объект DataSource — точнее, его Spring-имплементацию.
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ManualJdbcConnectService {
+
+    public static final String JDBC_URL="jdbc:mysql://cat.world:3306/allcats";
+    public static final String JDBC_USERNAME="iamacat";
+    public static final String JDBC_PASSWORD="iamapet";
+    public static final String JDBC_DRIVER="org.mysql.jdbc.Driver";
+
+    public JdbcTemplate getTemplate() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName(JDBC_DRIVER);
+        dataSource.setUrl(JDBC_URL);
+        dataSource.setUsername(JDBC_USERNAME);
+        dataSource.setPassword(JDBC_PASSWORD);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        return jdbcTemplate;
+    }
+
+}
+
+  В конце необходимо подключить новый JdbcTemplate к источнику данных.
+Дальнейшая работа с кодом будет происходить точно так же, как если бы был использован способ подключения через Spring.
+
+  Функция автоматической настройки не всегда отвечает задачам приложения.
+В некоторых случаях, например при тестировании, может понадобиться отключить автоконфигурацию подключения к базе данных.
+Чтобы объяснить Spring Boot, что его помощь не требуется,
+добавьте в аннотацию @SpringBootApplication параметр exclude со значением DataSourceAutoConfiguration.class.
+
+          @SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
+
+  Теперь можно получать сведения обо всех котиках мира и скачивать их из одной базы в другую!
+
+==========================================================================================================================================================
+
+public class User {
+
+    private String id;
+    private String username;
+    private String nickname;
+    public User() {
+    }
+}
+------------------------------------------------------------------------------
+public interface UserDao {
+
+    Optional<User> findUserById(String id);
+}
+------------------------------------------------------------------------------
+@Component
+public class UserDaoImpl implements UserDao {
+    private final JdbcTemplate jdbcTemplate;
+
+    public UserDaoImpl(JdbcTemplate jdbcTemplate){
+        this.jdbcTemplate=jdbcTemplate;
+    }
+
+    @Override
+    public Optional<User> findUserById(String id) {
+        // реализацию добавим немного позже
+        return Optional.empty();
+    }
+}
+------------------------------------------------------------------------------
+@RestController
+@RequestMapping("/users")
+public class UserController {
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping("/{login}")
+    public Optional<User> getUser(@PathVariable String login){
+        return userService.findUserById(login);
+    }
+}
+------------------------------------------------------------------------------
+@Service
+public class UserService {
+    private final UserDao userDao;
+
+    public UserService(UserDao userDao) {
+        this.userDao = userDao;
+    }
+
+    public Optional<User> findUserById(String id) {
+        return userDao.findUserById(id);
+    }
+}
+------------------------------------------------------------------------------

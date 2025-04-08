@@ -1,0 +1,67 @@
+
+                  FileInputStream
+
+- int read() 	                            -  Читает один байт и возвращает его
+- int read(byte b[]) 	                    -  Читает массив байт, возвращает количество
+- int read(byte b[], int off, int len)   	-  Читает из потока массив байт
+- long skip(long n) 	                    -  Пропускает n байт, используется при чтении из потока
+- int available()                      	  -  Возвращает количество байт, которое еще можно прочитать из потока
+- void close() 	                          -  Закрывает поток
+
+                  FileOutputStream
+
+- void write(int b) 	                    -  Записывает один байт в поток
+- void write(byte b[])            	      -  Записывает массив байт в поток
+- void write(byte b[], int off, int len) 	-  Записывает массив байт в поток
+- void close() 	                          -  Закрывает поток
+
+                  ZipEntry
+
+  (Специальный класс – ZipEntry. Он представляет файл, хрянящийся в архиве)
+
+- String getName() 	                      -  Внутреннее имя файла
+- long getTime(), setTime(long) 	        -  Время последней модификации entry
+- long getCrc(), setCrc(long) 	          -  Контрольная сумма
+- long getSize(), setSize(long)       	  -  Размер до компрессии
+- int getMethod(), setMethod(int)       	-  Метод сжатия
+- long get/setCompressedSize() 	          -  Размер после архивации
+- boolean isDirectory() 	                -  Является ли entry директорией
+
+                  ZipInputStream
+
+- ZipEntry getNextEntry() 	              -  Возвращает объект, описывающий следующий ZipEntry (пропускает все байты текущего entry)
+- void closeEntry() 	                    -  Закрывает чтение текущего ZipEntry (пропускает все байты текущего entry)
+- int available() 	                      -  Возвращает 1, если есть доступные ZipEntry, иначе 0
+- int read(byte[] b, int off, int len)   	-  Читает байты из текущего ZipEntry
+- long skip(long n) 	                    -  Пропускает n байт при чтении из потока
+- void close() 	                          -  Закрывает поток
+
+                  ZipOutputStream
+
+- void setComment(String comment)   	    -  Устанавливает комментарий к архиву
+void setMethod(int method) 	              -  Указывает метод (тип) сжатия
+void setLevel(int level)     	            -  Указывает степень сжатия. Чем сильнее, тем медленнее
+void putNextEntry(ZipEntry e)       	    -  Добавляет новый ZipEntry
+void closeEntry() 	                      -  Закрывает текущий ZipEntry
+void write(byte[] b, int off, int len)   	-  Пишет набор байт в текущий ZipEntry
+void close() 	                            -  Закрывает поток
+
+--------------------------------------------------------------------------------------------------------------------------------------
+
+// создаем архив
+
+FileOutputStream zipFile = new FileOutputStream("c:/archive.zip");
+ZipOutputStream zip = new ZipOutputStream(zipFile);
+
+//кладем в него ZipEntry – «архивный объект»
+
+zip.putNextEntry(new ZipEntry("document.txt"));
+
+//копируем файл «document-for-archive.txt» в архив под именем «document.txt»
+
+File file = new File("c:/document-for-archive.txt");
+Files.copy(file.toPath(), zip);
+
+// закрываем архив
+
+zip.close();

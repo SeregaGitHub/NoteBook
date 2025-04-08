@@ -1,0 +1,20 @@
+
+    Берём задачу, которую нужно выполнить асинхронно
+    Оформляем её в экземпляр интерфейса Runnable, так же как и при создании потока
+    Отправляем этот Runnable в экзекьютор
+
+ExecutorService executor = Executors.newCachedThreadPool();
+
+Runnable task = () -> {
+   int result = 12*15;
+   updateValue(result);
+};
+
+executor.submit(task);
+
+
+
+- Executors.newSingleThreadExecutor()        - с одним потоком в пуле
+- Executors.newFixedThreadPool(int nThreads) - с числом потоков, равным nThreads
+- Executors.newCachedThreadPool()            - число потоков в пуле - динамическое. При необходимости потоки добавляются в пул,
+                                               но если поток простаивает минуту, он удаляется.

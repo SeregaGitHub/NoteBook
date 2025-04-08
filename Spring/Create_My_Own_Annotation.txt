@@ -1,0 +1,107 @@
+Статья про создание свих аннотаций
+
+https://coderlessons.com/articles/java/polzovatelskie-annotatsii-validatsii-spring-mvc
+
+--------------------------------------------------------------------------------------------------------------
+
+@Data
+public class User {
+    private Integer id;
+    @NonNull
+    @Email
+    private String email;
+    @NonNull
+    @NotEmpty
+    @Pattern(regexp = "\\S*")
+    private String login;
+    private String name;
+    @NonNull
+    @Past
+    private LocalDate birthday;
+    @NonNull
+    @Phone                       // My_Own_Annotation
+    private String phone;
+    @NonNull
+    @YearStartWork(2009)         // My_Own_Annotation
+    private int yearStartWork;
+
+    public User(@NonNull String email, @NonNull String login, String name, @NonNull LocalDate birthday) {
+        this.email = email;
+        this.login = login;
+        this.name = name;
+        this.birthday = birthday;
+    }
+}
+
+-----------------------------------------------------------------------------------------------------------------
+
+// @Documented   ???
+@Constraint(validatedBy = PhoneConstraintValidator.class)
+@Target( { ElementType.METHOD, ElementType.FIELD })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Phone {
+
+    String message() default "{Phone}";
+    Class<?>[] groups() default {};
+    Class<? extends Payload>[] payload() default {};
+}
+
+
+public class PhoneConstraintValidator implements ConstraintValidator<Phone, String> {
+
+    @Override
+    public void initialize(Phone constraintAnnotation) {
+        // ConstraintValidator.super.initialize(constraintAnnotation);
+    }
+
+    @Override
+    public boolean isValid(String phoneField, ConstraintValidatorContext constraintValidatorContext) {
+        String regex = "(\\+7|8)?(\\s?-?\\s?\\d{3}){2}(\\s?-?\\s?\\d\\d){2}";
+        if (phoneField == null) {
+            return false;
+        } else {
+            return phoneField.matches(regex);
+        }
+    }
+}
+
+------------------------------------------------------------------------------------------------------------------
+
+// @Documented   ???
+@Constraint(validatedBy = YearConstraintValidator.class)
+@Target( { ElementType.METHOD, ElementType.FIELD })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface YearStartWork {
+
+    int value();    /*    Этот метод раскрывает аргумент «значение» аннотации,
+                        который мы будем использовать для прохождения года,
+                        в котором аннотация должна проверяться.
+                        Остальная часть кода в основном шаблонная
+                    */
+
+    String message() default "{YearStartWork}";
+    Class<?>[] groups() default {};
+    Class<? extends Payload>[] payload() default {};
+}
+
+
+public class YearConstraintValidator implements ConstraintValidator<YearStartWork, Integer> {
+
+    private int annotationYear;
+
+    @Override
+    public void initialize(YearStartWork year) {
+        this.annotationYear = year.value();
+    }
+
+    @Override
+    public boolean isValid(Integer target, ConstraintValidatorContext cxt) {
+        if(target == null) {
+            return true;
+        }
+        return target == annotationYear;
+
+           //  target          -  то что передаётся в параметры конструктора
+           //  annotationYear  -  то чему аргумент должен соответствовать (параметры аннотации)
+    }
+}

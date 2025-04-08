@@ -1,0 +1,90 @@
+
+                                Класс Period
+
+  Используется для вычисления срока между двумя датами. (Количество дней, лет)
+В экземпляре класса есть три поля:
+
+    продолжительность в годах (можно получить с помощью метода getYears()),
+    месяцах (getMonths()),
+    днях (getDays()).
+
+  Самый простой способ узнать продолжительность —
+вызвать статический метод between(LocalDate startDateInclusive, LocalDate endDateExclusive),
+который вычисляет период с даты startDateInclusive по дату endDateExclusive.
+День, обозначенный датой endDateExclusive, в расчёте не учитывается.
+
+public static void main(String[] args) {
+    LocalDate today = LocalDate.now();
+    // напишите здесь свою дату рождения
+    LocalDate birthday = LocalDate.of(1990, JANUARY, 1);
+
+    Period age = Period.between(birthday, today);
+    System.out.println("Ваш возраст:");
+    System.out.println("Лет: " + age.getYears());
+    System.out.println("Месяцев: " + age.getMonths());
+    System.out.println("Дней: " + age.getDays());
+}
+-----------------------------------------------------------------------------------------------
+
+// промежуток длиной 100 лет, 10 месяцев, 1 день
+Period longTime = Period.of(100, 10, 1);
+
+Можно воспользоваться методами по созданию промежутка из конкретной величины. Для Period:
+
+- ofDays(int days) — создаёт экземпляр Period длительностью days дней,
+- ofWeeks(int weeks) — длительностью weeks недель,
+- ofMonths(int months) — длительностью months месяцев,
+- ofYears(int years) — длительностью years лет.
+
+===============================================================================================
+
+                                Класс Duration
+
+  В отличие от класса Period, класс Duration хранит продолжительность времени с точностью до наносекунд
+и используется для вычисления длительности времени между двумя моментами. Сделать это можно с помощью метода between(...):
+
+  Кроме того, у Instant, LocalDateTime, LocalDate и LocalTime есть метод plus(TemporalAmount amountToAdd),
+где TemporalAmount (англ. «временно́е количество») —  интерфейс, представляющий продолжительность времени,
+который как раз и реализуют классы Duration и Period. А значит их значения можно передать в качестве параметра этого метода.
+Таким образом, plus(TemporalAmount amountToAdd) можно использовать и для вычисления момента времени,
+который произойдёт спустя промежуток, хранящийся в Duration или Period
+
+public static void main(String[] args) {
+    LocalTime start = LocalTime.of(0, 0);
+    LocalTime finish = LocalTime.of(1, 30);
+
+    // находим продолжительность между двумя единицами времени
+    Duration ninetyMinutes = Duration.between(start, finish);
+
+    LocalTime noon = LocalTime.of(12, 0);
+    System.out.println("Старый момент времени: " + noon);
+    // прибавляем к созданному моменту вычисленную продолжительность
+    LocalTime newTime = noon.plus(ninetyMinutes);
+
+    System.out.println("Новый момент времени: " + newTime);
+}
+
+- getSeconds()
+- getNano()
+
+    Так как выводить время в секундах далеко не всегда удобно, то у Duration есть методы, приводящие продолжительность в другие единицы времени:
+
+- toDays()         — возвращает целое число дней в промежутке;
+- toHours()        — целое число часов;
+- toMinutes()      — целое число минут;
+- toMillis()       — целое число миллисекунд;
+- toNanos()        — целое число наносекунд;
+- toHoursPart()    — возвращает количество часов от неполного дня;
+- toMinutesPart()  — количество минут от неполного часа;
+- toSecondsPart()  — количество секунд от неполной минуты;
+- toMillisPart()   — количество миллисекунд от неполной секунды.
+
+-----------------------------------------------------------------------------------------------
+
+  Методы, с помощью которых можно создать экземпляр класса Duration:
+
+- ofSeconds(long seconds)                       — создаёт экземпляр Duration длительностью seconds секунд,
+- ofSeconds(long seconds, long nanoAdjustment)  — длительностью seconds секунд и nanoAdjustment наносекунд,
+- ofMinutes(long minutes)                       — длительностью minutes минут,
+- ofHours(long hours)                           — длительностью hours часов,
+- ofDays(long days)                             — длительностью days дней

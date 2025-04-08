@@ -1,0 +1,189 @@
+                                          Внедрение зависимостей
+
+Самый распространённый подход — передать зависимости зависимому классу через конструктор. При этом они становятся параметрами конструктора.
+
+  Разберём на примере. Допустим, классу-навигатору NavigatorScreen требуется отображать карту местности и показывать, где находится пользователь.
+За карты отвечает интерфейс MapService и его реализации, за определение местоположения — класс LocationService.
+MapService и LocationService — зависимости для NavigatorScreen, а сам NavigatorScreen — зависимый от MapService и LocationService.
+
+
+public class NavigatorScreen {
+    MapService mapService;
+    LocationService locationService;
+    int zoomLevel;
+
+    // зависимости - параметры конструктора
+    public NavigatorScreen(MapService mapService, LocationService locationService) {
+        this.mapService = mapService;
+        this.locationService = locationService;
+        this.zoomLevel = 5;
+    }
+
+    public void updateScreen() {
+        Coordinates coordinates =
+                locationService.getCoordinates();
+        MapData map = mapService.getMap(coordinates, zoomLevel);
+
+        // дальше: вывести карту на экран
+    }
+}
+
+  Теперь класс NavigatorScreen получает нужные зависимости MapService и LocationService через конструктор.
+При этом зависимому классу не нужно знать ни о конечной реализации зависимостей, ни о том, как правильно их создавать.
+Кроме того, не нужно создавать дополнительный класс и зависеть от него. Просто получай зависимости и используй их.
+При этом за создание и передачу зависимостей отвечает сторонний механизм.
+Весь этот процесс и носит название — внедрение зависимостей, или dependency injection.
+
+  У внедрения зависимостей много плюсов. Например, оно значительно упрощает тестирование — не нужно вручную подменять зависимость
+(как в случае создания зависимостей в конструкторе) или заменять класс-контекст (как в service locator).
+Достаточно создать тестовые версии зависимостей и передать их тестируемому классу.
+
+class Tests {
+    @Test
+    void testNavigatorWorksInAustralia() {
+        // создаём проверочные зависимости:
+        // сервис карт выдаёт пустые (blank) карты
+        // сервис локации всегда выдаёт координаты Сиднея
+        MapService testMapService = new BlankMapService();
+        LocationService testLocationService = new FixedPointLocationService(Locations.Sydney);
+
+        // передаём их тестируемому классу
+        NavigatorScreen navigator = new NavigatorScreen(testMapService, testLocationService);
+
+        navigator.updateScreen();
+        // тут проверяется, что экран обновился с учётом тестовых входных данных
+    }
+}
+
+  При работе со Spring — внедрение зависимостей полностью берёт на себя фреймворк.
+
+                                                  Spring IoC-контейнер
+
+  При внедрении зависимостей класс не сам создаёт зависимости, а получает их извне.
+Такой принцип проектирования программы в ООП считается реализацией инверсии управления, (англ. Inversion of Control или сокращённо IoC).
+Поэтому технология Spring для создания и внедрения зависимостей получила название — IoC-контейнер. Именно о нём и пойдёт речь.
+
+                                                  Контекст приложения
+
+  Spring IoC-контейнер, или Spring DI (Spring Dependency Injection), помогает создавать и передавать зависимости автоматически.
+Его основной интерфейс — ApplicationContext (с англ. контекст приложения).
+Реализации ApplicationContext отвечают за хранение информации о классах приложения, в частности о том,
+как они создаются, какие у них конструкторы, какие зависимости и так далее.
+Когда приложению требуется объект класса, оно просто получает его из контекста, не создавая с помощью new,
+а используя метод ApplicationContext.getBean(Class<T> klass).
+  Обратите внимание на название метода для получения объектов — getBean.
+Объекты, которые находятся в контейнере под управлением Spring, называются Spring Beans или просто бины.
+
+                                    @SpringBootApplication и внедрение зависимостей
+
+  В явном виде контекст используется в приложениях, написанных на «чистом» Spring, — в них ApplicationContext создаёт сам разработчик.
+Spring Boot берёт всю работу на себя — самостоятельно создаёт контекст приложения, если в коде используется аннотация @SpringBootApplication.
+Чтобы классы автоматически добавлялись в контекст, их нужно помечать специальными аннотациями.
+Базовая аннотация — @Component (англ. «компонент)». Также класс добавят в контекст аннотации @(Rest)Controller и @Service.
+Для всех классов контекста автоматически работает внедрение зависимостей. За него отвечает аннотация @Autowired.
+
+  Посмотрим на примере. Есть два класса: A и B. Пусть A зависит от B и вызывает его метод printName().
+Конструктор класса A пометим аннотацией @Autowired (от англ. «автоматическое подключение») и в качестве параметра укажем объект класса B.
+Аннотация @Autowired указывает на то, что в этом месте произойдёт внедрение зависимостей и его возьмёт на себя Spring.
+Она может стоять не только перед конструктором, но и полем или методом класса.
+
+-------------------------------------------------------------------------------------------------------------------------------------
+@Component // указываем, что B также нужно добавить в контекст
+public class B {
+    public void printName() {
+        System.out.println("Это Б!");
+    }
+}
+-------------------------------------------------------------------------------------------------------------------------------------
+@Component // аннотация указывает, что класс нужно добавить в контекст
+public class A {
+    private final B b;
+
+    @Autowired // сообщаем Spring, что нужно передать в конструктор объект класса B
+    public A(B b) {
+        this.b = b;
+    }
+
+    public void printName() {
+        System.out.println("Это A!");
+        b.printName();
+    }
+}
+-------------------------------------------------------------------------------------------------------------------------------------
+@SpringBootApplication // указываем, что SB возьмёт на себя создание контекста
+public class AppMain {
+    public static void main(String[] args) {
+        ApplicationContext context = SpringApplication.run(AppMain.class, args);
+        A a = context.getBean(A.class);
+        a.printName();
+    }
+}
+-------------------------------------------------------------------------------------------------------------------------------------
+
+  Сначала Spring найдёт классы, отмеченные @Component, — это классы A и B, и добавит их в контекст.
+Затем фреймворк увидит, что конструктор класса A помечен аннотацией @Autowired, и установит, что ему требуется объект класса B.
+Spring создаст объект класса B и добавит его в контекст, после чего создаст объект класса A, передав ему объект класса B из контекста.
+При этом всё также нет необходимости создавать классы вручную, через new.
+
+  SpringApplication — это вспомогательный класс Spring Boot. Он позволяет запустить Spring-приложение — настроить контекст и не только.
+Его обычно используют в классе с главным методом приложения. Такой класс, который содержит метод main, может называться как угодно,
+но обычно состоит из названия программы и слова Application или App — SomethingApplication или SomethingApp.
+
+  Когда классов десятки или сотни и большинство из них зависят друг от друга, использование Spring DI значительно облегчает работу.
+Не нужно ничего создавать вручную. Кроме того, по умолчанию Spring Boot будет проверять классы в том же пакете (и подпакетах),
+в котором находится класс, помеченный как @SpringBootApplication !!!!!
+
+  Если по какой-то причине нужно изменить список пакетов, в которых необходимо искать классы, используется параметр аннотации scanBasePackages.
+В нём можно перечислить пакеты, в которых нужно производить поиск.
+
+==========================================================================================================================================
+
+import org.springframework.stereotype.Component;
+
+@Component
+public class GoogleMapService implements MapService {
+    // поля и методы
+}
+
+
+import org.springframework.stereotype.Component;
+
+@Component
+public class GpsService implements LocationService {
+    // ...
+}
+
+
+@Component
+public class NavigatorScreen {
+    MapService mapService;
+    LocationService locationService;
+
+      @Autowired
+    public NavigatorScreen(
+            MapService mapService,
+            LocationService locationService) {
+
+        this.mapService = mapService;
+        this.locationService = locationService;
+    }
+
+    // методы, использующие mapService и locationService
+}
+
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
+
+@SpringBootApplication
+public class AppMain {
+    public static void main(String[] args) {
+        ApplicationContext context = SpringApplication.run(AppMain.class, args);
+        NavigatorScreen navigatorScreen = context.getBean(NavigatorScreen.class);
+    }
+}
+
+                  //  При запуске такого кода все бины будут создаваться автоматически !!!
+
+===========================================================================================================================

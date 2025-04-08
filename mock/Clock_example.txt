@@ -1,0 +1,79 @@
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.time.Clock;
+
+@Configuration                                           // Создать конфигурационный класс с бином - Clock clock()
+public class ClockConfig {                               // (где-нибудь в пакете - util)
+  
+    @Bean
+    public Clock clock() {
+        return Clock.systemDefaultZone();
+    }
+}
+
+---------------------------------------------------------------------------------------------------------
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class SomeClassImpl implements SomeInterface {
+    private final ...;
+    private final ...;
+    private final ...;
+    private final Clock clock;                           // В слое сервиса создать переменную - final Clock clock
+
+@Override
+    public someMethod(...) {
+        
+    LocalDateTime now = LocalDateTime.now(clock);        // При использовании LocalDateTime.now(clock) - в параметры передавать clock
+
+
+    }
+}
+
+---------------------------------------------------------------------------------------------------------
+
+@ExtendWith(MockitoExtension.class)
+class SomeClassImplTest {
+
+    @Mock
+    private Clock clock;                                 // В тестовом классе замокать - Clock clock
+
+    private static final ZonedDateTime NOW_ZDT = ZonedDateTime.of(
+            2023,
+            10,
+            10,
+            10,
+            10,
+            10,
+            0,
+            ZoneId.of("UTC")                             // Создать константу - ZonedDateTime (Цифры в параметрах не имеют значения - можно любые)
+    );
+
+    private LocalDateTime now;                           // Создать переменную LocalDateTime
+
+
+    @BeforeEach
+    void beforeEach() {                                  // В @BeforeEach - присвоить переменоой LocalDateTime - значение аналогочное ZonedDateTime (Одинаковые цифры)
+        now = LocalDateTime.of(
+                2023,
+                10,
+                10,
+                10,
+                10,
+                10);
+    }
+
+---------------------------------------------------------------------------------------------------------
+
+    @Test
+    void someTestMethod() {                               // В тестовых методах, где используется LocalDateTime.now(clock), прописать:
+
+        when(clock.getZone()).thenReturn(NOW_ZDT.getZone());
+        when(clock.instant()).thenReturn(NOW_ZDT.toInstant());
+
+        ......................................................
+    }
+}

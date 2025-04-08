@@ -1,0 +1,43 @@
+
+                                                                @JsonTest
+
+  Он отвечает за тестирование функциональности, связанной с сериализацией и десериализацией JSON в приложении.
+Особенно этот слайс важен, если в коде есть DTO-объекты, которые содержат в себе логику по конвертации в JSON.
+Например, когда для отдельных полей задаётся кастомизированный формат,
+определяются модификаторы доступа либо некоторые поля вручную исключаются из итогового JSON.
+Для проверки подобной логики обязательно нужны отдельные тесты.
+
+  Именно такие тесты создаются с помощью аннотации @JsonTest.
+Как вы помните, мы уже немного работали с тестированием JSON при написании тестов для web-слоя.
+Но @JsonTest позволяет сконцентрироваться только на тестировании правил JSON-конвертации без создания web-контекста и работы контроллеров.
+
+Рассмотрите пример:
+
+@JsonTest
+public class UserDtoJsonTest {
+
+    @Autowired
+    private JacksonTester<UserDto> json;
+
+    @Test
+    void testUserDto() throws Exception {
+        UserDto userDto = new UserDto(
+                1L,
+                "john.doe@mail.com",
+                "John",
+                "Doe",
+                "2022.07.03 19:55:00",
+                UserState.ACTIVE);
+
+        JsonContent<UserDto> result = json.write(userDto);
+
+        assertThat(result).extractingJsonPathNumberValue("$.id").isEqualTo(1);
+        assertThat(result).extractingJsonPathStringValue("$.firstName").isEqualTo("John");
+        assertThat(result).extractingJsonPathStringValue("$.lastName").isEqualTo("Doe");
+        assertThat(result).extractingJsonPathStringValue("$.email").isEqualTo("john.doe@mail.com");
+    }
+}
+
+  Как вы видите, тест становится лаконичным. Он полностью сконцентрирован на работе с JSON.
+И это упрощает содержание теста, позволяет сделать тестовое покрытие для каждого кусочка вашего приложения более полным.
+При использовании аннотации @JsonTest Spring создаёт вспомогательный объект JacksonTester<UserDto> json, который в дальнейшем можно использовать в тесте.

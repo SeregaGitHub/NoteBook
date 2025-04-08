@@ -1,0 +1,114 @@
+  Внутри механизма JDBC, а именно в JdbcTemplate, есть ряд методов для реализации маппинга полученных результатов.
+Это, например, queryForList, queryForStream и другие. Разные методы предполагают разные способы получения данных (в виде списка, объекта или стрима)
+и разный способ передачи параметров (в виде объектов или списков). Подробнее об этих методах можно узнать из документации.
+
+https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/jdbc/core/JdbcTemplate.html
+
+
+
+<T> List<T> query(String sql, RowMapper<T> rowMapper, Object... args)
+
+  Метод query (от англ. «запрос») позволяет выполнить запрос,
+а затем автоматически обработать результат с помощью реализации интерфейса RowMapper (англ. «преобразователь строк»).
+
+
+public interface RowMapper<T> {
+    T mapRow(ResultSet rs, int rowNum) throws SQLException;
+}
+
+  Интерфейс RowMapper преобразует строку rs с порядковым номером rowNum в нужный тип.
+Как и SqlRowSet, класс ResultSet обеспечивает получение результата запроса, но только для одной строки.
+
+
+// Так выглядит способ преобразования полученных данных вручную !!!
+
+@Override
+public Optional<User> findUserById(String id) {
+    // выполняем запрос к базе данных.
+    SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from cat_user where id = ?", id);
+
+    // обрабатываем результат выполнения запроса
+    if(userRows.next()) {
+
+        User user = new User();
+        user.setId(id);
+        user.setNickname(userRows.getString("nickname"));
+        user.setUsername(userRows.getString("username"));
+
+        log.info("Найден пользователь: {} {}", userRows.getString("id"), userRows.getString("nickname"));
+
+        return Optional.of(user);
+    } else {
+        log.info("Пользователь с идентификатором {} не найден.", id);
+        return Optional.empty();
+    }
+}
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+  Теперь можно реализовать класс PostDaoImpl, который будет имплементировать интерфейс PostDao с методом findPostsByUser(User user).
+
+Составьте запрос для получения данных.
+
+select * from cat_post where author_id = ? order by creation_date desc
+
+  Обратите внимание: в запросе была применена сортировка по дате создания (order by creation_date desc).
+
+  Многие этапы обработки, сортировки и группировки данных удобнее и быстрее производить в БД.
+Её движок и структура хранения специально на это рассчитаны.
+Такой подход экономит время при маппинге данных в Java-объекты.
+
+
+  В методе jdbcTemplate.query реализуйте анонимный класс-наследник RowMapper<Post> с единственным методом mapRow.
+В нём создайте новый экземпляр new Post(), а затем по очереди заполните поля через сеттеры.
+Отдельно заполните поле user с помощью объекта-параметра. В конце нужно вернуть результат метода в переменную post.
+Код компонента получится такой.
+
+
+@Component
+public class PostDaoImpl implements PostDao {
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public PostDaoImpl(JdbcTemplate jdbcTemplate){
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @Override
+    public Collection<Post> findPostsByUser(User user) {
+        // метод принимает в виде аргумента строку запроса, преобразователь и аргумент — id пользователя
+        String sql = "select * from cat_post where author_id = ? order by creation_date desc";
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makePost(user, rs), user.getId());
+    }
+
+    private Post makePost(User user, ResultSet rs) throws SQLException {
+        // используем конструктор, методы ResultSet
+        // и готовое значение user
+        Integer id = rs.getInt("id");
+        String description = rs.getString("description");
+        String photoUrl = rs.getString("photo_url");
+
+        // Получаем дату и конвертируем её из sql.Date в time.LocalDate
+        LocalDate creationDate = rs.getDate("creation_date").toLocalDate();
+
+        return new Post(id, user, description, photoUrl, creationDate);
+    }
+}
+
+  Поскольку нужен список постов конкретного пользователя, в качестве параметра поиска применяется значение user.getId().
+Это лишь один из способов использования ResultSet. Когда известно, какие колонки будут получены в результате запроса и какой у них тип данных,
+можно разобрать строку на составляющие и получить значения ячеек.
+Эти значения понадобятся для создания и заполнения данных объектов — таких как Post или User.
+
+  Для более сложных случаев у класса ResultSet есть методы по программной обработке любого набора колонок и полей
+
+-  getMetaData()
+-  getColumnCount()
+-  getColumnName()
+
+и другие.
+
+https://docs.oracle.com/javase/7/docs/api/java/sql/ResultSetMetaData.html
+
+Такой способ обработки данных полезен, например, когда запросы строятся по пользовательским фильтрам и их результаты неизвестны наперёд.

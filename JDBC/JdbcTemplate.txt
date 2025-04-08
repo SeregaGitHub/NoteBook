@@ -1,0 +1,98 @@
+  Внутри механизма JDBC, а именно в JdbcTemplate, есть ряд методов для реализации маппинга полученных результатов.
+Это, например, queryForList, queryForStream и другие. Разные методы предполагают разные способы получения данных
+(в виде списка, объекта или стрима) и разный способ передачи параметров (в виде объектов или списков).
+Подробнее об этих методах можно узнать из документации.
+
+https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/jdbc/core/JdbcTemplate.html
+
+-  queryForStream
+-  queryForList
+-  queryForRowSet
+
+---------------------------------------------------------------------------------------------------------------
+
+-  query  -  (от англ. «запрос») позволяет выполнить запрос,
+             а затем автоматически обработать результат с помощью реализации интерфейса
+             -  RowMapper (англ. «преобразователь строк»).
+
+<T> List<T> query(String sql, RowMapper<T> rowMapper, Object... args)
+
+public interface RowMapper<T> {
+    T mapRow(ResultSet rs, int rowNum) throws SQLException;
+}
+
+  Интерфейс RowMapper преобразует строку rs с порядковым номером rowNum в нужный тип.
+Как и SqlRowSet, класс ResultSet обеспечивает получение результата запроса, но только для одной строки.
+
+---------------------------------------------------------------------------------------------------------------
+
+                                  batchUpdate() - БЫСТРЕЕ чем обычный update() !!!
+
+public void batchUpdateTest() {
+        List<User> users= create100_000Users();
+        jdbcTemplate.batchUpdate("INSERT INTO Users (user_name, address, email, telephone) VALUES(?, ?, ?, ?)", new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement preparedStatement, int i) throws SQLException {
+                preparedStatement.setString(1, users.get(i).getUser_name());
+                preparedStatement.setString(2, users.get(i).getAddress());
+                preparedStatement.setString(3, users.get(i).getEmail());
+                preparedStatement.setString(4, users.get(i).getTelephone());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return users.size();
+            }
+        });
+    }
+
+public void multipleUpdateTest() {
+        List<User> users= create100_000Users();
+        for (User user: users) {
+            jdbcTemplate.update("INSERT INTO Users (user_name, address, email, telephone) VALUES(?, ?, ?, ?)",
+                    user.getUser_name(),
+                    user.getAddress(),
+                    user.getEmail(),
+                    user.getTelephone());
+        }
+    }
+
+===============================================================================================================
+
+                                    Если надо вернуть ID, привоенный БД
+
+KeyHolder keyHolder = new GeneratedKeyHolder();
+
+jdbcTemplate.update(con -> {PreparedStatement statement = con.prepareStatement(
+        "insert into FILM (FILM_NAME, FILM_DESCRIPTION, FILM_RELEASE_DATE, FILM_DURATION, RATING_ID) values (?, ?, ?, ?, ?)"
+                           , new String[]{"FILM_ID"});
+    statement.setString(1, film.getName());
+    statement.setString(2, film.getDescription());
+    statement.setDate(3, Date.valueOf(film.getReleaseDate()));
+    statement.setInt(4, film.getDuration());
+    statement.setInt(5, film.getMpa().getId()); return statement;}, keyHolder);
+
+film.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
+
+===============================================================================================================
+
+                    Если нужно выбрать колекцию из БД -> RowMapper - хороший вариант !!!
+
+public List<User> getUsersList() {
+        String sqlUsers = "select * from USER_FILMORATE ORDER BY USER_ID";
+        List<User> users = jdbcTemplate.query(sqlUsers, (rs, rowNum) -> makeUser(rs));
+        return users;
+    }
+
+static User makeUser(ResultSet rs) throws SQLException {
+        User user = User.builder()
+                .id(rs.getInt("USER_ID"))
+                .email(Objects.requireNonNull(rs.getString("USER_EMAIL")))
+                .login(Objects.requireNonNull(rs.getString("USER_LOGIN")))
+                .name(Objects.requireNonNull(rs.getString("USER_NAME")))
+                .birthday(Objects.requireNonNull(rs.getDate("USER_BIRTHDAY")).toLocalDate())
+                .build();
+        return user;
+    }
+
+===============================================================================================================

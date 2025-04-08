@@ -1,0 +1,156 @@
+
+                               Настраиваем Hibernate в проекте на «чистом» Spring
+
+<dependency>
+  <groupId>org.springframework.data</groupId>
+  <artifactId>spring-data-jpa</artifactId>
+  <version>2.6.1</version>
+</dependency>
+
+<dependency>
+  <groupId>org.hibernate</groupId>
+  <artifactId>hibernate-core</artifactId>
+  <version>5.4.17.Final</version>
+</dependency>
+
+<dependency>
+  <groupId>org.postgresql</groupId>
+  <artifactId>postgresql</artifactId>
+  <version>42.3.2</version>
+</dependency>
+
+- spring-data-jpa — обеспечивает интеграцию Spring;
+- hibernate-core — отвечает за реализацию интерфейсов JPA;
+- postgresql — содержит драйвер БД PostgreSQL.
+
+============================================================================================================
+
+  Мы покажем ручную настройку всех необходимых компонентов.
+Такая конфигурация будет выполняться в методах класса PersistenceConfig.
+Этот класс помечается аннотацией @Configuration и становится конфигурационным бином.
+Теперь в нём можно создавать бины с помощью соответствующих методов.
+
+
+package ru.practicum.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+
+import javax.persistence.EntityManagerFactory;
+import javax.sql.DataSource;
+import java.util.Properties;
+
+@Configuration
+@PropertySource(value = "classpath:application.properties")
+public class PersistenceConfig {
+    private final Environment environment;
+
+    public PersistenceConfig(Environment environment) {
+        this.environment = environment;
+    }
+
+    private Properties hibernateProperties() {
+        Properties properties = new Properties();
+        properties.put("hibernate.dialect", environment.getRequiredProperty("hibernate.dialect"));
+        properties.put("hibernate.show_sql", environment.getRequiredProperty("hibernate.show_sql"));
+        return properties;
+    }
+
+    @Bean
+    public DataSource dataSource() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName(environment.getRequiredProperty("jdbc.driverClassName"));
+        dataSource.setUrl(environment.getRequiredProperty("jdbc.url"));
+        dataSource.setUsername(environment.getRequiredProperty("jdbc.username"));
+        dataSource.setPassword(environment.getRequiredProperty("jdbc.password"));
+        return dataSource;
+    }
+
+    @Bean
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
+        final LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
+        emf.setDataSource(dataSource);
+        emf.setPackagesToScan("ru.practicum");
+
+        final HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+        emf.setJpaVendorAdapter(vendorAdapter);
+        emf.setJpaProperties(hibernateProperties());
+
+        return emf;
+    }
+
+    @Bean
+    public JpaTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
+        JpaTransactionManager transactionManager = new JpaTransactionManager();
+        transactionManager.setEntityManagerFactory(entityManagerFactory);
+        return transactionManager;
+    }
+
+}
+
+-------------------------------------------------------------------------------------------------------------------
+
+*  Сначала нужно подключиться к тестовой базе данных и настроить бин DataSource по заранее заданным параметрам приложения.
+
+  Шаги те же, что и в теме о работе с JDBC. Значения свойств берутся из файла настроек application.properties.
+Обратите внимание на аннотацию @Bean. Она выполняет несколько функций:
+
+  Метод, помеченный этой аннотацией, будет возвращать объекты — бины Spring.
+Это альтернатива способу создания бинов с помощью аннотаций класса — @Component и @Service.
+Аннотация @Bean позволяет добавлять в контекст приложения объекты классов, к исходному коду которых у разработчика нет доступа.
+Или объекты, которые не интегрированы в Spring, — например, классы из сторонних библиотек.
+  Аннотация @Bean позволяет сконфигурировать встроенные компоненты фреймворка. В нашем примере мы аннотировали метод dataSource().
+Теперь все бины — и пользовательские, и встроенные — будут считать этот бин основным источником данных.
+При работе в Spring Boot это также приведёт к тому, что стандартный бин dataSource от разработчиков Spring будет неактивен.
+Подробнее об этом в документации.
+https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#using.auto-configuration.replacing
+
+*  Следующий компонент для настройки — Hibernate. Опишем простой метод, возвращающий объект типа Properties.
+Этот объект будет содержать важные конфигурации Hibernate.
+
+  Мы настроили два важных свойства Hibernate. Первое, hibernate.dialect, нужно для обеспечения автоматической генерации кода.
+Оно содержит значение из файла application.properties и указывает на класс org.hibernate.dialect.PostgreSQLDialect.
+Хотя в работе с любой БД используется стандарт SQL, в каждой из них у этого языка запросов будут разные модификации.
+В нашем случае это модификация для базы PostgreSQL.
+  Второе свойство — hibernate.show_sql. Параметр show_sql принимает значения true или false.
+Он отвечает за включение или отключение режима отладочного вывода SQL-запроса.
+Пример такого сгенерированного фреймворком запроса мы показали в прошлом уроке.
+
+*  В теме о JDBC и базах данных основным интерфейсом для работы с БД был класс JdbcTemplate.
+В JPA есть похожий основной класс. Он называется **EntityManager** (англ. «менеджер сущностей»). Создадим следующий бин.
+
+  На самом деле вместо обычного бина мы создали фабрику бинов. Она использует заданные выше свойства Hibernate и бин DataSource для подключения к БД.
+Класс HibernateJpaVendorAdapter связывает интерфейсы JPA и их реализацию внутри фреймворка Hibernate.
+Также в этом примере мы указали пакет "ru.practicum". В нём фреймворк будет искать классы-сущности, отмеченные аннотацией @Entity
+
+*  Ещё один важный элемент — JpaTransactionManager (англ. «менеджер транзакций JPA»). О его работе вы узнаете в следующих уроках.
+Пока достаточно настроить бин в соответствующем методе.
+
+==================================================================================================================================
+
+                                      Spring Boot
+
+-  Добавить драйвер Postgresql в POM.xml
+-  Добавить spring-boot-starter-data-jpa
+-  Добавить в application.properties параметры подключения spring.datasource.* и диалект hibernate
+
+https://www.baeldung.com/spring-boot-starters#JPA
+
+https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#dependencies
+
+============================================================================================================
+
+                                          POM.xml
+
+- spring.jpa.show-sql=true              -  показ логов в консоле
+- spring.jpa.hibernate.ddl-auto=update  -  позволяем hibernate самому создавать таблицы (лучше не доверять !!!)
+  (по умолчанию, даже при связях One-To-Many, создаст связующую таблицу, как при Many-To_one)
+  (@OneToMany
+  @JoinColumn(name = "some_id")         -  третья таблица не будет создана
+  private Collection...)

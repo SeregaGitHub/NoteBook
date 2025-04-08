@@ -1,0 +1,93 @@
+
+                                                 Сервлеты
+
+https://www.jetbrains.com/help/idea/deploying-a-web-app-into-an-app-server-container.html
+
+                                                  Servlet
+
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class SumServlet extends HttpServlet {
+
+      @Override
+      protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+          int a = Integer.parseInt(req.getParameter("a"));
+          int b = Integer.parseInt(req.getParameter("b"));
+          int sum = a + b;
+          resp.getWriter().print(sum);
+      }
+}
+
+                                                  Spring
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class SumController {
+
+    @GetMapping("/sum")
+    public int sum(@RequestParam int a, @RequestParam int b) {
+        return a + b;
+    }
+}
+
+  Мы не будем подробно рассматривать разные контейнеры и остановимся на самом популярном — Apache Tomcat.
+Именно его Spring Boot использует по умолчанию для запуска встроенного контейнера
+https://tomcat.apache.org/
+
+================================================================================================================================
+
+                                          DispatcherServlet и ApplicationContext
+
+  Когда вы видите фразу «Spring собирает информацию о классах или методах с аннотацией @X и/или @Y», можно быть уверенным,
+что фреймворк задействует контекст приложения и его реализации. Работа DispatcherServlet — не исключение.
+Диспетчеру нужен настроенный контекст, в который включены все классы контроллеров.
+  Если Spring Boot автоматически создаёт и настраивает контекст и вам не нужно задумываться о том, откуда он взялся,
+то в случае со Spring Framework за настройку контекста отвечает разработчик. Поэтому от него требуется настроить и передать контекст
+вместе с бинами-контроллерами сервлету-диспетчеру.
+  Конструктор класса DispatcherServlet принимает на вход WebApplicationContext. WebApplicationContext отличается от ApplicationContext тем,
+что содержит метод для получения ServletContext.
+
+public interface WebApplicationContext extends ApplicationContext {
+    // ... полезные константы ...
+    ServletContext getServletContext();
+}
+
+  ServletContext, в свою очередь, хранит общие настройки и методы для всех сервлетов.
+
+  Обилие разнообразных «контекстов» может сбивать с толку, но всё это не так сложно, как кажется на первый взгляд.
+Главное — понять, что любой контекст, по сути, информация о текущем окружении — английское “context”
+можно перевести буквально как «окружающий текст». В Spring контекст означает ApplicationContext — множество классов или бинов,
+которые задействованы в приложении. Обычно они отмечены аннотациями @Component, @Service, @RestController и другими.
+В случае сервлетов контекст означает класс ServletContext, с помощью которого сервлет может взаимодействовать с контейнером сервлетов.
+
+                                             Реализации WebApplicationContext
+
+  Сам по себе WebApplicationContext — это интерфейс. Чтобы создать объект с таким интерфейсом, нужно использовать подходящую реализацию.
+Их несколько, но в большинстве случаев подходит AnnotationConfigWebApplicationContext.
+Эта реализация поддерживает создание бинов с помощью аннотаций @Component, @Service, @RestController и других.
+  В более старых проектах можно встретить реализацию XmlWebApplicationContext, которая вместо аннотаций ожидает XML-конфигурацию,
+где указаны все бины. Если увидите такой вариант, не пугайтесь, он работает практически так же, как и контекст с аннотациями.
+Самая страшная часть — это огромные XML-конфигурации, в которых может быть сложно разобраться.
+
+                                                      ServletContext
+
+  Объект класса ServletContext создаётся при запуске контейнера сервлетов и является общим для всех сервлетов приложения.
+Например, может быть три сервлета, но при этом будет только один объект типа ServletContext.
+  ServletContext можно использовать следующим образом.
+
+    Сервлет может получить настройки приложения (задаются в файле конфигурации) с помощью метода ServletContext.getInitParameter(name).
+    Сервлет может передать какие-то значения другому сервлету с помощью методов ServletContext.setAttribute(name, value) и ServletContext.getAttribute(name).
+    Можно что-нибудь залогировать с помощью метода ServletContext.log(message).
+
+  ServletContext — часть технологии сервлетов, и он ничего не знает о Spring Framework.
+Для приложений без Spring ServletContext может быть очень полезен, но экосистема фреймворков Spring
+предоставляет более удобные аналоги всех его функций. К примеру, Spring Boot автоматически настраивает логирование
+с помощью библиотеки slf4j, для настройки приложения есть удобные аннотации и так далее.
+При этом Spring использует ServletContext для первичной настройки DispatcherServlet.

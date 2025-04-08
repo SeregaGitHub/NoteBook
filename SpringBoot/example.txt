@@ -1,0 +1,96 @@
+@SpringBootApplication
+public class CatsgramApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(CatsgramApplication.class, args);
+	}
+}
+
+-----------------------------------------------------------------------------------------------------
+
+public class User {
+    private String email;
+    private String nickname;
+    private LocalDate birthdate;
+
+    public User(String email, String nickname, String birthdate) {
+        this.email = email;
+        this.nickname = nickname;
+        this.birthdate = LocalDate.parse(birthdate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
+
+-----------------------------------------------------------------------------------------------------
+
+    @RestController
+    @RequestMapping("/users")
+    public class UserController {
+
+        private final HashMap<String, User> userHashMap = new HashMap<>();
+
+        @GetMapping
+        public List<User> getUsersList() {
+            return new ArrayList<>(userHashMap.values());
+        }
+
+        @PostMapping
+        public User addNewUser(@RequestBody User user) {
+            Optional<String> optional = Optional.ofNullable(user.getEmail());
+            if (optional.isEmpty() || optional.get().isBlank()) {
+                throw new InvalidEmailException("There is no email !!!");
+            } else if (userHashMap.containsKey(optional.get())) {
+                throw new UserAlreadyExistException("Such user is already exists !!!");
+            } else {
+                userHashMap.put(user.getEmail(), user);
+            }
+            return user;
+        }
+
+        @PutMapping
+        public User updateUser(@RequestBody User user) {
+            Optional<String> optional = Optional.ofNullable(user.getEmail());
+            if (optional.isEmpty() || optional.get().isBlank()) {
+                throw new InvalidEmailException("There is no email !!!");
+            } else {
+                userHashMap.put(user.getEmail(), user);
+            }
+            return user;
+        }
+    }
+-----------------------------------------------------------------------------------------------------
+
+private final Map<Integer, User> users = new HashMap<>();
+
+public UserDto updateUser(Integer id, UserDto updatedUser) {
+
+        User user = getUser(id);
+        if (user == null) {
+            log.warn("User with Id={} - does not exist", id);
+            throw new UserNotFoundException("User with Id=" + id + " - does not exist");
+        } else {
+            user = makeUser(user, updatedUser);
+            users.put(user.getId(), user);
+            log.info("User with Id={} was updated", id);
+        }
+        return UserMapper.toUserDto(user);
+    }
+
+
+		public UserDto updateUser(Integer id, UserDto updatedUser) {
+
+		        User user = getUser(id);
+
+		        if (user == null) {
+		            log.warn("User with Id={} - does not exist", id);
+		            throw new UserNotFoundException("User with Id=" + id + " - does not exist");
+		        } else {
+		            userFields.forEach((k, v) -> {
+		                Field field = ReflectionUtils.findField(User.class, k);
+		                assert field != null;
+		                field.setAccessible(true);
+		                ReflectionUtils.setField(field, user, v);
+		            });
+		        }
+		        log.info("User with Id={} was updated", id);
+		        users.put(id, user);
+		        return UserMapper.toUserDto(user);
+		    }

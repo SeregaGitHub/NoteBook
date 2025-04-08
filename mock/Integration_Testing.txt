@@ -1,0 +1,68 @@
+
+  В целом интеграционные тесты внешне мало отличаются от юнит-тестов,
+но главная разница заключается в аннотации @ExtendWith(SpringExtension.class)
+(или @SpringJUnitConfig, включающей в себя эту же аннотацию).
+  Она позволяет запустить тест как маленькое Spring-приложение.
+
+==========================================================================================================================================================================
+
+                                                    Тестирование на SpringBoot
+
+https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#features.testing
+
+  Если есть аннотация @Transactional в начале теста. Она означает, что каждый тест будет запускаться в отдельной транзакции.
+По умолчанию Spring откатывает каждую транзакцию в конце теста.
+Это нужно, чтобы не заполнять базу лишними тестовыми данными, которые могут помешать корректному исполнению тестов в дальнейшем.
+Но если, например, тест не работает по непонятной причине, но нужно разобраться, что происходит, данные нужно сохранить в БД.
+Для этого можно использовать аннотацию @Rollback со значением false:
+
+@Transactional
+@Rollback(false)
+@TestPropertySource(properties = { "db.name=test"})
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@SpringJUnitConfig( { PersistenceConfig.class, UserServiceImpl.class})
+class UserServiceImplTest {
+    //код тот же
+}
+
+  Аннотацию @Rollback можно использовать как на уровне тестового класса, так и на уровне отдельного теста.
+  
+==========================================================================================================================================================================
+
+@Transactional
+@RequiredArgsConstructor(onConstructor_ = @Autowired)                   -- если не указать, в тестах не сработает автоматическое внедрение зависимостей через конструктор
+@SpringJUnitConfig( { PersistenceConfig.class, UserServiceImpl.class})  -- при запуске теста будет создан Spring-контекст. (Можно инжектить бины)
+@TestPropertySource(properties = { "db.name=test"})                     -- тест будет работать с базой данных с названием test (чтобы не работать с основной !!!)
+
+class UserServiceImplTest {
+
+    private final EntityManager em;
+    private final UserService service;
+
+@Test
+void saveUser() {
+    UserDto userDto = makeUserDto("some@email.com", "Пётр", "Иванов");
+    service.saveUser(userDto);
+
+    TypedQuery<User> query = em.createQuery("Select u from User u where u.email = :email", User.class);
+    User user = query.setParameter("email", userDto.getEmail()).getSingleResult();
+                                                                        -- assertThat (метод assertThat из библиотеки Hamcrest)
+                                                                        https://hamcrest.org/JavaHamcrest/
+    assertThat(user.getId(), notNullValue());
+    assertThat(user.getFirstName(), equalTo(userDto.getFirstName()));
+    assertThat(user.getLastName(), equalTo(userDto.getLastName()));
+    assertThat(user.getEmail(), equalTo(userDto.getEmail()));
+    assertThat(user.getState(), equalTo(userDto.getState()));
+    assertThat(user.getRegistrationDate(), notNullValue());
+}
+
+private UserDto makeUserDto(String email, String name) {
+    UserDto dto = new UserDto();
+    dto.setEmail(email);
+    dto.setFirstName(firstName);
+    dto.setLastName(lastName);
+    dto.setState(UserState.ACTIVE);
+
+    return dto;
+}
+}

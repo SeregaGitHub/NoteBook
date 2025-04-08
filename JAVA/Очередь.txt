@@ -1,0 +1,58 @@
+
+    Query myQueue = new Query();
+
+    Queue<Integer> myQueue = new LinkedList<>();
+
+    Queue<Integer> priorityQueue = new PriorityQueue<>();  -  очередь в порядке приоритета
+
+  (Очередь с приоритетом элементов)
+
+- myQueue.add(_);     -  добавление елемента в конец очереди (при ограниченной очереди, при переполнении - exception)
+- myQueue.offer(_);   -  добавление елемента в конец очереди (при ограниченной очереди, при переполнении - не добавится)
+- myQueue.poll();     -  получение и удаление первого элемента очереди
+                         (При пустой очереди - null)
+- myQueue.peek();     -  просмотр первого элемента очереди,
+                         не вынимая его (если пусто - null)
+- myQueue.element();  -  просмотр первого элемента очереди,
+                         не вынимая его (если пусто - NoSuchElementException)
+- myQueue.remove();   -  удаление первого элемента очереди
+- myQueue.remove(_);  -  удаление любого элемента очереди
+                         (При пустой очереди - ОШИБКА)
+
+- for (Object obJ : myQueue) {
+            System.out.println(obJ);
+        }
+-----------------------------------------------------------------------------------------------------------------
+    Deque<Integer> deque = new ArrayDeque<>();
+
+- deque.add();
+- deque.addFirst();
+- deque.addLast();
+- deque.offerFirst();
+- deque.offerLast();
+
+- deque.removeFirst();
+- deque.removeLast();
+- deque.pollFirst(); deque.pop();
+- deque.pollLast();
+
+- deque.peekFirst();
+- deque.peekLast();
+- deque.getFirst();
+- deque.getLast();
+
+========================================================================================
+    Stack myStack = new Stack();
+
+    Stack<Integer> integerMyStack = new Stack<>();
+
+- myStack.push(_)    -  добавление елемента в стек
+- myStack.pop();     -  вынимает(удаляет) первый элемент стека
+- myStack.search(_)  -  поиск элемента
+- myStack.empty()    -  проверяет, не пустая ли коллекция
+
+  Iterator iteR = myStack.iterator();
+        while (iteR.hasNext()) {
+            Object numbeR = iteR.next();
+            System.out.println(numbeR);
+        }

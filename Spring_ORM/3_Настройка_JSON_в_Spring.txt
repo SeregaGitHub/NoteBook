@@ -1,0 +1,33 @@
+
+                                              Настройка JSON в Spring
+
+  Чтобы научить Spring превращать объекты в JSON, подключим библиотеку Jackson. Для этого добавьте нужную зависимость в pom.xml.
+
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.13.3</version>
+</dependency>
+
+  Java-библиотек для работы с JSON много, и теоретически можно использовать любую.
+Но на практике со Spring чаще всего используют именно Jackson — из-за хорошей совместимости. Она же по умолчанию используется в Spring Boot.
+
+  Библиотеки регулярно обновляются, и какую бы версию мы ни указали в уроке, через некоторое время, неделю или месяц появится новая.
+Безопасно обновление версии происходит обычно в тех случаях, когда мажорная версия (первая цифра) не изменилась.
+Например, обновить Jackson с 2.13.3 на 2.14.1 с высокой гарантией безопасно.
+  А вот если обновить с 2.13.3 на 3.1.2, можно сломать проект — в другой мажорной версии могут быть другие названия классов и методов.
+
+-   Чтобы включить поддержку JSON через библиотеку Jackson, нужна аннотация @EnableWebMvc.
+  Это аннотация позволяет включить множество полезных для веб-проектов настроек Spring —  к примеру,
+  поддержку @ExceptionHandler и нужную нам поддержку JSON. @EnableWebMvc используется вместе с аннотацией @Configuration.
+
+
+package ru.practicum.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+
+@Configuration // помечает класс как java-config для контекста приложения
+@EnableWebMvc  // призывает импортировать дополнительную конфигурацию для веб-приложений
+public class WebConfig {
+}

@@ -1,0 +1,43 @@
+
+<dependency>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-classic</artifactId>
+    <version>1.2.11</version>
+</dependency>
+
+========================================================================================================
+
+                        Чтобы начать пользоваться логированием, нужно создать логгер, например, так:
+
+package ru.practicum;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+@Service
+public class ExampleService {
+    private static final Logger log = LoggerFactory.getLogger(ExampleService.class);
+
+    public int sum(int a, int b) {
+        log.info("Got a={}, b={}", a, b);
+        return a + b;
+    }
+}
+
+Или можно использовать аннотацию @Slf4j, которая создаст такое же точно поле log.
+
+package ru.practicum;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+@Service
+@Slf4j
+public class ExampleService {
+
+    public int sum(int a, int b) {
+        log.info("Got a={}, b={}", a, b);
+        return a + b;
+    }
+}

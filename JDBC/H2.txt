@@ -1,0 +1,52 @@
+  Почитайте, как использовать H2 со Spring Boot, в этой статье. Далее следуйте нашей инструкции:
+
+https://www.baeldung.com/spring-boot-h2-database
+
+  Добавьте в проект зависимости:
+
+-  com.h2database.h2
+-  org.springframework.boot.spring-boot-starter-data-jdbc
+-  org.springframework.boot.spring-boot-starter-test
+
+<dependency>
+  <groupId>com.h2database</groupId>
+  <artifactId>h2</artifactId>
+  <scope>runtime</scope>
+</dependency>
+
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-test</artifactId>
+  <scope>test</scope>
+  <exclusions>
+    <exclusion>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
+    </exclusion>
+  </exclusions>
+</dependency>
+
+
+  Сконфигурируйте базу данных для рабочего режима с помощью файла настроек application.properties.
+
+spring.sql.init.mode=always
+# в jdbc-url укажите, что данные нужно сохранять в файл
+spring.datasource.url=jdbc:h2:file:./db/filmorate
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=password
+
+
+spring.datasource.url=jdbc:h2:mem:./db/filmorate       -- mem вместо file  -  база будет создаваться в оперативной памяти, а не в файле
+
+
+  Соберите SQL-запросы, формирующие структуру вашей базы, в отдельный файл в src/main/resources с названием schema.sql
+ — так схема будет создаваться заново при каждом запуске приложения.
+  Включите в файл schema.sql создание таблиц. Если вам нужны некоторые данные в базе, их инициализация обычно описывается в файле data.sql
+— создайте его там же, где и schema.sql.
+  Чтобы избежать ошибок, связанных с многократным применением скрипта к БД, добавьте условие IF NOT EXISTS при создании таблиц и индексов.

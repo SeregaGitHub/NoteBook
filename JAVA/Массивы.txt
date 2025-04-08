@@ -1,0 +1,57 @@
+
+int[] myMassiv = new int[5];
+     for (int i = 0; i < myMassiv.length; i++) {
+       myMassiv[i] = i + 1;
+    }
+    ИЛИ
+      int[] myArray = {1, 2, 3, 4, 5};
+    System.out.print(Arrays.toString(myMassiv));
+    [1, 2, 3, 4, 5]
+  - for (int Chisla: myMassiv) {
+        System.out.print(Chisla);
+        12345
+  - Метод split() разрезает строку по элементу, указанному в скобках
+    String str = "I'll be back";
+    String[] words = str.split(" ");
+    System.out.println(Arrays.toString(words)); - [I'll, be, back]
+---------------------------------------------------------------------
+---------------------------------------------------------------------
+              Многомерные массивы
+   int[][] myArr = {{1, 2, 3}, {4}, {5, 6, 7, 8}};
+   двумерный массив (таблица), состоящий из трёх "строк",
+   при этом в первой "строке" - три "ячейки",
+   во второй - одна, а в третьей - четыре
+ - Двумерный массив размерами m*n называется матрицей
+   (m) - это количество строк в матрице,
+   вторая (n) - количество столбцов
+ - int [][] My_Massiv = new int[x][]; - создание массива
+ - Arrays.deepToString - вывод двумерного массива
+ - int[][] array = new int[2][];
+    array[0] = new int[3];
+    array[1] = new int[8];
+---------------------------------------------------------------------
+---------------------------------------------------------------------
+-   int[] mas = {1,2,3,4};     // изменения массива функцией
+        f(mas);
+   static void f(int[] a){
+        a[0] = 10;             // {10,2,3,4}
+
+---------------------------------------------------------------------
+
+import java.util.Arrays;
+
+- Arrays.toString                                                  -  вывод массива
+- Arrays.deepToString                                              -  вывод двумерного массива
+- Arrays.sort(My_Massiv)                                           -  сортирует массив
+- Arrays.sort(My_Massiv, 3, 7)                                     -  сортирует часть массива:
+                                                                      (правая граница не входит в отрезок сортировки)
+- Arrays.asList(myArray)                                           -  превращает массив в список
+- Arrays.equals(My_Massiv_1, My_Massiv_2)                          -  сравнивает два массива и (true/false)
+- Arrays.deppEquals(My_Massiv_1, My_Massiv_2)                      -  сравнивает два многомерных массива
+- Arrays.copyOf(My_Massiv, 3)                                      -  копия первых трёх элементов массива
+- Arrays.copyOf(My_Massiv, My_Massiv.length)                       -  копия всего массива
+- Arrays.copyOfRange(My_Massiv, 2, 5)                              -  копия элементов массива 2,3,4
+- Arrays.fill(myArray, значение)                                   -  заполнить массив одинаковыми значениями
+- Arrays.fill(myArray, первый, последний, значение)                -  заполнить
+                                                                      часть массива одинаковыми значениями
+- int i = Arrays.binarySearch(myArray(отсортированный), значение)  -  бинарный поиск

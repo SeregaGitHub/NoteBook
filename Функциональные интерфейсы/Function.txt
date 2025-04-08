@@ -1,0 +1,51 @@
+
+import model.Student;
+import util.StudentsInfo;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+
+public class FunctionExample {
+    public static void main(String[] args) {
+        Student st1 = new Student("Ivan", 'M', 22, 3, 8.3);
+        Student st2 = new Student("Nikolay", 'M', 28, 2, 6.4);
+        Student st3 = new Student("Elena", 'F', 19, 1, 8.9);
+        Student st4 = new Student("Petr", 'M', 35, 4, 7);
+        Student st5 = new Student("Mariya", 'F', 23, 3, 9.1);
+
+        List<Student> students = new ArrayList<>();
+        students.add(st1);
+        students.add(st2);
+        students.add(st3);
+        students.add(st4);
+        students.add(st5);
+
+        StudentsInfo info = new StudentsInfo();
+        System.out.println();
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+        Function<Student, Double> doubleFunction = student -> student.getAvgGrade();
+        Function<Student, Double> doubleFunction2 = Student::getAvgGrade;
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+        System.out.println(avrSomething(students, Student::getAvgGrade));
+        System.out.println(avrSomething(students, student -> (double) student.getAge()));
+
+        System.out.println(avrSomethingExample(students, Student::getAvgGrade));
+        System.out.println(avrSomethingExample(students, student -> (double) student.getAge()));
+
+    }
+    public static double avrSomething(List<Student> studentList, Function<Student, Double> function) {
+        double avg = 0;
+        for (Student s: studentList ) {
+            avg += function.apply(s);
+        }
+        return avg / studentList.size();
+    }
+
+    public static double avrSomethingExample(List<Student> studentList, Function<Student, Double> function) {
+        AtomicReference<Double> avg = new AtomicReference<>((double) 0);
+        studentList.forEach(student -> avg.updateAndGet(v -> (double) (v + function.apply(student))));
+        return avg.get() / studentList.size();
+    }
+}

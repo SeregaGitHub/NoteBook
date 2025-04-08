@@ -1,0 +1,3 @@
+                                         Тестируем API с помощью Insomnia
+
+snap run insomnia

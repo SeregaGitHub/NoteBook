@@ -1,0 +1,32 @@
+
+- addAll(colls, e1, e2, ..)         -  Добавляет в коллекцию colls элементы e1, e2,...
+- fill(list, obj)                   -  Заменяет в переданном списке все элементы на obj
+- nCopies(n, obj)                   -  Возвращает список, состоящий из n копий объекта obj
+- replaceAll(list, oldVal, newVal)  -  Заменяет в списке list
+                                       все значения oldVal на newVal
+- copy(dest, src)                   -  Копирует все элементы из списка src в список dest
+- reverse(list)                     -  Разворачивает список задом наперед
+- sort(list)                        -  Сортирует список в порядке возрастания
+- rotate(list, n)                   -  Циклично сдвигает элементы списка list на n элементов
+- shuffle(list)                     -  Случайно перемешивает элементы списка
+- min(colls)                        -  Находит минимальный элемент коллекции colls
+- max(colls)                        -  Находит максимальный элемент коллекции colls
+- frequency(colls, obj)             -  Определяет, сколько раз элемент obj
+                                       встречается в коллекции colls
+- binarySearch(list, key)           -  Ищет индекс элемента key в отсортированном списке.
+- disjoint(colls1, colls2)          -  Возвращает true, если у коллекций нет общих элементов
+- unmodifiableList()                -  создает из переданного списка его неизменяемый вариант
+
+- emptyList()                       -  создаёт пустой список
+- singletonList(e)                  -  создаёт список из единственного элемента (e)
+- nCopies(int, e)                   -  создаёт список, где элемент e повторён int раз
+
+    (List<String> solarSystem = Collections.unmodifiableList
+    (new ArrayList<>(Arrays.asList(mercury, venus, earth, mars,
+                 jupiter, saturn, uranus, neptune)));)
+
+- swap()                             -  поменяет местами элементы коллекции
+
+    (Collections.swap(solarSystem, solarSystem.indexOf(mercury), solarSystem.indexOf(neptune));)
+
+- disjoint()                         -  проверяет, есть ли у двух коллекций пересечения, то есть хоть один одинаковый элемент

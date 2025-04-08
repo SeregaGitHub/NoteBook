@@ -1,0 +1,153 @@
+
+                                                              Настройка QueryDSL
+
+  Если задача предполагает необходимость работы с сущностями и сложные условия поиска, но не требует особых агрегаций,
+можно использовать язык QueryDSL (Query Domain Specific Language).
+  QueryDSL разработан сторонними авторами и не привязан к репозиториям напрямую.
+Работа через этот язык расширяет возможности репозиториев Spring Data и решает проблему сложных логических выражений в запросных методах.
+Чтобы работать с QueryDSL, нужно добавить в проект зависимость querydsl.
+
+<dependencies>
+        <dependency>
+          <groupId>com.querydsl</groupId>
+          <artifactId>querydsl-jpa</artifactId>
+          <version>5.0.0</version>
+      </dependency>
+</dependencies>
+
+  Также требуется добавить плагин querydsl в секцию <build> файла pom.xml.
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>com.mysema.maven</groupId>
+            <artifactId>apt-maven-plugin</artifactId>
+            <version>1.1.3</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>process</goal>
+                    </goals>
+                    <configuration>
+                        <outputDirectory>target/generated-sources/java</outputDirectory>
+                        <processor>com.querydsl.apt.jpa.JPAAnnotationProcessor</processor>
+                    </configuration>
+                </execution>
+            </executions>
+            <dependencies>
+                <dependency>
+                    <groupId>com.querydsl</groupId>
+                    <artifactId>querydsl-apt</artifactId>
+                    <version>5.0.0</version>
+                </dependency>
+            </dependencies>
+        </plugin>
+    </plugins>
+</build>
+
+  Если сущности размечены аннотациями JPA, то QueryDSL поймёт, что нужно сформировать дополнительные вспомогательные классы.
+Эти классы будем называть Q-классами по их общему внешнему виду.
+Плагин querydsl позволит в фазе предкомпиляции и в процессе анализа исходного кода создать для каждой из сущностей свой Q-класс.
+Q-класс выглядит примерно так.
+
+/**
+ * QItem is a Querydsl query type for Item
+ */
+@Generated("com.querydsl.codegen.DefaultEntitySerializer")
+public class QItem extends EntityPathBase<Item> {
+
+    private static final long serialVersionUID = 2084451991L;
+
+    public static final QItem item = new QItem("item");
+
+    public final NumberPath<Long> id = createNumber("id", Long.class);
+
+    public final SetPath<String, StringPath> tags = this.<String, StringPath>createSet("tags", String.class, StringPath.class, PathInits.DIRECT2);
+
+    public final StringPath url = createString("url");
+
+    public final NumberPath<Long> userId = createNumber("userId", Long.class);
+
+    public QItem(String variable) {
+        super(Item.class, forVariable(variable));
+    }
+
+    public QItem(Path<? extends Item> path) {
+        super(path.getType(), path.getMetadata());
+    }
+
+    public QItem(PathMetadata metadata) {
+        super(Item.class, metadata);
+    }
+
+}
+
+  Такие классы с префиксом Q можно увидеть, если после компиляции проекта в Maven заглянуть в target/generated-sources/java.
+Помимо Q-классов поддерживаются также enum-классы и связанные сущности. Подробнее можно почитать в документации QueryDSL.
+
+http://querydsl.com/static/querydsl/5.0.0/reference/html_single/
+
+=======================================================================================================================================================
+
+                                                          Репозиторий + QueryDSL
+
+  Допустим, нужно построить условие выборки в зависимости от параметров, которые указал пользователь.
+При этом неизвестно заранее, какие параметры он выберет, поэтому написать соответствующий запросный метод или JPQL-запрос не получится.
+Но есть выход.
+  Можно динамически собирать и выполнять запросы с помощью связки репозиторий + QueryDSL.
+Чтобы добавить в ItemRepository методы для работы с QueryDSL, расширим его через интерфейс QueryDslPredicateExecutor.
+
+interface ItemRepository extends JpaRepository<Item, Long>, QuerydslPredicateExecutor<Item> {
+
+}
+
+  Q-классы на основе ваших сущностей учитывают типы данных и допустимые операции с ними.
+Это позволяет формировать выражения в стиле fluent (англ. «текучий») для запроса данных на основе нужных критериев.
+Критерии и выражения для их описания называются предикатами или логическими единицами.
+  Теперь создадим запрос с использованием QueryDSL.
+
+class ItemServiceImpl implements ItemService {
+
+    //здесь остальные методы сервиса
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ItemDto> getItems(long userId, Set<String> tags) {
+        BooleanExpression byUserId = QItem.item.userId.eq(userId);
+        BooleanExpression byAnyTag = QItem.item.tags.any().in(tags);
+        Iterable<Item> foundItems = repository.findAll(byUserId.and(byAnyTag));
+        return ItemMapper.mapToItemDto(foundItems);
+    }
+}
+
+  QItem.item.userId.eq(userId) и QItem.item.tags.any().in(tags) — это и есть предикаты.
+
+  Такой запрос будет аналогичен следующему — с использованием JPQL.
+
+select item
+from Item item
+where item.user.id = ?1 and exists (
+  select 1
+  from Item i
+  inner join i.tags as tags
+  where i = item and tags in (?2)
+)
+
+Каждое поле Q-класса соответствует полю исходной сущности, а сами предикаты можно соединять с помощью логических операторов.
+
+                                                      Выберите верные предикаты QueryDSL.
+
+QAccount.*account*.password.isNotNull();
+Это верное выражение — оно проверяет пароль пользователя на null.
+
+QAccount.*account*.role.like(UserRoleEnum.ADMIN);
+Для оператора like нужно строковое поле, а не enum-класс.
+
+QAccount.*account*.mail.likeIgnoreCase("%yandex-team.ru").and(QAccount.*account*.phone.startsWith("+7"));
+Такое выражение корректно — оно, в частности, проверяет, работает ли пользователь в российской команде Яндекса.
+
+QAccount.fio.isNotEmpty();
+Здесь использовано некорректное обращение к Q-классу.
+
+QAccount.*account*.balance.gt(0.0).
+Это выражение поможет получить все аккаунты с балансом больше нуля.

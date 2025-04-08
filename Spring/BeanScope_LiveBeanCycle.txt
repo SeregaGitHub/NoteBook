@@ -1,0 +1,133 @@
+
+                                        Bean_Scope (область видимости)
+
+- Singleton
+- Prototype
+
+- Request                 |
+- Session                 |     только
+- Application (Servlet)   |  веб-приложения
+- Websocket               |
+
+=============================================================================================================
+
+                                                Singleton
+
+- Singleton - создаёт один бин (Stateless).
+(Если заинжектить в несколько классов -> изменить в одном -> изменится во всех)
+
+@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+@Scope("singleton")
+
+
+                                                Prototype
+
+- Prototype - создаёт несколько бинов (Stateful)
+(Если заинжектить в несколько классов -> изменить в одном -> изменится только в одном)
+
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+@Scope("prototype")
+
+
+                                                 Request
+
+- Request - создаётся на время одного HTTP запроса
+
+@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@RequestScope
+
+
+                                                 Session
+
+- Session - создаётся на время одной HTTP сессии
+
+@Scope(value = WebApplicationContext.SCOPE_SESSION, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@SessionScope
+
+
+                                              Application
+
+- Application - создаётся на время жизненного цикла ServletContext
+
+@Scope(value = WebApplicationContext.SCOPE_APPLICATION, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@ApplicationScope
+
+
+                                                Websocket
+
+- Websocket - создаётся на время одной Websocket сессии
+
+@Scope(scopeName = "websocket", proxyMode = ScopedProxyMode.TARGET_CLASS)
+
+=============================================================================================================
+
+                                           Жизненный цикл бина
+
+Старт приложения
+        |
+Создание ApplicationContext
+        |
+Создание объекта
+        |
+Внедрение зависимостей
+        |
+Пре-Инициализация
+BeanPostProcessor
+.postProcessBeforeInitialization()
+        |
+Инициализация
+@PostConstruct
+initMethod
+InitializaingBean
+.afterPropertiesSet()
+        |
+Пост-Инициализация
+BeanPostProcessor
+.postProcessAfterInitialization()
+        |
+Использование бина
+        |
+Удаление бина
+@PreDestroy
+destroyMethod
+DisposableBean
+.destroy()
+        |
+Завершение приложения
+
+------------------------------------------------------------------------------------------------------------------------
+
+                                Варианты интеграции в жизненный цикл бина
+
+  Аннотации (рекомендованный) [ указываются над методами ]
+
+-  @PostConstruct
+-  @PreDestroy
+
+  Джава код
+
+-  Интерфейс InitializaingBean, метод afterPropertiesSet()
+-  Интерфейс DisposableBean, метод destroy()
+
+  XML конфигурация
+
+-  Атрибут init-method                (init-method="doMyInit")
+-  Атрибут destroy-method             (destroy-method="doMyDestroy")
+
+------------------------------------------------------------------------------------------------------------------------
+
+                            Тонкости методов интеграции в жизненный цикл бина
+
+-  Модификатор доступа - любой (возможно, лучше private)
+-  Тип возвращаемого значения - любой, обычно void
+-  Название метода - любое
+-  Аргументы метода - НЕ ДОЛЖНЫ БЫТЬ
+-  Если методов аннотированных @PostConstruct или @PreDestroy несколько: то они вызываются в хаотичном порядке
+-  Для PrototypeScope - @PreDestroy НЕ РАБОТАЕТ, т.к. Spring не контролирует бин после его создания в этом случае
+-  При инжекте Prototype бина в Singleton -> Prototype бин создастся ОДИН раз
+   (Если нам необходимо другое поведение -> [ @LookUp(лучше) или ApplicationContext(нерекомендуемо) ])
+
+  @Lookup
+  public PrototypeBean getPrototypeBean() {    -  Spring будет возвращать не null, а вновь созданный бин !!!
+  return null;
+  }

@@ -1,0 +1,75 @@
+
+URL url = new URL("https://www.google.com.ua/images/srpr/logo11w.png");  -  Создается объект URL, куда передается ссылка в интернете на файл с картинкой.
+InputStream inputStream = url.openStream();                              -  У объекта url открываться поток на чтение файла – InputStream.
+
+Path tempFile = Files.createTempFile("temp-",".tmp");                    -  С помощью метода  createTempFile создается временный файл.
+Files.copy(inputStream, tempFile);                                       -  Метод Files.copy копирует данные из inputStream в tempFile.
+
+------------------------------------------------------------------------------------------------------
+
+URL url = new URL("https://javarush.ru");  -  Создает объект URL с путем к странице
+InputStream input = url.openStream();      -  Получает InputStream у интернет-объекта
+byte[] buffer = input.readAllBytes();      -  Читает все байты и возвращает массив байт
+String str = new String(buffer);           -  Преобразуем массив в строку
+System.out.println(str);                   -  Выводим строку на экран
+
+          Отобразится содержимое html файла.
+
+------------------------------------------------------------------------------------------------------
+
+            Работа с интернетом                                 Работа с файлом
+
+    URL url = new URL("https://javarush.ru");        File file = new File("c:\\readme.txt");
+    InputStream input = url.openStream();            InputStream input = new FileInputStream(file);
+    byte[] buffer = input.readAllBytes();            byte[] buffer = input.readAllBytes();
+    String str = new String(buffer);                 String str = new String(buffer);
+    System.out.println(str);                         System.out.println(str);
+
+----------------------------------------------------------------------------------------------------
+
+                                   Класс URLConnection
+
+                                Загрузка данных в интернет
+
+  URL url = new URL("https://javarush.ru");            -  Создаем объект URL с путем к странице
+  URLConnection connection = url.openConnection();     -  Создаем двустороннее соединение
+
+          // получили поток для отправки данных
+  OutputStream output = connection.getOutputStream();  -  Получаем поток вывода
+  output.write(1);                                     -  Выводим в него данные (отправляем данные)
+
+          // получили поток для чтения данных
+  InputStream input = connection.getInputStream();     -  Получаем поток ввода
+  int data = input.read();                             -  Читаем из него данные (читаем данные)
+
+
+              Лучше через - try-with-resources для безопасной работы.
+
+    URL url = new URL("https://javarush.ru");
+    URLConnection connection = url.openConnection();
+
+                    // отправляем данные
+      try (OutputStream output = connection.getOutputStream();
+         PrintStream sender = new PrintStream(output))
+        {
+           sender.println("Привет");
+        }
+
+                   // читаем данные
+        try(InputStream input = connection.getInputStream();
+           BufferedReader reader = new BufferedReader(new InputStreamReader(input)))
+        {
+           while (reader.ready())
+              System.out.println(reader.readLine());
+        }
+
+--------------------------------------------------------------------------------------------------
+
+                      Сохранение картинки
+
+  String image = "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png";
+  URL url = new URL(image);
+  InputStream input = url.openStream();
+
+  Path path = Path.of("c:\\GoogleLogo.png");
+  Files.copy(input, path);

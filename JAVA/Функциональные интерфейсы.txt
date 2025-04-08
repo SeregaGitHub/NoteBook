@@ -1,0 +1,55 @@
+
+            Comparable:
+
+- public int compareTo(T o);
+--------------------------------
+
+            Comparator:
+
+- int compare(T o1, T o2);
+- boolean equals(Object obj);
+- default Comparator<T> reversed() {
+        return Collections.reverseOrder(this);
+    }
+- default <U extends Comparable<? super U>> Comparator<T> thenComparing
+- default Comparator<T> thenComparingInt(ToIntFunction<? super T> keyExtractor) {
+                                     Long
+                                     Double
+- public static <T, U extends Comparable<? super U>> Comparator<T> comparing(
+- public static <T> Comparator<T> comparingInt(ToIntFunction<? super T> keyExtractor) {
+                                           Long
+                                           Double
+- public static <T extends Comparable<? super T>> Comparator<T> reverseOrder() {
+- public static <T extends Comparable<? super T>> Comparator<T> naturalOrder() {
+- public static <T> Comparator<T> nullsFirst(Comparator<? super T> comparator) {
+- public static <T> Comparator<T> nullsLast(Comparator<? super T> comparator) {
+--------------------------------
+
+            Predicate:
+
+- boolean test(T t);
+- default Predicate<T> and(Predicate<? super T> other) {
+- default Predicate<T> or(Predicate<? super T> other) {
+- default Predicate<T> negate() {
+- static <T> Predicate<T> not(Predicate<? super T> target) {
+- static <T> Predicate<T> isEqual(Object targetRef) {
+--------------------------------
+
+            Supplier:
+
+- T get();
+--------------------------------
+
+            Consumer:
+
+- void accept(T t);
+- default Consumer<T> andThen(Consumer<? super T> after) {
+--------------------------------
+
+            Function:
+
+- R apply(T t);
+- default <V> Function<V, R> compose(Function<? super V, ? extends T> before) {
+- default <V> Function<T, V> andThen(Function<? super R, ? extends V> after) {
+- static <T> Function<T, T> identity() {
+--------------------------------

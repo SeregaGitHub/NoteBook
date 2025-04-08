@@ -1,0 +1,54 @@
+Контроллер -> Сервис -> Сторадж
+
+@RestController
+@RequestMapping("/directors")
+public class DirectorController {
+private final DirectorService directorService;
+
+  @Autowired
+  public DirectorController(DirectorService directorService) {
+  this.directorService = directorService;
+}
+
+  @GetMapping("/{id}")
+  public Director getDirector(@PathVariable int id) {
+  return directorService.getDirector(id);
+  }
+}
+
+@Slf4j
+@Service
+public class DirectorService {
+private final DirectorDbStorage directorDbStorage;
+
+  @Autowired
+  public DirectorService(DirectorDbStorage directorDbStorage) {
+  this.directorDbStorage = directorDbStorage;
+}
+
+  public Director getDirector(int id) {
+  log.info("Getting director with id: {}", id);
+  return directorDbStorage.getDirector(id);
+  }
+}
+
+@Repository (или @Component)
+public class DirectorDbStorage {
+private final JdbcTemplate jdbcTemplate;
+
+  public DirectorDbStorage(JdbcTemplate jdbcTemplate) {
+  this.jdbcTemplate = jdbcTemplate;
+}
+
+  public Director getDirector(int id) {
+  SqlRowSet directorRows = jdbcTemplate.queryForRowSet("SELECT * FROM DIRECTS WHERE DIRECT_ID = ?", id);
+  if (directorRows.next()) {
+    Director director = new Director();
+    director.setName(directorRows.getString("name"));
+    director.setId(directorRows.getInt("direct_id"));
+    return director;
+    } else {
+      throw new NotFoundException("The Director with this id was not found");
+    }
+  }
+}

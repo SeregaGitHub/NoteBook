@@ -1,0 +1,60 @@
+                                                  При тестирования контроллера
+
+
+@WebMvcTest                              -- Содержит бины для тестирования контроллера (Spring Boot)
+class UserControllerIT {
+
+    @Autowired
+    private ObjectMapper objectMapper;   -- Необходимо использовать для сериализации и десериализации
+
+    @Autowired
+    private MockMvc mockMvc;             -- Класс для тестирования контроллера и анализа ответов
+
+    @MockBean
+    private UserService userService;     -- Внутренний бин
+
+
+    @SneakyThrows                            -- perform() выбрасывает Exception, аннотация нужна чтобы не оборачивать в try-catch
+    @Test
+    void getUser() {
+      Integer userId = 0;
+      mockMvc.perform(MockMvcRequestBuilders.get("/users/{id}", userId)
+        .accept(MediaType.APPLICATION_JSON))
+        .andDo(MockMvcResultHandlers.print())                        -- печать инф. о методе
+        .andExpect(MockMvcResultMatchers.status().isOk());
+
+      Mockito.verify(userService).getUser(userId);
+    }
+
+    @SneakyThrows
+    @Test
+    void addUser() {
+      User userToSave = new User(null, "name", "email@yandex.ru");
+      UserDto userDto = UserMapper.toUserDto(userToSave);
+      Mockito.when(userService.addUser(userDto)).thenReturn(userDto);
+
+      String result = mockMvc.perform(MockMvcRequestBuilders.post("/users")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(userDto)))
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
+
+      assertEquals(objectMapper.writeValueAsString(userDto), result);
+
+    }
+
+    @SneakyThrows
+    @Test
+    void updateUser_whenEmailIsNotValid_thenReturnBadRequest()                 -- проверка сработки валидации поля !!!
+      User userToUpdate = new User(1, "name", "email.yandex.ru");
+      UserDto userDto = UserMapper.toUserDto(userToUpdate);
+
+      mockMvc.perform(MockMvcRequestBuilders.post("/users")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(userDto)))
+        .andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+      Mockito.verify(userService, Mockito.never()).updateUser(1, userDto);
+    }

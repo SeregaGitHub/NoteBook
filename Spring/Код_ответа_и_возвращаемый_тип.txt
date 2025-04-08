@@ -1,0 +1,119 @@
+                                Код ответа и возвращаемый тип
+
+                                      Возвращаемый тип
+
+  Если на контроллере стоит аннотация @ResponseBody, то возвращаемый тип может быть любым: по умолчанию Spring Boot сконвертирует его в JSON.
+Частая практика — создание специального объекта для универсального формата ошибки. Например, ErrorResponse:
+
+package ru.yandex.practicum.controllers;
+
+public class ErrorResponse {
+    // название ошибки
+    String error;
+    // подробное описание
+    String description;
+
+public ErrorResponse(String error, String description) {
+    this.error = error;
+    this.description = description;
+}
+
+// геттеры необходимы, чтобы Spring Boot мог получить значения полей
+public String getError() {
+    return error;
+}
+
+public String getDescription() {
+    return description;
+  }
+}
+
+  Тогда обработчик ошибок будет выглядеть, например, так:
+
+@ExceptionHandler
+public ErrorResponse handle(final RuntimeException e) {
+    return new ErrorResponse(
+        "Ошибка данных", "Подробное описание, где именно произошла ошибка"
+        );
+  }
+
+  Этот метод удобен для построения API: клиент, который вызывает серверное приложение, знает,
+какой формат ответа может быть в случае ошибки. Это позволит корректнее построить алгоритм взаимодействия.
+Например, фронт сможет вывести сообщение об ошибке пользователю в корректном формате.
+
+
+                                          Меняем код ответа
+
+  При неправильном count возвращается статус-код 200, соответствующий корректному выполнению запроса, хотя запрос был отправлен с ошибкой.
+Чтобы изменить код ответа на 400 (ошибка со стороны клиента), можно воспользоваться несколькими способами.
+
+                                    ResponseEntity и @ResponseStatus
+
+  В качестве ответа можно возвращать экземпляр класса ResponseEntity, он позволяет настроить http-ответ.
+Например, указать конкретный код статуса ответа и заголовки, которые нужно добавить.
+
+ @ExceptionHandler
+ public ResponseEntity<Map<String, Integer>> handleHappinessOverflow(final HappinessOverflowException e) {
+     return new ResponseEntity<>(
+             Map.of("happinessLevel", e.getHappinessLevel()),
+             HttpStatus.BAD_REQUEST
+     );
+ }
+
+
+  При наличии @ResponseBody можно оставить только тело ответа, а код вынести в отдельную аннотацию @ResponseStatus (англ. «статус ответа»).
+Она ставится перед методом обработчика, а в параметрах указывается описанное в перечислении HttpStatus значение.
+При использовании @ResponseStatus код получается короче и лаконичнее:
+
+ @ExceptionHandler
+ @ResponseStatus(HttpStatus.BAD_REQUEST)
+ public Map<String, Integer> handleHappinessOverflow(final HappinessOverflowException e) {
+     return Map.of("happinessLevel", e.getHappinessLevel());
+ }
+
+
+                                        ResponseStatusException
+
+  Существует ещё один способ быстро вернуть необходимый http-код при ошибке в приложении —
+с помощью исключения ResponseStatusException (англ. «исключение статуса ответа»).
+Это программный интерфейс к аннотации @ResponseStatus и базовый класс для исключений,
+который используется для применения статус-кода к http-ответу.
+Так как ResponseStatusException — непроверяемое исключение, в сигнатуру функции его описание добавлять не нужно.
+  Например, если программист начал реализовывать какой-то метод, но не дописал его до конца,
+он может сгенерировать в нём исключение ResponseStatusException с кодом возврата 501 — «метод не реализован».
+
+@GetMapping("/feed")
+public Map<String, Integer> feed() {
+   throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Метод /feed ещё не реализован.");
+}
+
+  У ResponseStatusException есть три конструктора, которые могут принимать от одного до трёх параметров в следующем порядке:
+
+-  HttpStatus status (англ. «статус») — перечисление HttpStatus, обозначающее код ответа.
+-  String reason (англ. «повод», «основание») — текстовое сообщение, которое может быть передано ответ от сервера;
+-  Throwable cause (англ. «причина») — произошедшее ранее исключение.
+
+==================================================================================================================================
+
+  Если запустить приложение и оно выдаёт такой ответ:
+
+{
+    "timestamp":"2022-01-25T06:06:15.905+00:00",
+    "status":501,
+    "error":"Not Implemented",
+    "path":"/cats/happiness"
+}
+
+  Значит: в нём не фигурирует переданное дополнительное сообщение (reason).
+Это нужно настраивать отдельно: установить в application.properties параметр server.error.include-message=always.
+После чего ответ программы станет таким:
+
+{
+    "timestamp":"2022-01-25T06:10:10.295+00:00",
+    "status":501,
+    "error":"Not Implemented",
+    "message":"Happiness not implemented",
+    "path":"/cats/happiness"
+}
+
+==================================================================================================================================

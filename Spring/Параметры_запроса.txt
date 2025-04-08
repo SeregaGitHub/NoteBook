@@ -1,0 +1,194 @@
+                                                Параметры запроса
+
+  Вам может понадобиться получить информацию не только об одном посте, но и обо всех постах, соответствующих какому-либо условию.
+Например, о тех, которые были опубликованы в определённый день, или о тех, у которых автор — конкретный пользователь.
+Запрос может быть и более точным — все посты конкретного пользователя, опубликованные в определённый день.
+
+  Для того чтобы отправить к серверу запрос с параметрами, существует специальный механизм — строка запроса (англ. query string).
+Это часть URL-адреса, с помощью которой можно передать в эндпоинт дополнительную информацию.
+Вы уже встречались с этим понятием в теме о сетевых запросах.
+
+Запрос к сервису с указанием параметров будет выглядеть так.
+
+.../posts/search?author=Bob&date=2020-12-31
+
+  Напомним, что аргументы в строке запроса указываются в формате параметр=значение и отделяются от пути знаком вопроса (?). Символ & разделяет аргументы.
+В нашем примере мы пытаемся найти посты, автор которых — Боб и которые опубликованы 31 декабря 2020 года.
+
+http://catgram.com/posts/search?description=Какой%20красивый%20кот!  -  Пробел в URL кодируется символами %20
+
+=====================================================================================================================================
+
+                                                @RequestParam
+                                https://www.baeldung.com/spring-request-param
+
+  Для реализации рассматриваемого механизма в Spring используется аннотация @RequestParam (англ. «параметр запроса»).
+Ею помечается аргумент метода. @RequestParam указывает, какой именно параметр строки запроса Spring добавит в этот аргумент.
+Создадим контроллер, возвращающий посты, которые опубликованы конкретным пользователем.
+
+@GetMapping("/posts/search")
+public List<Post> searchPosts(@RequestParam String author) {
+    System.out.println("Ищем посты пользователя с именем " + author);
+    ... // опустим логику поиска
+}
+
+Теперь поиск стал более гибким! Можно найти нужные посты, обратившись по следующему адресу.
+
+.../posts/search?author=Bob
+
+  Обратите внимание: имена параметров запроса и имена аргументов метода совпадают (author).
+Как и в случае с переменной пути, это позволяет Spring автоматически их сопоставлять.
+С автором разобрались. Осталось научиться учитывать дату при поиске постов, чтобы можно было обратиться по такому адресу.
+
+.../posts/search?author=Bob&date=2020-12-31
+
+  Тут всё немного сложнее. Если попытаться просто преобразовать параметр из строки запроса в объект типа LocalDate, произойдёт ошибка.
+Такой код не сработает:
+
+@GetMapping("/posts/search")
+public List<Post> searchPosts(@RequestParam String author,
+                              @RequestParam LocalDate date) {
+    System.out.println("Ищем посты пользователя с именем " + author +
+                        " и опубликованные " + date);
+    ... // опустим логику поиска
+}
+
+
+Возникнет следующее исключение:
+
+Failed to convert value of type 'java.lang.String' to required type 'java.time.LocalDate';
+  nested exception is org.springframework.core.convert.ConversionFailedException.
+
+  Spring не знает, в каком формате дата приходит в запросе, поэтому не может произвести автоматическую конвертацию.
+Чтобы решить эту проблему, нужно явно указать, в каком формате дата поступает в запросе.
+Сделать это можно с помощью аннотации @DateTimeFormat. Она применяется к аргументу метода контроллера.
+У этой аннотации есть параметр pattern, который позволяет указать формат даты.
+Например, для даты 2020-12-31 формат будет следующий: yyyy-MM-dd.
+
+Исправим код контроллера с помощью аннотации @DateTimeFormat:
+
+@GetMapping("/posts/search")
+public List<Post> searchPosts(
+        @RequestParam String author,
+        @RequestParam
+        @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
+
+    System.out.println("Ищем посты пользователя с именем " + author +
+                          " и опубликованные " + date);
+    ... // опустим логику поиска
+}
+
+
+  К параметру date применены две аннотации: @RequestParam и @DateTimeFormat. Теперь всё работает корректно.
+Для работы с датами в Spring есть и другие способы. Ознакомиться с ними вы можете в этой статье:
+https://www.baeldung.com/spring-date-parameters
+
+===================================================================================================================================
+
+                                      Указание имени параметра запроса
+
+@PostMapping("/api/foos")
+@ResponseBody
+public String addFoo(@RequestParam(name = "id") String fooId, @RequestParam String name) {
+    return "ID: " + fooId + " Name: " + name;
+}
+
+
+                                      Необязательные параметры запроса
+
+  Параметры метода, помеченные @RequestParam, обязательны по умолчанию.
+Это означает, что если параметр отсутствует в запросе, мы получим сообщение об ошибке.
+
+  Однако мы можем настроить наш @RequestParam как необязательный с обязательным атрибутом:
+
+@GetMapping("/api/foos")
+@ResponseBody
+public String getFoos(@RequestParam(required = false) String id) {
+    return "ID: " + id;
+}
+
+Когда параметр не указан, параметру метода присваивается значение null.
+
+
+                                      Использование Java 8 Optional
+
+  В качестве альтернативы мы можем обернуть параметр в Optional:
+
+@GetMapping("/api/foos")
+@ResponseBody
+public String getfoo(@RequestParam Optional<String> id){
+    return "ID: " + id.orElseGet(() -> "not provided");
+}
+
+  В этом случае нам не нужно указывать требуемый атрибут.
+И будет использоваться значение по умолчанию, если параметр запроса не указан:
+
+http://localhost:8080/spring-mvc-basics/api/foos
+----
+ID: not provided
+
+
+                            Значение по умолчанию для параметра запроса
+
+  Мы также можем установить значение по умолчанию для @RequestParam, используя атрибут default Value:
+
+@GetMapping("/api/foos")
+@ResponseBody
+public String getFoos(@RequestParam(defaultValue = "test") String id) {
+    return "ID: " + id;
+}
+
+Это похоже на required=false, в том смысле, что пользователю больше не нужно указывать параметр:
+
+http://localhost:8080/spring-mvc-basics/api/foos
+----
+ID: test
+
+Хотя, мы все еще в порядке, чтобы предоставить это:
+
+http://localhost:8080/spring-mvc-basics/api/foos?id=abc
+----
+ID: abc
+
+Обратите внимание, что когда мы устанавливаем атрибут defaultValue, required действительно имеет значение false.
+
+
+                                  Mapping всех параметров
+
+  Мы также можем иметь несколько параметров, не определяя их названия или количество, просто используя Map:
+
+@PostMapping("/api/foos")
+@ResponseBody
+public String update Foos(@RequestParam Map<String,String> allParams) {
+    return "Parameters are " + allParams.entrySet();
+}
+
+который затем отразит обратно все отправленные параметры:
+
+curl -X POST -F 'name=abc' -F 'id=123' http://localhost:8080/spring-mvc-basics/api/foos
+-----
+
+Параметрами являются {[name=abc], [id=123]}
+
+
+                                  Mapping многозначного параметра
+
+  Один @RequestParam может иметь несколько значений:
+
+@GetMapping("/api/foos")
+@ResponseBody
+public String getfoo(@RequestParam List<String> id) {
+    return "IDs are " + id;
+}
+
+И Spring MVC сопоставит параметр id, разделенный запятыми:
+
+http://localhost:8080/spring-mvc-basics/api/foos?id=1,2,3
+----
+IDs are [1,2,3]
+
+или список отдельных параметров идентификатора:
+
+http://localhost:8080/spring-mvc-basics/api/foos?id=1&id=2
+----
+IDs are [1,2]

@@ -1,0 +1,214 @@
+
+@SpringBootApplication                              -  в классе с методом main()
+public class Application {
+
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
+}
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+@Component                              -  указывает фреймворку на необходимость работы с этим классом
+                                           (@Controller, @RestController, @Service и @Repository – это специализированные формы @Component)
+                                           может быть прописан над утильным классом
+
+@Autowired                              -  автоматическое внедрение завиимостей
+
+private final UserService userService;
+
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+@Qualifier("some_implementation")       -  указывает фреймворку в скобках какую имплементацию внедрять если их несколько
+                                           В имплементации(сторадже) - над классом:
+                                               @Qualifier("userDbStorage")
+                                               public class UserDbStorage implements UserStorage {
+                                           В классе выше уровнем(сервисе) - в конструкторе:
+                                               @Autowired
+                                               public UserService(@Qualifier ("userDbStorage") UserStorage userStorage) {
+                                                   this.userStorage = userStorage;
+                                               }
+@Primary                                -  для того же что и @Qualifier (указывается над классом необходимой имплементации)
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+                                                      Model
+
+- @Getter                    -  геттеры
+- @Setter                    -  сеттеры
+- @ToString                  -  метод toString()
+- @EqualsAndHashCode         -  методы Equals() и HashCode()
+- @NoArgsConstructor         -  конструктор, без параметров
+- @AllArgsConstructor        -  конструктор, включающий все поля
+- @RequiredArgsConstructor   -  конструктор, включающий все final-поля или поля, помеченные аннотацией @NonNull
+- @Data                      -  @Getter, @Setter, @ToString, @EqualsAndHashCode и @RequiredArgsConstructor
+- @Value                     -  похожа на @Data, но: нет сеттеров, есть @AllArgsConstructor
+- @Builder                   -  билдер
+- @NonNull                   -  поле не может быть null.
+- @NotBlank                  -  применяется только к строкам и проверяет, что строка не пуста (вкл: пробелы, табуляция и т.п.)
+- @NotEmpty                  -  применяется к CharSequence, Collection, Map или Array и проверяет, что он не null имеет размер больше 0
+- @Size(min=6, max=80)       -  ограничивает размер строки
+- @Pattern(regexp = "\\S*")  -  валидация по паттерну (в данном случаи - строка без пробелов)
+
+- @FieldDefaults(level = AccessLevel.PRIVATE)  -  все поля будут private;
+- @JsonProperty(value = "isPositive")          -  чтобы lombok не поменял имя поля - isPositive !!!
+    Boolean isPositive;
+- @PastOrPresent(message = "some_message")     -  до сего момента времени
+    private LocalDate birthday;
+- @Positive                                    -  число должно быть положительным
+    private Integer duration;
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+                                                Controller
+
+@RestController                 -  @Component класса контроллера
+@RequestMapping("/films")
+public class SomeController {
+
+
+- @RestController               -  @RestController, в отличии от @Controller, автоматически добавляет аннотацию @ResponseBody для каждого метода.
+                                   или @RequestBody надо добавлять самому:
+                                             @PostMapping
+                                             public Film addFilm(@Valid @RequestBody Film film) {
+
+- @RequestMapping("/some")      -  @ResponseBody дает фреймворку понять, что объект, который вы вернули из метода надо прогнать
+  @ResponseBody                                  через HttpMessageConverter, чтобы получить готовое к отправке на клиент представление.
+  public Some getSome(){
+    return some;
+  }
+
+- @RequestBody                  -  означает, что значение аргумента нужно взять из тела запроса. (public Item add(@RequestBody Item item))
+- @RequestMapping("/films")     -  задаёт url адреса методов (обычно над классом, но может быть и над методом)
+- @Valid                        -  валидирует аргументы по аннотациям в Model ( public Film addFilm(@Valid @RequestBody Film film) { )
+- @PostMapping                  -  post запрос
+- @PutMapping                   -  put запрос
+- @DeleteMapping("/{id}")       -  delete запрос
+- @GetMapping("/{id}/friends")  -  get запрос
+- @PathVariable("id")           -  параметр пути, например: - public User getUser(@PathVariable("id") Integer id) {
+- @RequestParam                 -  параметр запроса, напрмер: public List<Review> getAllReviews(@RequestParam(defaultValue = "10") Integer count) {
+                                                              -  defaultValue = "10"  -  если параметр запроса не будет указан - по умолчанию 10.
+- @RequestHeader("X-some_code") -  позволяет вытащить значение из заголовка HTTP-запроса и передать его в параметр long userId
+																	 (При этом X-Later-User-Id — это название заголовка. Префикс X- принято добавлять к нестандартным HTTP-заголовкам)
+
+																	 @PostMapping
+																	 public Item add(@RequestHeader("X-Later-User-Id") Long userId) {
+																				return itemService.addNewItem(userId, item);
+																	 }
+
+- @Validated                    -  используется при валидационной группе (чтобы определить какаю группа будет валидироваться первой)
+
+                                public class Account {
+
+                                @NotBlank(groups = {ValidationStepOne.class})
+                                private String username;
+
+                                @Email(groups = {ValidationStepOne.class})
+                                @NotBlank(groups = {ValidationStepOne.class})
+                                private String email;
+
+                                @NotBlank(groups = {ValidationStepTwo.class})
+                                @StrongPassword(groups = {ValidationStepTwo.class})
+                                private String password;
+
+                                @NotBlank(groups = {ValidationStepTwo.class})
+                                private String confirmedPassword;
+
+                                }
+
+                                @RequestMapping(value = "stepOne")
+                                public String stepOne(@Validated(Account.ValidationStepOne.class) Account account) {...}
+
+                                @RequestMapping(value = "stepTwo")
+                                public String stepTwo(@Validated(Account.ValidationStepTwo.class) Account account)
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+                                               Service
+
+@Service                                     -  @Component класса сервиса
+@Slf4j
+public class SomeService {
+    private final SomeStorage someStorage;
+
+    @Autowired
+    public SomeService(@Qualifier ("someDbStorage")) {
+        this.someStorage = someStorage;
+    }
+
+- @Slf4j                        -  логирование
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+                                             Storage (DAO)
+
+@Repository                                            -  @Component класса стораджа
+@Qualifier("userDbStorage")
+public class UserDbStorage implements UserStorage {
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public UserDbStorage(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+..........................
+}
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+                                          ErrorHandler (в пакете controllers)
+
+  ValidationException, MethodArgumentNotValidException, FilmNotFoundException - пишем сами в отдельном пакете
+
+
+- @RestControllerAdvice                    -  класс для обработки исключений
+- @ControllerAdvice                        -  как и с аннотацией @Controller, если не добавлять аннотацию @ResponseBody,
+                                              то ответ в обработчике ошибок необходимо собирать самостоятельно через ResponseEntity.
+                                              А если комбинацию @ControllerAdvice + @ResponseBody заменить на @RestControllerAdvice,
+                                              можно возвращать сразу тело ответа, как мы делали это ранее.
+
+- @ExceptionHandler                        -  обработка ошибок
+- @ResponseStatus(HttpStatus.BAD_REQUEST)  -  присвоение кода ответа
+
+
+@RestControllerAdvice
+public class ErrorHandler {
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleNegativeFilmValidation(ValidationException exception) {
+        return Map.of(
+                "errorValidation - ", "Валидация фильма не пройдена.",
+                "errorMessage    - ", exception.getMessage()
+                );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Map<String, String> handleNegativeFilmAnnotationsValidation(MethodArgumentNotValidException exception) {
+        return Map.of(
+                "errorMessage    - ", exception.getMessage(),
+                "errorValidation - ", "Валидация фильма не пройдена."
+                );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleFilmNotFound(FilmNotFoundException exception) {
+        return Map.of(
+                "errorMessage - ", exception.getMessage()
+        );
+    }
+}
+
+                                     ИЛИ
+
+@ControllerAdvice
+public class ErrorHandler {
+
+    @ExceptionHandler({NotFoundException.class, GetNotFoundException.class, UpdateNotFoundException.class})
+    public ResponseEntity<Map<String, String>> handleNotFoundException(final Exception e) {
+        log.error("ID not found.", e);
+        return new ResponseEntity<>(Map.of("message", e.getMessage()),
+                HttpStatus.NOT_FOUND);
+    }
+}

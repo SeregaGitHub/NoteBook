@@ -1,0 +1,162 @@
+
+                                                    Mockito
+
+- @Test                                -  над тестом.                         Метод тестовый
+- @ExtendWith(MockitoExtension.class)  -  над тестовым классом.               Позволяет использовать другие аннотации
+- @InjectMocks                         -  над полем основного тест-класса.    Делает основной мок (например поле UserController;)
+- @Mock                                -  над полем внутреннего тест-класса.  Делает внутренний мок (например поле UserService;)
+- @Captor                              -  над полем.                          Ловит объект из другого метода
+  private ArgumentCaptor<User> userAC;
+
+- @WebMvcTest                          -  над тестовым классом.               Содержит бины для тестирования контроллера
+=====================================================================================================================================
+
+- Mockito.when(userService.getAllUsers()).thenReturn(expectedUsers)                     -- когда @Mock.метод -> тогда ожидаемый результат
+- Mockito.verify(@Mock).метод(аргумент);                                                -- проверка, что метод сработал
+
+-------------------------------------------------------------------------------------------------------------------------------------
+- Mockito.when(userRepository.findById(userId)).thenThrow(                              -- используется, если datatype метода - НЕ void
+        new NotFoundException("NotFoundException"));
+    assertThrows(NotFoundException.class, () -> userHibernateService.getUser(userId));
+
+- Mockito.doThrow(NotFoundException.class).when(userRepository).findById(userId);       -- используется, если datatype метода - void
+-------------------------------------------------------------------------------------------------------------------------------------
+
+- Mockito.verify(userRepository, Mockito.never()).save(userToSave);                     -- проверяет, что метод userRepository.save не вызывался ни разу
+- Mockito.verify(userRepository, Mockito.times(1)).save(userToSave);                    -- проверяет, что метод userRepository.save вызывался 1 раз
+- Mockito.verify(userRepository, Mockito.atLeast(5)).save(userToSave);                  -- проверяет, что метод userRepository.save вызывался минимум 5 раз
+- Mockito.verify(userRepository, Mockito.atMost(5)).save(userToSave);                   -- проверяет, что метод userRepository.save вызывался не более 5 раз
+- Mockito.verify(userRepository).save(userArgumentCaptor.capture());                    -- ловит объект из другого метода
+    User captorUser = userArgumentCaptor.getValue();                                    -- получает объект в переменную, после с её полями -> assertEquals
+
+-------------------------------------------------------------------------------------------------------------------------------------
+InOrder inOrder = Mockito.inOrder(userHibernateService, userRepository);  -- задаёт проверку порядка выполнения методов
+
+inOrder.verify(userHibernateService.deleteUser(userId));
+inOrder.verify(userRepository.deleteById(userId));
+-------------------------------------------------------------------------------------------------------------------------------------
+
+=====================================================================================================================================
+
+                                              Test UserController
+
+class UserControllerTest {
+
+@Mock
+private UserService userService;
+
+@InjectMocks
+private UserController userController;
+
+@Test
+    void getAllUsers_whenInvoked_thenReturnListWithOneUser() {
+        List<User> expectedUsers = List.of(new User());
+        Mockito.when(userService.getAllUsers()).thenReturn(expectedUsers);   // настраиваем мок
+
+        List<User> users = userController.getAllUsers();
+        //assertTrue(users.isEmpty());                                       -  если мок не настроен - вернёт значение по умолчанию
+
+        assertEquals(expectedUsers, users);
+    }
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+                                              Test UserService
+
+@Mock
+private UserRepository userRepository;
+
+//@Spy
+@InjectMocks
+private UserHibernateService userHibernateService;
+
+@Captor
+private ArgumentCaptor<User> userArgumentCaptor;
+
+@Test
+    void getUser_whenUserFound_thenReturnUser() {
+        Integer userId = 1;
+        User expectedUser = new User();
+        Mockito.when(userRepository.findById(userId)).thenReturn(Optional.of(expectedUser));
+
+        User actualUser = userHibernateService.getUser(userId);
+
+        assertEquals(expectedUser, actualUser);
+
+        // ЛУЧШЕ !!!
+        assertReflectionEquals(expectedUser, actualUser);
+    }
+
+@Test
+    void getUser_whenUserNotFound_thenThrowNewNotFoundException() {
+        Integer userId = 1;
+        Mockito.when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> userHibernateService.getUser(userId));
+    }
+
+@Test
+    void getUser_whenUserNotFound_thenThrowNewNotFoundException2() {
+        Integer userId = 1;
+
+        Mockito.when(userRepository.findById(userId)).thenThrow(
+                new NotFoundException("NotFoundException"));
+
+        assertThrows(NotFoundException.class, () -> userHibernateService.getUser(userId));
+    }
+
+@Test
+    void getUser_whenUserNotFound_thenThrowNewNotFoundException3() {
+        Integer userId = 1;
+        User userToSave = new User(null, "name", "email@yandex.ru");
+
+        Mockito.when(userRepository.findById(userId)).thenThrow(
+                new NotFoundException("NotFoundException"));
+
+        Mockito.doThrow(NotFoundException.class).when(userRepository).findById(userId);  -- используется, если datatype метода - void
+        assertThrows(NotFoundException.class, () -> userHibernateService.getUser(userId));
+
+
+        Mockito.verify(userRepository, Mockito.never()).save(userToSave);             -- проверяет, что метод userRepository.save не вызывался ни разу
+        Mockito.verify(userRepository, Mockito.times(0)).save(userToSave);            -- проверяет, что метод userRepository.save вызывался 0 раз
+        Mockito.verify(userRepository, Mockito.atLeast(5)).save(userToSave);          -- проверяет, что метод userRepository.save вызывался минимум 5 раз
+        Mockito.verify(userRepository, Mockito.atMost(5)).save(userToSave);           -- проверяет, что метод userRepository.save вызывался не более 5 раз
+    }
+
+@Test
+    void addUser_whenInvoked_thenReturnNewUser() {
+        User userToSave = new User(null, "name", "email@yandex.ru");
+        UserDto userDto = UserMapper.toUserDto(userToSave);
+        Mockito.when(userRepository.save(userToSave)).thenReturn(userToSave);
+
+        UserDto actualUser = userHibernateService.addUser(userDto);
+
+        assertEquals(userToSave, UserMapper.toUser(actualUser));
+        Mockito.verify(userRepository).save(userToSave);
+    }
+
+@Test
+    void updateUser_whenUserFound_thenUpdateSomeFields() {
+        Integer userId = 1;
+        User user = new User(userId, "name", "email@yandex.ru");
+        User userToUpdate = new User(1, "newName", "newEmail@yandex.ru");
+        UserDto userToUpdateDto = UserMapper.toUserDto(userToUpdate);
+        Mockito.when(userRepository.findById(1)).thenReturn(Optional.of(user));
+
+        userHibernateService.updateUser(userId, userToUpdateDto);
+        Mockito.verify(userRepository).save(userArgumentCaptor.capture());
+        User captorUser = userArgumentCaptor.getValue();
+
+        assertEquals(userId, captorUser.getId());
+        assertEquals("newName", captorUser.getName());
+        assertEquals("newEmail@yandex.ru", captorUser.getEmail());
+    }
+
+@Test                                         // userHibernateService, userRepository - ПРИМЕР
+    void deleteUser() {
+        Integer userId = 1;
+        InOrder inOrder = Mockito.inOrder(userHibernateService, userRepository);  -- задаёт проверку порядка выполнения методов
+
+        inOrder.verify(userHibernateService.deleteUser(userId));
+        inOrder.verify(userRepository.deleteById(userId));
+    }

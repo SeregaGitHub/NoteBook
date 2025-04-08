@@ -1,0 +1,8 @@
+https://struchkov.dev/blog/exception-handling-controlleradvice/
+
+
+https://www.youtube.com/watch?v=VywxIQ2ZXw4  (PostMan - eng)
+
+https://vaadin.com/                          -  фреймворк для разработки веб-приложений непосредственно на Java
+
+https://springframework.guru/udemy-90-day-trial-license-intellij-spring-5/      --  IDEA Ultimate 120 for free !!!

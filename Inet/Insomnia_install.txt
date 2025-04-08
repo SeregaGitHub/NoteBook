@@ -1,0 +1,5 @@
+sudo snap remove insomnia  // Если надо удалить.
+
+wget https://github.com/Kong/insomnia/releases/download/core%402022.6.0/Insomnia.Core-2022.6.0.snap
+
+sudo snap install Insomnia.Core-2022.6.0.snap --dangerous

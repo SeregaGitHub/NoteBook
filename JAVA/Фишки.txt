@@ -1,0 +1,203 @@
+
+-------------------------------------------------------------------------
+
+- Замер времени выполнения программы:
+
+    public static void main(String[] args) {
+        long before = System.currentTimeMillis();
+        // Your program...
+        long after = System.currentTimeMillis();
+        System.out.println(after - before);
+    }
+------------------------------------------------------------------------
+            Более раннее время
+
+LocalDateTime checkTime(LocalDateTime a, LocalDateTime b) {
+        return a == null ? b : (b == null ? a : (a.isBefore(b) ? a : b));
+    }
+------------------------------------------------------------------------
+
+Object object = 21;
+System.out.println(object.getClass() == Integer.class);    // true
+------------------------------------------------------------------------
+    instanceof - проверяет, создан ли объект на основе нужного нам класса или интерфейса
+
+- boolean isPet = animal instanceof Pet;
+- if (vegetable instanceof Potato) {...};
+------------------------------------------------------------------------
+
+-     char x = '.';      - узнать номер
+      int u = (int) x;     символа в таблице
+
+-     System.exit(1);    -  остановка программы !!!
+
+-     Scanner scanner = new Scanner(System.in).useLocale(Locale.US);
+         // будет считывать точки если double
+
+- int middle = low + (high-low) / 2;  // поиск middle в массиве
+
+- java.util.Scanner scan = new java.util.Scanner(System.in);
+
+- 123 / 10 % 10 == 2 (true)   - сравнить со среднем числом
+- while (scan.hasNext())      - сканирует пока пользователь вводит данные
+- Character.toString(my_char) - перевод символа в строку
+  String.valueOf(my_char)     - то же самое
+- Character.isDigit(my_char)  - является ли символ цифрой
+- Character.isLetter(my_char) - является ли символ буквой
+
+- "fileName" + File.separator + ".txt"  -  File.separator - это или / или \
+
+- // сконвертируйте publicationDateString в экземпляр LocalDate
+        String publicationDateString = "25--12--2020";
+        LocalDate publicationDate = LocalDate.from(LocalDate.parse(
+                publicationDateString, DateTimeFormatter.ofPattern("dd--MM--yyyy")));
+
+- private static String makeFileName() {
+        return String.format("fileName%s.csv", ++fileQuantity);
+    }
+
+- int command = scanner.nextInt;
+  if (command == 0) {
+  System.exit(0);}     // код равен 0, программа была завершена намеренно
+
+* SWITCH
+  Можно использовать: byte, short, int, char, String
+                      и любые enum !!!
+                      Day day = Day.MONDAY;
+                      switch (day)
+------------------------------------------------------------------------
+  int day = 3;                          String dayTipe = switch(day) {
+  switch(day) {                             case 1, 2, 3, 4, 5 ->
+  case 6:                               "Working day";
+    System.out.println("Saturday");         case 6, 7 ->
+    break;                              "Weekend";
+  case 7:                                   default ->
+    System.out.println("Sunday");       "Invalid day";
+    break;                               }
+  default:
+    System.out.println("Weekday")
+  }
+
+* цикл for each:
+  int[] mas = {1, 6, 4, 3, 9, 4, 5, 2, 1};
+  (Любая коллекция)
+        for(int r: mas){
+            System.out.println(r);
+        }
+
+* прерывание внешнего цикла:
+  outerLoop:
+  for (Object obj : objects) {
+    for (int j = 0; j < 10; j++) {
+      if (...) {
+        //...;
+      } else {
+        break outerLoop;
+      }
+    }
+  }
+
+* Итератор:
+  TreeSet<String> tesT = new TreeSet<>();
+  (Любая коллекция)
+            Iterator<String> iteR = tesT.iterator();
+                while (iteR.hasNext()) {
+                    String str = iteR.next();
+                    result += (str + " ");
+                    System.out.print(str);
+                }
+            (remove() - удаляет элемент коллекции)
+            
+* for (Map.Entry<Integer, String> poisK : entrySet) {
+            if (namE.equals(poisK.getValue())) {
+                System.out.println(poisK.getKey());
+            }
+        }       // ищет ключи по значениям !!!
+
+                  // ИЛИ
+
+    map.entrySet().forEach(v -> System.out.println(v.getKey() + " : " + v.getValue()));
+    System.out.println("===========================================================");
+    map.forEach((key, value) -> System.out.println(key + " : " + value));
+
+
+* LinkedHashMap<String, Integer> myMap = new LinkedHashMap<>();
+  - myMap.put(myString, myMap.getOrDefault(myString, 0) + 1);
+  (В значении будет - сколько раз встречается myString )
+
+* ЛистИтератор
+
+    ListIterator<Integer> listIterator = integerList.listIterator(integerList.size());
+      while (listIterator.hasPrevious()) {
+      System.out.println(listIterator.previous());
+    }                                                 // Обходит список в обратном порядке
+
+* public static void main(String[] args) throws InterruptedException {
+        for (int i = 10; i > 0; i--) {
+            System.out.println(i);
+            Thread.sleep(1000);
+        }
+        System.out.println("Поехали !!!");
+                       ИЛИ
+  import java.util.concurrent.TimeUnit;
+    public static void main(String[] args) throws InterruptedException {
+                for (int i = 10; i > 0; i--) {
+            System.out.println(i);
+            TimeUnit.SECONDS.sleep(1);            NANOSECONDS
+        }                                         MICROSECONDS
+        System.out.println("Поехали !!!");        MILLISECONDS
+    }                                             SECONDS
+}                                                 MINUTES
+                                                  HOURS
+                                                  DAYS
+
+*       String line = "Hello World !!!";
+        StringTokenizer token = new StringTokenizer(line, " ");
+        while (token.hasMoreTokens())
+        {
+            String newLine = token.nextToken();     // Hello
+            System.out.println(newLine);            // World
+        }                                           // !!!
+
+------------------------------------------------------------------------------
+
+                       Удаление из коллекции
+
+                       Только для ArrrayList
+                   * for (int i = 0; i < list.size(); i++)
+                   {
+                      String str = list.get(i);
+                      if (str.equals("Hello"))
+                      {
+                         list.remove(str);
+                         i--;    // нужно уменьшить i, т.к. после удаления элементы сдвинулись
+                      }
+                   }
+
+                   * Iterator<String> it = set.iterator();
+                   while (it.hasNext())
+                   {
+                      String str = it.next();
+                      if (str.equals("Hello"))
+                          it.remove();
+                   }
+
+                   * ArrayList<String> listCopy = new ArrayList(list);
+                   for (String str: listCopy)
+                   {
+                      if (str.equals("Hello"))
+                         list.remove(str);
+                   }
+
+------------------------------------------------------------------------------------
+
+                                    Из List в Map через STREAM
+
+Page<Team> listTeamPage = teamRepository.findAll(pageable);
+
+        Map<Integer, String> map = new HashMap<>();
+        map = listTeamPage.hasContent()
+                ? listTeamPage.getContent().stream().collect(Collectors.toMap(k -> k.getId(), v -> v.getName()))
+                : Collections.emptyMap();
+
+------------------------------------------------------------------------------------

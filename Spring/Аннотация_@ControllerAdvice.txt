@@ -1,0 +1,71 @@
+                                            Аннотация @ControllerAdvice
+
+  Например, в приложении из десяти контроллеров мы хотим одинаково обрабатывать все исключения RuntimeException.
+В таком случае код будет повторяться десять раз. Чтобы избежать дублирования,
+в Spring Boot есть способ централизованной обработки ошибок с помощью классов с аннотацией @ControllerAdvice (англ. «совет, консультация контроллера»).
+
+  Аннотация @ControllerAdvice ставится над отдельным классом, в котором перечисляют обработчики @ExceptionHandler.
+
+@ControllerAdvice
+public class ErrorHandler {
+
+    @ExceptionHandler
+    // обработка одного исключения
+    ...
+
+    @ExceptionHandler
+    // обработка другого исключения
+    ...
+
+    ...
+}
+
+  Как и с аннотацией @Controller, если не добавлять аннотацию @ResponseBody,
+то ответ в обработчике ошибок необходимо собирать самостоятельно через ResponseEntity.
+А если комбинацию @ControllerAdvice + @ResponseBody заменить на @RestControllerAdvice,
+можно возвращать сразу тело ответа, как мы делали это ранее.
+
+Код с @ControllerAdvice:
+
+@ControllerAdvice
+public class ErrorHandler {
+
+    @ExceptionHandler
+    public ResponseEntity<Map<String, Integer>> handleHappinessOverflow(final HappinessOverflowException e) {
+        return new ResponseEntity<>(
+                Map.of("happinessLevel", e.getHappinessLevel()),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+}
+
+Код с @RestControllerAdvice:
+
+@RestControllerAdvice
+public class ErrorHandler {
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, Integer> handleHappinessOverflow(final HappinessOverflowException e) {
+        return Map.of("happinessLevel", e.getHappinessLevel());
+    }
+}
+
+
+  Выбрать конкретный класс или классы для обработки можно с помощью параметра assignableTypes.
+Необходимые классы для него перечисляются в фигурных скобках через запятую, при этом если класс один, то фигурные скобки можно опустить.
+Например, если требуется обработать ошибки только в контроллере CatsInteractionController, настройка будет выглядеть так:
+
+@ControllerAdvice(assignableTypes = CatsInteractionController.class)
+
+А аннотация для одновременной обработки двух контроллеров — DogsInteractionController и CatsInteractionController — будет такой:
+
+@ControllerAdvice(assignableTypes = {DogsInteractionController.class, CatsInteractionController.class})
+
+Если необходимо обработать сразу все классы, которые находятся в одном пакете, можно воспользоваться одним из следующих вариантов:
+
+@ControllerAdvice("ru.yandex.practicum.controllers")
+// или
+@ControllerAdvice(value = "ru.yandex.practicum.controllers")
+// или
+@ControllerAdvice(basePackages = "ru.yandex.practicum.controllers")

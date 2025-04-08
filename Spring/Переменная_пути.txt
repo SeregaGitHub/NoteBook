@@ -1,0 +1,294 @@
+                                              Переменная пути
+
+public class Post {
+
+    private Integer id;
+    private final String author; // автор
+    private final Instant creationDate = Instant.now(); // дата создания
+    private String description; // описание
+    private String photoUrl; // url-адрес фотографии
+
+public Post(Integer id, String author, String description, String photoUrl) {
+    this.id = id;
+    this.author = author;
+    this.description = description;
+    this.photoUrl = photoUrl;
+}
+
+  Теперь добавим эндпоинт, позволяющий получить пост по его идентификатору.
+Согласно правилам REST идентификатор поста должен быть в самом пути.
+
+.../posts/{postId}
+
+  Последняя часть пути записана в фигурных скобках. Это значит, что она не фиксирована и может изменяться.
+Такая часть называется переменной пути (англ. path variable).
+Переменная пути позволяет задавать параметры прямо в URL.
+В нашем примере в ней будет передан идентификатор поста, к которому нужно получить доступ.
+
+                                        Аннотация @PathVariable
+
+  В Spring для обращения к переменной пути используется аннотация @PathVariable. Ею помечается параметр метода контроллера.
+С помощью @PathVariable Spring узнаёт, какая часть URL-пути будет автоматически подтягиваться в аргумент метода,
+к которому применена эта аннотация.
+  Используем её в коде контроллера.
+
+ @GetMapping("/posts/{postId}")
+ public Optional<Post> findById(@PathVariable int postId) {
+      return posts.stream()
+          .filter(x -> x.getId() == postId)
+          .findFirst();
+ }
+
+  Параметр метода findById помечен аннотацией @PathVariable, а последняя часть пути записана в фигурных скобках.
+Обратите внимание: имена переменной пути и параметра метода совпадают (postId). Таким образом Spring понимает, что нужно их связать.
+Теперь можно получить информацию о посте по следующему относительному пути.
+
+.../posts/12 // для поста с идентификатором 12
+
+================================================================================================================================
+
+Простым вариантом использования аннотации @PathVariable была бы конечная точка, которая идентифицирует объект с помощью первичного ключа:
+
+@GetMapping("/api/employees/{id}")
+@ResponseBody
+public String getEmployeesById(@PathVariable String id) {
+    return "ID: " + id;
+}
+
+В этом примере мы используем аннотацию @PathVariable для извлечения шаблонной части URI, представленной переменной {id}.
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+В предыдущем примере мы пропустили определение имени переменной path шаблона, поскольку имена параметра метода и переменной path были одинаковыми.
+
+Однако, если имя переменной path отличается, мы можем указать его в аргументе аннотации @PathVariable:
+
+@GetMapping("/api/employeeswithvariable/{id}")
+@ResponseBody
+public String getEmployeesByIdWithVariableName(@PathVariable("id") String employeeId) {
+    return "ID: " + employeeId;
+}
+
+http://localhost:8080/api/employeeswithvariable/1
+----
+ID: 1
+
+Мы также можем определить имя переменной path как @PathVariable(значение=”id”) вместо PathVariable(“id”) для ясности.
+
+(Может ли имя переменной пути отличаться от имени параметра метода контроллера?)
+(В этом случаи нужно указать имя переменной пути в скобках после аннотации @PathVariable(...) !!!)
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+                                Несколько переменных пути в одном запросе
+
+  В зависимости от варианта использования у нас может быть более одной переменной path в нашем URI запроса для метода контроллера,
+который также имеет несколько параметров метода:
+
+@GetMapping("/api/employees/{id}/{name}")
+@ResponseBody
+public String getEmployeesByIdAndName(@PathVariable String id, @PathVariable String name) {
+    return "ID: " + id + ", name: " + name;
+}
+
+http://localhost:8080/api/employees/1/bar
+----
+ID: 1, name: bar
+
+Мы также можем обрабатывать более одного параметра @PathVariable, используя параметр метода типа java.util.Map<String, String>:
+
+@GetMapping("/api/employeeswithmapvariable/{id}/{name}")
+@ResponseBody
+public String getEmployeesByIdAndNameWithMapVariable(@PathVariable Map<String, String> pathVarsMap) {
+    String id = pathVarsMap.get("id");
+    String name = pathVarsMap.get("name");
+    if (id != null && name != null) {
+        return "ID: " + id + ", name: " + name;
+    } else {
+        return "Missing Parameters";
+    }
+}
+
+http://localhost:8080/api/employees/1/bar
+----
+ID: 1, name: bar
+
+  Однако при обработке нескольких параметров @PathVariable возникает небольшая проблема,
+когда строка переменной path содержит символ точки(.). Мы подробно обсудили эти краеугольные случаи здесь.
+https://www.baeldung.com/spring-mvc-pathvariable-dot
+
+((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+
+В приведенном выше примере давайте рассмотрим следующие запросы и оценим наши переменные:
+
+@GetMapping("/example/{firstValue}/{secondValue:.+}")
+public void example(
+  @PathVariable("firstValue") String firstValue,
+  @PathVariable("secondValue") String secondValue) {
+    //...
+}
+
+пример URL/галерея/ссылка приводит к вычислению FirstValue = “галерея” и secondValue = “ссылка”
+при использовании URL-адреса example/gallery.df/link.ar у нас будет FirstValue = “галерея.df” и secondValue = “ссылка”
+с URL-адресом примера/gallery.df/link.com.ar нашими переменными будут: FirstValue = “галерея.df” и secondValue = “link.com ”
+
+Как мы можем видеть, первая переменная не затрагивается, но вторая всегда усекается.
+
+  Другой способ избежать этой проблемы - добавить косую черту в конце нашего @PathVariable.
+Это заключит нашу вторую переменную, защищая ее от поведения Spring по умолчанию:
+
+@GetMapping("/example/{firstValue}/{secondValue}/")
+
+
+
+))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+  Два приведенных выше решения применимы к отображению одного запроса, которое мы изменяем.
+
+  Если мы хотим изменить поведение на глобальном уровне MVC, нам нужно предоставить пользовательскую конфигурацию.
+Для этой цели мы можем расширить WebMvcConfigurationSupport и переопределить его метод get PathMatchConfigurer() для настройки PathMatchConfigurer.
+
+@Configuration
+public class CustomWebMvcConfigurationSupport extends WebMvcConfigurationSupport {
+
+@Override
+protected PathMatchConfigurer getPathMatchConfigurer() {
+    PathMatchConfigurer pathMatchConfigurer = super.getPathMatchConfigurer();
+    pathMatchConfigurer.setUseSuffixPatternMatch(false);
+
+    return pathMatchConfigurer;
+    }
+}
+
+  Мы должны помнить, что этот подход влияет на все URL-адреса.
+
+  Используя эти три параметра, мы получим тот же результат: при вызове URL-адреса example/gallery.df/link.com.ar
+наша переменная secondValue будет оценена как “link.com.ar ”, чего мы и хотим.
+
+
+                                                Уведомление об устаревании
+
+Начиная с Spring Framework 5.2.4, метод setUseSuffixPatternMatch(boolean) устарел,
+чтобы препятствовать использованию расширений пути для маршрутизации запросов и согласования содержимого.
+По сути, текущая реализация затрудняет защиту веб-приложений от атаки Reflected File Download (RFD).
+
+Кроме того, начиная с Spring Framework 5.3, сопоставление шаблонов суффиксов будет работать только для явно зарегистрированных суффиксов,
+чтобы предотвратить произвольные расширения.
+
+Суть в том, что начиная с Spring 5.3 нам не нужно будет использовать setUseSuffixPatternMatch(false), поскольку по умолчанию он отключен.
+
+================================================================================================================================
+
+                                              Необязательные переменные пути
+
+В Spring параметры метода, помеченные @PathVariable, обязательны по умолчанию:
+
+@GetMapping(value = { "/api/employeeswithrequired", "/api/employeeswithrequired/{id}" })
+@ResponseBody
+public String getEmployeesByIdWithRequired(@PathVariable String id) {
+    return "ID: " + id;
+}
+
+  Учитывая, как это выглядит, вышеупомянутый контроллер должен обрабатывать оба пути запроса
+/api/employeeswithrequired и /api/employeeswithrequired/1.
+Однако, поскольку параметры метода, аннотированные @PathVariables, по умолчанию являются обязательными,
+он не обрабатывает запросы, отправленные в /api/employeeswithrequired pat
+
+Мы можем справиться с этим двумя различными способами.
+
+*  Мы можем установить обязательному свойству @PathVariable значение false, чтобы сделать его необязательным.
+Таким образом, модифицируя наш предыдущий пример, мы теперь можем обрабатывать версии URI с переменной path и без нее:
+
+@GetMapping(value = { "/api/employeeswithrequiredfalse", "/api/employeeswithrequiredfalse/{id}" })
+@ResponseBody
+public String getEmployeesByIdWithRequiredFalse(@PathVariable(required = false) String id) {
+    if (id != null) {
+        return "ID: " + id;
+    } else {
+        return "ID missing";
+    }
+}
+
+*  Используя java.util.Optional
+
+  С момента появления Spring 4.1 мы также можем использовать java.util.Optional<T> (доступен в Java 8+)
+для обработки необязательной переменной path:
+
+@GetMapping(value = { "/api/employeeswithoptional", "/api/employeeswithoptional/{id}" })
+@ResponseBody
+public String getEmployeesByIdWithOptional(@PathVariable Optional<String> id) {
+    if (id.isPresent()) {
+        return "ID: " + id.get();
+    } else {
+        return "ID missing";
+    }
+}
+
+Теперь, если мы не укажем идентификатор переменной path в запросе, мы получим ответ по умолчанию:
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+                                      Использование параметра метода типа Map<String, String>
+
+  Как было показано ранее, мы можем использовать один параметр метода типа java.util.Map для обработки всех переменных пути в URI запроса.
+Мы также можем использовать эту стратегию для обработки необязательных переменных пути.:
+
+@GetMapping(value = { "/api/employeeswithmap/{id}", "/api/employeeswithmap" })
+@ResponseBody
+public String getEmployeesByIdWithMap(@PathVariable Map<String, String> pathVarsMap) {
+    String id = pathVarsMap.get("id");
+    if (id != null) {
+        return "ID: " + id;
+    } else {
+        return "ID missing";
+    }
+}
+
+
+                                                  Значение по умолчанию для @PathVariable
+
+  Изначально не предусмотрено определение значения по умолчанию для параметров метода, аннотированных @PathVariable.
+Однако мы можем использовать те же стратегии, которые обсуждались выше, чтобы удовлетворить случаю значения по умолчанию для @PathVariable,
+нам просто нужно проверить наличие null в переменной path.
+
+  Например, используя java.util.Optional<String, String>, мы можем определить, является ли переменная path нулевой или нет.
+Если оно равно null, то мы можем просто ответить на запрос значением по умолчанию
+
+@GetMapping(value = { "/api/defaultemployeeswithoptional", "/api/defaultemployeeswithoptional/{id}" })
+@ResponseBody
+public String getDefaultEmployeesByIdWithOptional(@PathVariable Optional<String> id) {
+    if (id.isPresent()) {
+        return "ID: " + id.get();
+    } else {
+        return "ID: Default Employee";
+    }
+}
+
+============================================================================================================================================
+
+@RestController
+@RequestMapping("/users")
+public class UserController {
+    /////////////////
+}
+
+@GetMapping
+    @RequestMapping("/{email}")
+    public User getUser(@PathVariable String email) {
+        return userService.getUser(email);
+    }
+
+
+@RestController
+public class PostController {
+/////////////////
+}
+
+@GetMapping("/post/{id}")              -  ПРАВИЛЬНО !!!
+// @GetMapping("/post")                -  ТАК НЕЛЬЗЯ !!!
+// @RequestMapping("/{id}")
+public Post getPost(@PathVariable Integer id) {
+    return postService.getPost(id);
+}

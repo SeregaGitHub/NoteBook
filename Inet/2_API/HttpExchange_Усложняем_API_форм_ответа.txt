@@ -1,0 +1,44 @@
+
+                                          Методы для формирования ответа
+
+  В классе HttpExchange есть методы не только для чтения запроса, но и для формирования ответа.
+Они нужны для заполнения заголовков, статус-кода и тела ответа.
+
+- Headers getResponseHeaders()
+
+  С помощью этого метода можно добавить к ответу HTTP-заголовки. Метод getResponseHeaders() возвращает объект класса Headers.
+Все дальнейшие манипуляции по редактированию заголовков выполняются с этим объектом.
+
+    Headers headers = httpExchange.getResponseHeaders();
+
+    // Content-Type — это один из стандартных заголовков
+    // с его помощью клиент понимает, в каком формате пришло тело ответа
+    // text/plain означает, что ответ состоит из простого текста
+    headers.set("Content-Type", "text/plain");
+
+    // можно создать свои собственные заголовки
+    headers.set("X-your-own-header", "any-information-you-want");
+    headers.set("X-your-own-header-2", "any-information-you-want-2");
+
+- void sendResponseHeaders(int rCode, long responseLength)
+
+    Об этом методе мы уже рассказывали в первом уроке темы. Он принимает на вход два параметра: rCode и responseLength.
+
+httpExchange.sendResponseHeaders(200, 787);
+
+    Обратите внимание: метод sendResponseHeaders нужно вызывать до вызова getResponseBody()
+
+- OutputStream getResponseBody()
+
+  Через этот метод определяется, что вернётся клиенту в теле ответа. Метод getResponseBody() возвращает объект OutputStream,
+в который нужно записать массив байтов. После того как байты записаны, у объекта OutputStream нужно вызвать метод close().
+
+    OutputStream os = httpExchange.getResponseBody();
+    os.write("Тело ответа в виде простого текста".getBytes(StandardCharsets.UTF_8));
+    os.close();
+
+  Или воспользоваться try-with-resources, как мы делали это выше.
+
+    try (OutputStream os = httpExchange.getResponseBody()) {
+        os.write("Тело ответа в виде простого текста".getBytes());
+    }

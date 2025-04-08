@@ -1,0 +1,69 @@
+
+                                  Варианты просмотра spring только двух пакетов
+
+  Если в контроллере есть зависимость от реализации интерфейса, и есть несколько реализаций этого интерфейса:
+то необходимо указать какую использовать !!!
+
+=========================================================================================================================================
+
+package ru.yandex.practicum.filmorate;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication(scanBasePackages = {"ru.yandex.practicum.filmorate.controllers", "ru.yandex.practicum.filmorate.service"})
+
+                                             // ИЛИ
+
+@SpringBootApplication(scanBasePackageClasses = ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage.class)
+public class FilmorateApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(FilmorateApplication.class, args);
+	}
+
+}
+
+=========================================================================================================================================
+
+                            ТОЛЬКО ЕСЛИ ВНЕДРЕНИЕ ЧЕРЕЗ ПОЛЯ, А НЕ ЧЕРЕЗ КОНСТРУКТОР !!! ???
+
+public interface FilmStorage {
+
+    List<Film> getFilmsList();
+}
+
+@Component
+public class InMemoryFilmStorage implements FilmStorage {
+
+    @Override
+    public List<Film> getFilmsList() {
+        return new ArrayList<>(filmHashMap.values());
+    }
+}
+
+
+@Component
+public class FilmStogageExample implements FilmStorage {
+    @Override
+    public List<Film> getFilmsList() {
+        return null;
+    }
+}
+
+@Qualifier("best")
+private final FilmStorage filmStorage;
+
+=========================================================================================================================================
+
+@Component
+@Primary         // Указывает на доминантную реализацию итерфейса, который является зависимостью.
+
+public class InMemoryFilmStorage implements FilmStorage {
+    private final Map<Integer, Film> filmHashMap = new HashMap<>();
+
+    @Override
+    public List<Film> getFilmsList() {
+        return new ArrayList<>(filmHashMap.values());
+
+}

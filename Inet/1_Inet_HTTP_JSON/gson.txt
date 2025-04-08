@@ -1,0 +1,61 @@
+
+Gson gson = new Gson();
+Gson gson = new GsonBuilder().create();
+==============================================================================
+
+- toJson(Object src)                        -  Сериализация
+- fromJson(String json, Class<T> classOfT)  -  Десериализация
+
+------------------------------------------------------------------------------
+                            Сериализация
+
+Gson gson = new Gson();
+gson.toJson(123);               // 123
+gson.toJson("hello");           // "hello"
+gson.toJson(Long.valueOf(10));  // 10
+
+* String string = gson.toJson(new int[] { 10, 100 }); // [10,100]
+
+                           Десериализация
+
+Integer integer = gson.fromJson("1", int.class);
+String string = gson.fromJson("\"world\"", String.class);
+Boolean bool = gson.fromJson("true", Boolean.class);
+
+* int[] array = gson.fromJson("[10,100]", int[].class)
+
+==============================================================================
+
+public static class Entity {
+    volatile int id;
+    String name;
+    transient long random;
+
+    public Entity(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+}
+
+Entity entity = new Entity(100, "name");
+entity.random = 1234;
+
+String json = gson.toJson(entity); // {"id":100,"name":"name"}
+Entity read = gson.fromJson(json, Entity.class);
+System.out.println(read.random);   // 0
+
+------------------------------------------------------------------------------
+
+public static void main(String[] args) {
+    String jsonString = "{\"name\":\"Тузик\",\"owner\":{\"name\":\"Игорь\",\"surname\":\"Петров\"},\"age\":3}";
+    Gson gson = new Gson();
+    Dog dog = gson.fromJson(jsonString, Dog.class);
+
+    System.out.println("Собака:");
+    System.out.println("Кличка: " + dog.getName());
+    System.out.println("Возраст: " + dog.getAge());
+    System.out.println("Владелец:");
+    Owner owner = dog.getOwner();
+    System.out.println("Имя: " + owner.getName());
+    System.out.println("Фамилия: " + owner.getSurname());
+}

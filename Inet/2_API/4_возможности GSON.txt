@@ -1,0 +1,305 @@
+
+                                  GSON - другие возможности
+  У библиотеки GSON есть множество разных настроек и дополнительных возможностей. В этом уроке речь пойдёт о некоторых из них.
+Начнём с альтернативного способа создания объекта Gson. Его используют,
+когда требуется указать дополнительные настройки сериализации или десериализации.
+Таких настроек может быть много и не все они обязательны. Перечислять их для передачи в метод или конструктор сложно.
+Поэтому программисты используют отдельный класс-строитель, который обеспечивает удобное построение объектов других классов.
+Этот класс так и называется — GsonBuilder(builder — англ. «строитель»).
+
+    GsonBuilder gsonBuilder = new GsonBuilder();
+
+    // тут можно поменять настройки, вызывая разные методы у объекта gsonBuilder
+
+    Gson gson = gsonBuilder.create();
+
+  А теперь рассмотрим несколько полезных настроек библиотеки GSON:
+
+- prettyPrinting
+
+  Настройка prettyPrinting (от англ. «красивая печать») определяет форматирование JSON-объекта — в коротком виде в одну строку или в длинном, но более удобном для чтения.
+По умолчанию настройка prettyPrinting выключена и GSON генерирует короткую версию JSON — без пробелов, переносов строк и отступов. Такой JSON неудобно читать человеку.
+
+{"photoUrl":"https://new-social-network.site/images/928476864.jpg","publicationDate":{"year":2020,"month":12,"day":25},"userId":97748,"description":"Классное фото!","likesQuantity":753}
+
+  Значение по умолчанию выбрано неслучайно. Короткая строка занимает меньше места в памяти компьютера, сокращает количество данных,
+передаваемых по сети, и ускоряет работу систем. Такая экономия особенно существенна,
+если речь идёт о загруженных серверах, которые обрабатывают тысячи запросов в секунду.
+
+    Включим настройку prettyPrinting.
+
+  GsonBuilder gsonBuilder = new GsonBuilder();
+  gsonBuilder.setPrettyPrinting();
+  Gson gson = gsonBuilder.create();
+
+  JSON станет более удобным для чтения.
+
+{
+  "photoUrl": "https://new-social-network.site/images/928476864.jpg",
+  "publicationDate": {
+  "year": 2020,
+  "month": 12,
+  "day": 25
+},
+  "userId": 97748,
+  "description": "Классное фото!",
+  "likesQuantity": 753
+}
+
+  Включать prettyPrinting рекомендуется, например, при выводе данных в формате JSON в консоль приложения
+или при ручной обработке ответов от API — когда важна читаемость данных.
+
+- serializeNulls
+
+  Если у Java-объекта какое-либо поле равно null, то по умолчанию такие поля не попадут в JSON.
+Это поведение можно поменять настройкой serializeNulls (от англ. «сериализовать null»).
+
+GsonBuilder gsonBuilder = new GsonBuilder();
+gsonBuilder.serializeNulls();
+Gson gson = gsonBuilder.create();
+
+  Как и предыдущую, эту настройку обычно оставляют выключенной, чтобы не передавать по сети лишние данные.
+Если в объекте много полей и они часто бывают равны null, то выключенная настройка уберёт из JSON строки вида "название_поля": null.
+В некоторых случаях необходимо явно показывать, что поле пустое. Например, некоторые API вернут ошибку,
+если поле не будет передано вовсе, но корректно обработают вариант с null.
+
+
+- registerTypeAdapter
+
+  В самом первом примере экземпляр класса LocalDateTime был сериализован следующим образом.
+
+"publicationDate": {
+    "year": 2020,
+    "month": 12,
+    "day": 25
+  }
+
+  Этот код удобно читать, но в некоторых случаях может понадобиться возвращать или принимать дату в другом формате.
+Реализовать сериализатор или десериализатор с заданными параметрами поможет метод registerTypeAdapter(Type type, Object typeAdapter).
+Он принимает в качестве аргументов класс, который нужно конвертировать, а также typeAdapter (от англ. «адаптер типа») — правила его конвертации.
+Чтобы написать свой конвертер, необходимо наследовать от абстрактного класса TypeAdapter,
+передав ему в качестве дженерика класс, для которого требуется изменить логику сериализации.
+А затем переопределить методы write(...) и read(...)
+
+- write
+  Метод write(...) принимает в качестве аргументов два параметра. Первый — объект класса JsonWriter.
+Это специальный класс из библиотеки Gson, отвечающий за конвертацию из объекта в строку.
+Второй параметр — экземпляр класса, который необходимо конвертировать в строку.
+Метод jsonWriter.value(...) принимает на вход тот формат, в котором он должен появиться в итоговом JSON — например,
+boolean, double или, как в нашем случае, String. Конвертировать экземпляр LocalDate можно с помощью DateTimeFormatter.
+
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonWriter;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+class LocalDateAdapter extends TypeAdapter<LocalDate> {
+    // задаём формат выходных данных: "dd--MM--yyyy"
+    private static final DateTimeFormatter formatterWriter = DateTimeFormatter.ofPattern("dd--MM--yyyy");
+
+    @Override
+    public void write(final JsonWriter jsonWriter, final LocalDate localDate) throws IOException {
+        // приводим localDate к необходимому формату
+        jsonWriter.value(localDate.format(formatterWriter));
+    }
+
+    ...
+}
+
+- read
+  Схожим образом работает метод read(...), но в обратную сторону.
+С помощью экземпляра JsonReader он считывает указанный тип файла, который можно впоследствии обработать.
+В нашем примере можно считать строку с помощью метода jsonReader.nextString()
+и конвертировать её в экземпляр LocalDate с помощью DateTimeFormatter и метода LocalDate.parse(...)
+
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+class LocalDateAdapter extends TypeAdapter<LocalDate> {
+    private static final DateTimeFormatter formatterReader = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+    ...
+
+    @Override
+    public LocalDate read(final JsonReader jsonReader) throws IOException {
+        return LocalDate.parse(jsonReader.nextString(), formatterReader);
+    }
+}
+
+В итоге LocalDateAdapter будет выглядеть так.
+
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+class LocalDateAdapter extends TypeAdapter<LocalDate> {
+    private static final DateTimeFormatter formatterWriter = DateTimeFormatter.ofPattern("dd--MM--yyyy");
+    private static final DateTimeFormatter formatterReader = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+    @Override
+    public void write(final JsonWriter jsonWriter, final LocalDate localDate) throws IOException {
+        jsonWriter.value(localDate.format(formatterWriter));
+    }
+
+    @Override
+    public LocalDate read(final JsonReader jsonReader) throws IOException {
+        return LocalDate.parse(jsonReader.nextString(), formatterReader);
+    }
+}
+
+Осталось совсем немного — зарегистрировать написанный TypeAdapter с помощью метода registerTypeAdapter.
+
+GsonBuilder gsonBuilder = new GsonBuilder();
+gsonBuilder.registerTypeAdapter(LocalDate.class, new LocalDateAdapter());
+Gson gson = gsonBuilder.create();
+
+💡 Часто для билдеров не создают отдельную переменную, а применяют методы сразу после вызова конструктора.
+
+Gson gson = new GsonBuilder()
+        .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
+        // любые другие методы билдера
+        .create();
+
+Такой способ выглядит немного лаконичнее.
+
+С помощью TypeAdapter в коде ниже объект LocalDate конвертируется в JSON в формате dd--MM--yyyy, а из JSON — в формате dd.MM.yyyy.
+Вы можете потренироваться и описать свои форматы ввода и вывода!
+
+--------------------------------------------------------------------------------------------------------------------------------------
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+class UserPostConverter {
+    public static void main(String[] args) {
+        UserPost post = new UserPost();
+        post.setPhotoUrl("https://new-social-network.site/images/928476864.jpg");
+        post.setUserId(97_748);
+        post.setDescription("Классное фото!");
+        post.setLikesQuantity(753);
+        LocalDate publicationDate = LocalDate.of(2020, 12, 25);
+        post.setPublicationDate(publicationDate);
+
+        Gson gson = new GsonBuilder()
+                .setPrettyPrinting()
+                .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
+                .create();
+
+				// сериализуем объект в JSON
+        String postSerialized = gson.toJson(post);
+        // Дата теперь отображается как 25--12--2020
+        System.out.println("Serialized post:\n" + postSerialized);
+
+        // заменим дату в JSON на другой формат
+        String jsonWithAnotherDateFormat = postSerialized.replace("25--12--2020", "25.12.2020");
+
+        System.out.println("New json:\n" + jsonWithAnotherDateFormat);
+
+        // сконвертируем дату в формате 25.12.2020 в объект LocalDate
+        UserPost postDeserialized = gson.fromJson(jsonWithAnotherDateFormat, UserPost.class);
+        System.out.println("Deserialized post:\n" + postDeserialized);
+    }
+}
+
+// правила конвертации, описанные в TypeAdapter для класса LocalDate
+class LocalDateAdapter extends TypeAdapter<LocalDate> {
+    private static final DateTimeFormatter formatterWriter = DateTimeFormatter.ofPattern("dd--MM--yyyy");
+    private static final DateTimeFormatter formatterReader = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+    @Override
+    public void write(final JsonWriter jsonWriter, final LocalDate localDate) throws IOException {
+        jsonWriter.value(localDate.format(formatterWriter));
+    }
+
+    @Override
+    public LocalDate read(final JsonReader jsonReader) throws IOException {
+        return LocalDate.parse(jsonReader.nextString(), formatterReader);
+    }
+}
+
+
+class UserPost {
+    // URL-адрес, по которому можно скачать фото
+    private String photoUrl;
+
+    // дата публикации
+    private LocalDate publicationDate;
+
+    // уникальный идентификатор автора поста
+    private int userId;
+
+    // текстовой комментарий к фото
+    private String description;
+
+    // сколько пользователей поставило лайк этому посту
+    private int likesQuantity;
+
+
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
+    }
+
+    public LocalDate getPublicationDate() {
+        return publicationDate;
+    }
+
+    public void setPublicationDate(LocalDate publicationDate) {
+        this.publicationDate = publicationDate;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public int getLikesQuantity() {
+        return likesQuantity;
+    }
+
+    public void setLikesQuantity(int likesQuantity) {
+        this.likesQuantity = likesQuantity;
+    }
+
+
+    @Override
+    public String toString() {
+        return "UserPost{" +
+                "photoUrl='" + photoUrl + '\'' +
+                ", publicationDate=" + publicationDate +
+                ", userId=" + userId +
+                ", description='" + description + '\'' +
+                ", likesQuantity=" + likesQuantity +
+                '}';
+    }
+}

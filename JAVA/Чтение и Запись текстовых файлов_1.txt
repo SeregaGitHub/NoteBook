@@ -1,0 +1,236 @@
+
+- с помощью FileWriter мы можем создавать файлы
+- с помощью FileReader - считывать их
+
+import java.io.*;
+
+ОБЯЗАТЕЛЬНО добавить - throws Exception !!!:
+public static void main(String[] args) throws Exception{
+
+FileWriter fw = new FileWriter("TestFile.txt");
+                    МОЖНО
+    (File file = new File("Tekst");
+        PrintWriter pr = new PrintWriter(file);)
+
+FileReader fr = new FileReader("TestFile.txt");
+
+ОБЯЗАТЕЛЬНО закрыть поток !!!:
+fw.close();
+fr.close();
+
+****************************************************************
+1	- FileWriter(File file) -
+Конструктор создает объект FileWriter для объекта File.
+2	- FileWriter(File file, boolean append) -
+Конструктор создает объект FileWriter, заданный объектом File
+с логическим значением, указывающим, следует ли добавлять
+записанные данные.
+3	- FileWriter(FileDescriptor fd) -
+Конструктор создает объект FileWriter, связанный с
+данным файловым дескриптором.
+4	- FileWriter(String fileName) -
+Конструктор создает объект FileWriter, учитывая имя файла.
+5	- FileWriter(String fileName, boolean append) -
+Конструктор создает объект FileWriter с именем файла
+с логическим значением, указывающим, следует ли
+добавлять записанные данные.
+
+  Так, в конструктор передается либо путь к файлу в виде строки,
+либо объект File, который ссылается на конкретный текстовый файл.
+Параметр append указывает, должны ли данные дозаписываться
+в конец файла (если параметр равен true),
+либо файл должен перезаписываться.
+
+1	- public void write(int c) throws IOException -
+Записывает один символ.
+2	- public void write(char [] c, int offset, int len) -
+Записывает часть массива символов, начиная с offset, длиной len.
+2	- public void write(String s, int offset, int len) -
+Напишите часть строки, начиная со смещения и длины len.
+*****************************************************************
+
+Основной метод FileWriter - это метод .write().
+fw.write("Hello Serega !!!");
+------------------------------------------------------------
+    public static void main(String[] args) throws Exception {
+        int k1 = 2;
+        int k2 = 5;
+        newFile( k1, k2);
+    }
+    public static void newFile(int k1, int k2) throws Exception {
+        FileWriter nFile = new FileWriter("file1.txt");
+
+            for(int i = k1; i <= k2; i++) {
+
+                    nFile.write(i);  ИЛИ  nFile.write(i+"\n");
+                }
+        nFile.close();
+    }                  // 2345       ИЛИ  2
+}                                         3
+                                          4
+                                          5
+----------------------------------------------------------------
+public static void main(String[] args) throws Exception {
+
+    FileWriter nFile = new FileWriter("file1.txt");
+
+        nFile.write("Хокку \nПодобен лучу самурайский клинок");
+
+    nFile.close();
+    }                  // Хокку
+}                      // Подобен лучу самурайский клинок
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+import java.io.FileReader;
+import java.util.Scanner;  - ВСЕГДА вместе с ридер !!!
+
+    public static void main(String[] args) throws Exception {
+
+        FileReader fr= new FileReader("file1.txt");
+        Scanner scan = new Scanner(fr);
+
+        fr.close();
+    }
+}
+
+
+- .nextLine()   - это метод, который считывает строку (до ENTER),
+                  и возвращает это значение
+- .hasNextLine() - метод, который возвращает boolean - true или false,
+                   показывая, есть ли следующая строка.
+
+public static void main(String[] args) throws Exception {
+
+    FileReader fr= new FileReader("file1.txt");
+    Scanner scan = new Scanner(fr);
+
+    int i = 1;
+
+    while (scan.hasNextLine()) {
+        System.out.println(i + " : " + scan.nextLine());
+        i++;
+    }
+        fr.close();   //   1 : Хокку
+    }                 //   2 : Подобен лучу самурайский клинок
+}
+---------------------------------------------------------------------
+public static void main(String[] args) {
+        try(FileReader reader = new FileReader("notes3.txt"))
+        {
+           // читаем посимвольно
+            int c;
+            while((c=reader.read())!=-1){
+
+                System.out.print((char)c);
+            }
+        }
+        catch(IOException ex){
+
+            System.out.println(ex.getMessage());
+        }  finally {
+            reader.close();
+        }
+-------------------------------------------------------------------------
+                      МОЖНО ЧИТАТЬ БЕЗ FileReader
+         String s = File.separator;
+        // String path = "/home/serega/1_Stepik/Linux/qqq.txt";
+        String path = s + "home" + s + "serega" + s + "1_Stepik" + s +
+                "Linux" + s + "qqq.txt";
+        File file = new File(path);
+        Scanner scanner = new Scanner(file);
+        while (scanner.hasNextLine()) {
+            System.out.println(scanner.nextLine());
+        }
+      // Запись содержимого в файл
+      writer.write("Это простой пример,\n в котором мы осуществляем\n
+      с помощью языка Java\n запись в файл\n и чтение из файла\n");
+      writer.flush();
+      writer.close();
+
+      // Создание объекта FileReader
+      FileReader fr = new FileReader(file);
+      char [] a = new char[200];  // Количество считываемых символов
+      fr.read(a);   // Чтение содержимого в массив
+
+      for(char c : a)
+         System.out.print(c);   // Вывод символов один за другими
+      fr.close();
+   }
+}
+                       ДОБАВЛЕНИЕ В ФАЙЛ
+        File file = new File("/home/serega/My_papka/www");
+        FileWriter fileWriter = new FileWriter(file, true);
+        BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+        String str = "ABCDEFG";
+        bufferedWriter.append(str);
+        bufferedWriter.close();         // ОБЯЗАТЕЛЬНО !!!
+        fileWriter.close();
+        scanner.close();
+**********************************************************************
+**********************************************************************
+   public static void main(String args[])throws IOException {
+      File file = new File("Example.txt");
+
+      // Создание файла
+      file.createNewFile();
+
+      // Создание объекта FileWriter
+      FileWriter writer = new FileWriter(file);
+
+      // Запись содержимого в файл
+      writer.write("Это простой пример,\n в котором мы осуществляем\n
+      с помощью языка Java\n запись в файл\n и чтение из файла\n");
+      writer.flush();
+      writer.close();
+
+      // Создание объекта FileReader
+      FileReader fr = new FileReader(file);
+      char [] a = new char[200];  // Количество считываемых символов
+      fr.read(a);   // Чтение содержимого в массив
+
+      for(char c : a)
+         System.out.print(c);   // Вывод символов один за другими
+      fr.close();
+   }
+}
+                       ДОБАВЛЕНИЕ В ФАЙЛ
+        File file = new File("/home/serega/My_papka/www");
+        FileWriter fileWriter = new FileWriter(file, true);
+        BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+        String str = "ABCDEFG";
+        bufferedWriter.append(str);
+        bufferedWriter.close();         // ОБЯЗАТЕЛЬНО !!!
+        fileWriter.close();*****************************************************
+   public static void main(String args[])throws IOException {
+      File file = new File("Example.txt");
+
+      // Создание файла
+      file.createNewFile();
+
+      // Создание объекта FileWriter
+      FileWriter writer = new FileWriter(file);
+
+      // Запись содержимого в файл
+      writer.write("Это простой пример,\n в котором мы осуществляем\n
+      с помощью языка Java\n запись в файл\n и чтение из файла\n");
+      writer.flush();
+      writer.close();
+
+      // Создание объекта FileReader
+      FileReader fr = new FileReader(file);
+      char [] a = new char[200];  // Количество считываемых символов
+      fr.read(a);   // Чтение содержимого в массив
+
+      for(char c : a)
+         System.out.print(c);   // Вывод символов один за другими
+      fr.close();
+   }
+}
+                       ДОБАВЛЕНИЕ В ФАЙЛ
+        File file = new File("/home/serega/My_papka/www");
+        FileWriter fileWriter = new FileWriter(file, true);
+        BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+        String str = "ABCDEFG";
+        bufferedWriter.append(str);
+        bufferedWriter.close();         // ОБЯЗАТЕЛЬНО !!!
+        fileWriter.close();

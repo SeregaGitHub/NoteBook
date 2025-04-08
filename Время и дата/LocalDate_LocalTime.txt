@@ -1,0 +1,137 @@
+
+                              LocalDate
+
+LocalDate today = LocalDate.now();  -  Получение текущей даты
+
+---------------------------------------------------------------------------------------
+ZoneId  timezone = ZoneId.of("Asia/Shanghai");
+LocalDate today = LocalDate.now(timezone);
+
+Список имен всех часовых поясов (time zone) можно найти в интернете.
+---------------------------------------------------------------------------------------
+
+LocalDate date = LocalDate.of(2019, Month.FEBRUARY, 22);  -  объект LocalDate, содержащий определенную дату
+              ИЛИ
+LocalDate date = LocalDate.of(2019, 2, 22);               -  (месяца нумеруются с 1 !!!)
+
+LocalDate today = LocalDate.ofYearDay(2019, 100);         -  Получение даты по номеру дня
+LocalDate today = LocalDate.ofEpochDay(1);                -  Получение даты Unix (в скобках - количество дней, прошедшее с 1 января 1970 года)
+
+
+- getYear()        -  Возвращает год из конкретной даты
+- getMonth()       -  Возвращает месяц даты — одну из специальных констант (JANUARY, FEBRUARY, ...;)
+- getMonthValue()  -  Возвращает номер месяца из даты. Январь == 1.
+- getDayOfMonth()  -  Возвращает номер дня в месяце
+- getDayOfYear()   -  Возвращает номер дня с начала года
+- getDayOfWeek()   -  Возвращает день недели: одну из специальных констант (MONDAY, TUESDAY, ...;)
+- getEra()         -  Возвращает эру: константа BC (Before Current Era) и CE(Current Era)
+
+---------------------------------------------------------------------------------------
+
+                      Методы класса LocalDate:
+
+Каждый из этих методов не меняет существующий объект LocalDate, а возвращает новый с нужными данными !!!
+
+- plusDays(int days)       -  Добавляет определенное количество дней к дате
+- plusWeeks(int weeks)     -  Добавляет недели к дате
+- plusMonths(int months)   -  Добавляет месяцы к дате
+- plusYears(int years)     -  Добавляет годы к дате
+- minusDays(int days)      -  Отнимает дни от даты
+- minusWeeks(int weeks)    -  Отнимает недели от даты
+- minusMonths(int months)  -  Отнимает месяцы от даты
+- minusYears(int years)    -  Отнимает годы от даты
+
+=========================================================================================================================
+=========================================================================================================================
+
+                                LocalTime
+
+Класс LocalTime создан для случаев, когда нужно работать только со временем без даты.
+
+
+LocalTime time = LocalTime.now();                   -  Получение текущего времени
+
+LocalTime time = LocalTime.of(часы, минуты, секунды, наносекунды);
+LocalTime time = LocalTime.of(12, 15, 0, 100);
+
+LocalTime time = LocalTime.of(часы, минуты, секунды);
+LocalTime time = LocalTime.of(часы, минуты);
+
+LocalTime time = LocalTime.ofSecondOfDay(секунды);  -  Получение времени по номеру секунды в сутках
+
+------------------------------------------------------------------------------------------------------------------------
+- getHour()    -  Возвращает часы
+- getMinute()  -  Возвращает минуты
+- getSecond()  -  Возвращает секунды
+- getNano()    -  Возвращает наносекунды
+
+LocalTime now = LocalTime.now();
+System.out.println(now.getHour());
+------------------------------------------------------------------------------------------------------------------------
+
+- plusYears(long years)      -  Добавляет год
+- plusHours(int hours)       -  Добавляет часы
+- plusMinutes(int minutes)   -  Добавляет минуты
+- plusSeconds(int seconds)   -  Добавляет секунды
+- plusNanos(int nanos)       -  Добавляет наносекунды
+- minusYears(long years)     -  Вычитает год
+- minusHours(int hours)      -  Вычитает часы
+- minusMinutes(int minutes)  -  Вычитает минуты
+- minusSeconds(int seconds)  -  Вычитает секунды
+- minusNanos(int nanos)      -  Вычитает наносекунды
+
+
+      можно «цепочкой» вызвать сразу несколько методов:
+
+  LocalDateTime currentDateTime = LocalDateTime.now();
+  LocalDateTime newDateTime = currentDateTime.plusMonths(3).plusWeeks(2);
+
+=========================================================================================================================
+=========================================================================================================================
+
+                          LocalDateTime
+
+  Класс LocalDateTime объединяет в себе возможности классов LocalDate и LocalTime: он хранит и дату, и время.
+
+LocalDateTime time = LocalDateTime.now();
+LocalDateTime time = LocalDateTime.of(год, месяц, день, часы, минуты, секунды);
+-----------------------------------------------------------------------------------------------------------------------
+LocalDate date = LocalDate.now();
+LocalTime time = LocalTime.now();
+LocalDateTime current = LocalDateTime.of(date, time);
+-----------------------------------------------------------------------------------------------------------------------
+
+    Экземпляры класса LocalDateTime можно сравнивать друг с другом при помощи следующих методов:
+
+- isBefore(LocalDateTime otherMoment)  -  проверяет, находятся ли дата и время на временной шкале раньше,
+                                          чем дата и время, переданные в качестве параметра. Например, lastYear.isBefore(nextYear) вернёт true,
+                                          если lastYear находится на временной шкале раньше, чем nextYear.
+- isAfter(LocalDateTime otherMoment)   -  проверяет, находятся ли дата и время на временной шкале позже,
+                                          чем дата и время, переданные в качестве параметра. Например, nextYear.isAfter(lastYear) вернёт true,
+                                          если nextYear находится на временной шкале позже, чем lastYear.
+- equals(LocalDateTime otherMoment)    -  проверяет, равны ли две даты и их время. Например, LocalDateTime.now().equals(newYear) вернёт true,
+                                          если текущие дата и время будут равны newYear.
+
+=========================================================================================================================
+
+                    LocalDate и LocalTime можно извлечь из LocalDateTime
+
+  LocalDateTime dateTime = LocalDateTime.now();
+
+  // извлечём время
+  LocalTime time = dateTime.toLocalTime();
+  System.out.println(time);
+
+  // извлечём дату
+  LocalDate date = dateTime.toLocalDate();
+  System.out.println(date);
+
+                    И собрать обратно:
+
+  // создадим по отдельности дату и время
+  LocalTime time = LocalTime.now();
+  LocalDate date = LocalDate.now();
+
+  // соберём их вместе — в экземпляр LocalDateTime
+  LocalDateTime newDateTime = LocalDateTime.of(date, time);
+  System.out.println(newDateTime);

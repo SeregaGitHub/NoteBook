@@ -1,0 +1,61 @@
+
+DateTimeFormatter dtf = DateTimeFormatter.ofPattern(шаблон);
+
+DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+String text = dtf.format(LocalDateTime.now());
+System.out.println(text);
+              ИЛИ
+System.out.println(dtf.format(LocalDateTime.now()));
+
+-----------------------------------------------------------------------------------------------------
+
+             LocalDate.parse()    LocalTime.parse()    LocalDateTime.parse()
+
+DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MMMM-dd-yyyy", Locale.ENGLISH);
+LocalDate date = LocalDate.parse("February-23-2019", dtf);
+System.out.println(date);
+
+DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
+LocalTime time = LocalTime.parse("23:59:59", dtf);
+System.out.println(time);
+
+public static void main(String[] args) {
+    String input = "14 часов 09 минут. Месяц: 02, День: 14, Год: 1966.";
+    printCorrectDateTime(input);
+}
+private static void printCorrectDateTime(String input) {
+    DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern(
+                                       "HH часов mm минут. Месяц: MM, День: dd, Год: yyyy.");
+                                       // определите входной формат
+    LocalDateTime dateTime = LocalDateTime.parse(input, inputFormatter); // сконвертируйте исходную строку в LocalDateTime
+    DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd_MM_yyyy|HH:mm"); // определите выходной формат
+    System.out.println(dateTime.format(outputFormatter)); // выведите результат на экран
+}
+-----------------------------------------------------------------------------------------------------
+
+Шаблон 	      Вариации шаблона 	              Пример 	                              Описание
+_____________________________________________________________________________________________________
+y 	      yy, yyyy 	                   19; 2019 	                             Год
+M/L 	    M, MM, MMM, MMMM, MMMMM 	   1; 01; Jan; January; J 	               Месяц
+d 	      d, dd 	                     9; 09 	                                 День
+H 	      H, HH 	                     2; 02 	                                 Часы
+m 	      m, mm 	                     3; 03 	                                 Минуты
+s 	      s, ss 	                     5; 05 	                                 Секунды
+S 	      S, SS, SSS, ... 	           1; 12; 123 	                           Тысячные доли секунды
+n 	      n 	                         123456789 	                             Наносекунды
+G 	      G, GGGG, GGGGG 	             AD; Anno Domini; A; 	                   Эра
+Q/q 	    q, qq, qqq, qqqq 	           3; 03; Q3; 3rd quarter 	               Квартал
+w 	      w 	                         13 	                                   Неделя года
+W 	      W 	                         3 	                                     Неделя месяца
+E 	      EEE, EEEE, EEEEE 	           Mon; Monday; M 	                       День недели
+e/c 	    e, ee, eee, eeee, eeeee 	   1; 01; Mon; Monday; M 	                 День недели
+a 	      a 	                         PM 	                                   AM или PM
+h 	      h 	                         12 	                                   Время 1-12 часов.
+V 	      VV 	                         Europe/Helsinki 	                       Временная зона
+z 	      z zzzz 	                     EET;  Eastern European Standard Time 	 Временная зона
+O 	      O OOOO 	                     GMT+2;  GMT+02:00 	                     Временная зона
+
+Самый полный находится по ссылке:
+
+https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/time/format/DateTimeFormatter.html

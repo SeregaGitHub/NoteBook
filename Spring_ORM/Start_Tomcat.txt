@@ -1,0 +1,195 @@
+
+                            Добавляем Tomcat через зависимость в POM файл
+
+<dependencies>
+    <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-core</artifactId>
+        <version>9.0.56</version>
+    </dependency>
+</dependencies>
+
+
+
+                                    Создаём тестовый сервлет
+
+package ru.practicum;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class TestServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.getWriter().print("OK!");
+    }
+}
+
+
+  Теперь нужно добавить сервлет в контейнер. Для этого нам понадобятся классы Context и Wrapper.
+Класс Context (да, снова «контекст», но в новом значении) обозначает в терминах Tomcat набор сервлетов.
+Сервлеты из одного контекста могут общаться друг с другом, а из разных не могут.
+Класс Wrapper позволяет задать важные и не очень настройки сервлета — какой URL он будет обслуживать,
+надо ли инициализировать сервлет сразу или только после первого запроса и другие.
+  Стоит также сказать, что в те далёкие времена, когда серверы были большими, а рабочие компьютеры маленькими,
+в одном контейнере сервлетов запускали по несколько приложений (контекстов) одновременно.
+Каждому приложению назначался свой базовый путь — к примеру, /app1 и /app2.
+Все URL приложения обрабатывались относительно этого базового пути.
+То есть если в приложении app1 был сервлет, обрабатывающий запросы на /users, то полный URL получался /app1/users.
+В случае встроенного контейнера нет большого смысла добавлять какой-то базовый путь (приложение одно),
+но Tomcat обязывает это сделать. Решение простое — использовать в качестве пути пустую строку.
+
+  В итоге код получится таким.
+
+                                      Класс с методом main()
+
+package ru.practicum;
+
+import org.apache.catalina.Context;
+import org.apache.catalina.LifecycleException;
+import org.apache.catalina.Wrapper;
+import org.apache.catalina.startup.Tomcat;
+
+public class LaterApplication {
+    private static final int PORT = 8080;
+
+public static void main(String[] args) throws LifecycleException {
+      Tomcat tomcat = new Tomcat();
+      tomcat.getConnector().setPort(PORT);
+
+      // то самое "приложение" или "контекст" с пустым путём
+      Context tomcatContext = tomcat.addContext("", null);
+
+      // класс Wrapper позволяет задать дополнительные настройки для сервлета
+      Wrapper testServletWrapper =
+          Tomcat.addServlet(tomcatContext, "testServlet", new TestServlet());
+
+      // addMapping() сопоставляет URL-путь с сервлетом
+      testServletWrapper.addMapping("/test");
+
+      tomcat.start();
+      }
+}
+
+  Если теперь запустить программу и зайти в браузере на http://localhost:8080/test, то можно увидеть OK!.
+Не очень полезное приложение, но приятно, что работает!
+
+==============================================================================================================================
+
+                                              Spring-Контекст
+
+  Чтобы заменить TestServlet на более полезный DispacherServlet,
+нужно создать WebApplicationContext — без него сервлет-диспетчер не будет работать.
+Для создания контекста добавьте в pom.xml зависимость spring-webmvc. На самом деле хватило бы и spring-context,
+но мы сразу добавим webmvc, так как потом будем работать с контроллерами.
+spring-context добавится автоматически, как транзитивная зависимость spring-webmvc.
+
+
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-webmvc</artifactId>
+    <version>5.3.15</version>
+</dependency>
+
+
+  Теперь в main можно создать контекст. Для этого нам нужен класс AnnotationConfigWebApplicationContext.
+Это одна из реализаций WebApplicationContext, которая умеет находить бины по аннотациям @Component, @Controller и другим.
+Именно поэтому название класса и начинается со слова “annotation”
+
+
+public class LaterApplication {
+    private static final int PORT = 8080;
+
+    public static void main(String[] args) throws LifecycleException {
+        Tomcat tomcat = new Tomcat();
+        tomcat.getConnector().setPort(PORT);
+
+        Context tomcatContext = tomcat.addContext("", null);
+
+        // создаём контекст
+        AnnotationConfigWebApplicationContext applicationContext =
+            new AnnotationConfigWebApplicationContext();
+        applicationContext.setServletContext(tomcatContext.getServletContext());
+        applicationContext.scan("ru.practicum");
+        applicationContext.refresh();
+
+        // дальше добавление TestServlet и запуск Tomcat, как раньше
+        // ...
+    }
+}
+
+  Вызов метода .scan("ru.practicum") значит, что контекст будет искать бины в пакете ru.practicum.
+Метод .setServletContext задаёт, как и следует из названия, ServletContext. Метод .refresh загружает Spring-контекст. Готово!
+
+
+                                            Диспетчер запросов
+
+  Теперь, когда добавлены и настроены Tomcat и WebApplicationContext, пришло время для DispatcherServlet. Добавьте его также в метод main.
+
+  package ru.practicum;
+
+  import org.apache.catalina.Context;
+  import org.apache.catalina.LifecycleException;
+  import org.apache.catalina.Wrapper;
+  import org.apache.catalina.startup.Tomcat;
+  import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+  import org.springframework.web.servlet.DispatcherServlet;
+
+  public class LaterApplication {
+
+      public static void main(String[] args) throws LifecycleException {
+          Tomcat tomcat = new Tomcat();
+          tomcat.getConnector().setPort(8080);
+
+          Context tomcatContext = tomcat.addContext("", null);
+
+          AnnotationConfigWebApplicationContext applicationContext =
+                  new AnnotationConfigWebApplicationContext();
+          applicationContext.scan("ru.practicum");
+          applicationContext.setServletContext(tomcatContext.getServletContext());
+          applicationContext.refresh();
+
+          // добавляем диспетчер запросов
+          DispatcherServlet dispatcherServlet = new DispatcherServlet(applicationContext);
+          Wrapper dispatcherWrapper =
+                  Tomcat.addServlet(tomcatContext, "dispatcher", dispatcherServlet);
+          dispatcherWrapper.addMapping("/");
+          dispatcherWrapper.setLoadOnStartup(1);
+
+          tomcat.start();
+      }
+  }
+
+
+  Это похоже на настройку TestServlet, но есть и отличия:
+
+      В конструктор DispatcherServlet передаётся applicationContext.
+      Метод addMapping("/") отвечает за то, что сервлет будет обрабатывать все пути, начиная с корневого.
+      Метод setLoadOnStartup(1) показывает, что сервлет будет инициализирован при запуске контейнера, а не при первом запросе.
+
+                                                Плюс контроллер
+
+  Сам по себе DispatcherServlet не умеет обрабатывать запросы, ему для этого нужны контроллеры. Значит, пришло время добавить контроллер.
+
+      package ru.practicum;
+
+      import org.springframework.web.bind.annotation.GetMapping;
+      import org.springframework.web.bind.annotation.RestController;
+
+      @RestController
+      public class TestController {
+
+          @GetMapping("/test")
+          public String test() {
+              return "OK from controller!";
+          }
+      }
+
+  Если теперь запустить main и зайти на http://localhost:8080/test, должно получиться следующее: - OK from controller!
+
+
+  Всё то, что мы описали в этом уроке, Spring Boot делает автоматически:
+запускает Tomcat, создаёт WebApplicationContext и добавляет DispatcherServlet.
+Плюс добавляет ещё множество разнообразных настроек и удобств.

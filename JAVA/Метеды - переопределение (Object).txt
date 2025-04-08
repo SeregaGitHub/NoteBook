@@ -1,0 +1,82 @@
+    Контракт метода — свод правил, закреплённых в документации:
+
+- Правило рефлексивности — объект должен быть равен самому себе.
+  То есть вызов x.equals(x) должен всегда возвращать true.
+- Правило симметричности — «от перестановки мест слагаемых сумма не меняется».
+  Результат сравнения объектов не зависит от того, в каком порядке они расположены.
+  Вызов x.equals(y) должен возвращать true в то же время, когда вызов y.equals(x) возвращает true.
+- Правило логической транзитивности — если два объекта равны и один из них равен третьему,
+  то все три объекта равны.
+  Так, если вызов x.equals(y) возвращает true и y.equals(z) возвращает true,
+  то вызов x.equals(z) также должен вернуть true.
+- Правило согласованности — если не менять данные сравниваемых объектов,
+  то и результат их сравнения должен быть всегда одинаков.
+  То есть множественный вызов x.equals(y) должен возвращать один и тот же результат до тех пор,
+  пока данные полей объектов x и y неизменны.
+- Правило «на ноль делить нельзя» — ни один из сравниваемых объектов не может быть равен null.
+  Это значит, что вызов x.equals(null) должен всегда возвращать false.
+
+=======================================================================================================
+
+class Book {
+    private String title;
+    private String author;
+    private int pagesNumber;
+    private String information;
+--------------------------------------------------------------------------------------------------------
+
+                  Переопределение equals()
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;                        // проверяем адреса объектов
+        if (obj == null) return false;                       // проверяем ссылку на null
+        if (this.getClass() != obj.getClass()) return false; // сравниваем классы
+        Book otherBook = (Book) obj;                         // открываем доступ к полям другого объекта
+        return Objects.equals(title, otherBook.title) &&     // проверяем все поля
+                Objects.equals(author, otherBook.author) &&  // нужно логическое «и»
+                (pagesNumber == otherBook.pagesNumber);      // примитивы сравниваем через ==
+    }
+
+                  Переопределение hashCode()
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(title, artist, songwriter);
+    }
+
+                  ИЛИ
+
+    @Override
+    public int hashCode() {
+        int hash  = 17;
+        if (title != null) {
+            hash = hash + title.hashCode();
+        }
+        hash = hash * 31;
+        if (artist != null) {
+            hash = hash + artist.hashCode();
+        }
+        if (songwriter != null) {
+            hash = hash + songwriter.hashCode();
+        }
+        return hash;
+    }
+
+             Переопределение toString()
+
+    @Override
+    public String toString() {
+        String result = "Book{" +
+                        "title='" + title + '\'' +
+                        ", author='" + author + '\'' +
+                        ", pagesNumber=" + pagesNumber +
+                        ",";                                             // Если выводим метод, то:
+                if (information != null) {
+                    result = result + " information.length()=" + information.length() + "}";
+                } else {
+                    result = result + " information.length()=null}";
+                }                                                        // Arrays.toString() - можно как обычно
+        return result;
+    }
+}

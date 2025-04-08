@@ -1,0 +1,159 @@
+
+                                                  Внешние настройки
+
+  Продолжаем настраивать Spring. В этом уроке разберём, как вынести некоторые настройки приложения в отдельный файл и зачем это может быть нужно.
+Представьте, что вы делаете банковское приложение, которое обрабатывает переводы между счетами. Все транзакции при этом хранятся в базе данных.
+Если сохранить логин и пароль от базы прямо в исходном коде приложения, то у всех, у кого есть доступ к коду, будет пароль и от базы транзакций.
+Чтобы взломать банк и пополнить свой счёт за пару лишних транзакций, достаточно будет украсть ноутбук любого разработчика проекта.
+Чтобы обезопасить любую систему, не только банковскую, принято выносить настройки, к примеру, такие как логины и пароли, в отдельный файл.
+Дописывать логин и пароль в этот файл может либо администратор базы, либо программа, которая разворачивает приложение на сервере.
+
+                                                  Файл с настройками
+
+  Логины и пароли — это не единственные настройки, которые стоит хранить отдельно от исходного кода.
+В отдельный файл с настройками часто выносят, к примеру, непосредственно адрес базы данных.
+Если адрес базы поменяется, то вместо перекомпиляции приложения можно будет обойтись только изменением настройки и перезапуском приложения.
+Однако чтобы получить что-то из файла, нужно, чтобы он был.
+  Когда мы создаём приложение на Spring Boot через Spring Initializr, в проекте автоматически появляется файл для настроек application.properties.
+В случае со Spring Framework нужно создать его самостоятельно в папке src/main/resources.
+
+                                                  Путь к настройкам
+
+  Чтобы указать Spring, из каких файлов *.properties нужно брать настройки, нужна аннотация @PropertySource("путь к файлу").
+Эту аннотацию нужно поместить на класс-конфигурацию — класс с аннотацией @Configuration. К примеру, это может выглядеть так:
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+package ru.practicum.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+
+@Configuration
+@PropertySource("classpath:application.properties")
+public class AppConfig {
+}
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+  Перед именем файла в @PropertySource указан префикс classpath: — он говорит, что файл нужно искать в самом приложении.
+Взять настройки из совсем внешнего файла можно с помощью префикса file: и указания полного пути к нему. Например, так.
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+package ru.practicum.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+
+@Configuration
+@PropertySource("classpath:application.properties")
+@PropertySource(value = "file:C:\\myapp\\myapp.properties", ignoreResourceNotFound = true) // пример для Windows
+@PropertySource(value = "file:/etc/myapp/myapp.properties", ignoreResourceNotFound = true) // пример для Unix-like
+public class AppConfig {
+}
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+  Spring обрабатывает аннотации последовательно, поэтому настройки из файлов, указанных позже, «перекроют» настройки из более ранних.
+Например, если в application.properties указано, что x=A, а в myapp.properties, что x=B, то в приложении будет использовано x=B,
+так как загрузка настроек из файла myapp.properties произошла позже.
+Поэтому можно задать в application.properties настройки по умолчанию, а потом по необходимости переопределить часть из них в других файлах.
+  Параметр ignoreResourceNotFound = true значит, что отсутствие такого файла не будет ошибкой.
+Если поставить false, а файла нет, то приложение просто не запустится.
+
+                                                        Как получить настройку
+
+  Мы показали, как сказать Spring, где искать файл с настройками. Теперь попробуем получить значение какой-нибудь настройки.
+Сделайте в файле application.properties такую запись — это и есть наша настройка:
+
+message=Hello world, from config!
+
+  Теперь попробуем сделать так, чтобы это сообщение загрузилось в приложение и его можно было вернуть из контроллера.
+Для этого нужна аннотация @Value — с ней настройку можно внедрить так же, как зависимости.
+Эта аннотация используется для работы с настройками в Spring Framework. Например, так:
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+package ru.practicum;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ExampleComponent {
+
+    @Autowired
+    public ExampleComponent(@Value("${message}") String message) {
+        // в параметре message будет значение из файла с настройками
+    }
+}
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+  Обратите внимание, что с @Value обязательно использовать знак доллара и фигурные скобки ${...}.
+Если просто написать @Value("message"), то в переменной message будет буквально строка "message".
+Такой подход позволяет писать сложные выражения, например, @Value("Hello, ${name}!").
+  Также у выражений в @Value есть полезная возможность задать значение по умолчанию — @Value("${key:Default value}").
+Если ключ key есть в настройках, будет использовано значение из настроек, а если нет, то будет использовано значение “Default value”.
+
+  Выражения внутри @Value() используют язык Spring Expression Language, или SpEL. Он также используется и в других частях Spring.
+
+                                                    Полный пример с настройкой
+
+  Если добавить простой класс-сервис — он будет загружать настройку и хранить её значение.
+Рассмотрим это на примере сервиса HelloMessageService и контроллера HelloMessageController.
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+package ru.practicum.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+@Service
+public class HelloMessageService {
+    private final String message;
+
+    @Autowired
+    public HelloMessageService(@Value("${message:Hello!}") String message) {
+        this.message = message;
+    }
+
+    public String getHelloMessage() {
+        return message;
+    }
+}
+
+package ru.practicum.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.service.HelloMessageService;
+
+@RestController
+@RequestMapping("/hello")
+public class HelloMessageController {
+    private final HelloMessageService messageService;
+
+    @Autowired
+    public HelloMessageController(HelloMessageService messageService) {
+        this.messageService = messageService;
+    }
+
+    @GetMapping
+    public String hello() {
+        return messageService.getHelloMessage();
+    }
+}
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+  Если теперь запустить приложение и зайти на http://localhost:8080/hello, то получится увидеть сообщение из настройки.
+
+  Если удалить строчку с message=... из application.properties, то вместо строки “Hello world, from config!” останется просто “Hello!” —
+значение по умолчанию в @Value("${message:Hello!}").

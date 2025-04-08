@@ -1,0 +1,185 @@
+
+                              RandomAccessFile
+
+String filePath = File.separator + "home" + File.separator + "serega" + File.separator + "Atom_NoteBook"
+        + File.separator + "Lessons" + File.separator + "ForFileStudy" + File.separator + "RandomAccess.txt";
+
+// Не читает русский текст ?!
+
+try (RandomAccessFile randomAccessFile = new RandomAccessFile(filePath, "rw");) {
+                                                                        // Режим работы с файлом
+                                                                        // rw -  чтение и запись
+                                                                        // r  -  чтение
+                                                                        // w  -  запись
+    int b = randomAccessFile.read();                    // Прочитает первый байт (D)
+    System.out.println((char) b);
+    b = randomAccessFile.read();                        // Каретка перешла на второй символ (e)
+    System.out.println((char) b);
+
+    String str1 = randomAccessFile.readLine();          // De - уже прочитаны. Выведется:
+    System.out.println(str1);                           // ar doting sweetheart of my childhood,
+
+    randomAccessFile.seek(101);                     // Премещение каретки на 101 индекс
+    String str2 = randomAccessFile.readLine();          // Выведется:
+    System.out.println(str2);                           // ild wood
+
+    long position = randomAccessFile.getFilePointer();  // получение позиции каретки (Возвращает - long)
+    System.out.println(position);
+
+    /*randomAccessFile.seek(0);
+    randomAccessFile.writeBytes("HistoruManagerTest.Test");*/             // Перезапишет первые 4 символа на HistoruManagerTest.Test
+
+    randomAccessFile.seek(randomAccessFile.length() - 1);    // Премещение каретки на последний индекс
+    randomAccessFile.writeBytes("\n\n\t\t\t\tPushkin A.S.");   // Премещение каретки на 2 строчки вниз и
+                                                                  // после 4 табуляций записать - Pushkin A.S.
+
+} catch (IOException e) {
+    throw new RuntimeException(e);
+}
+=============================================================================================================
+
+                    ChannelBufferExample
+
+* try (RandomAccessFile randomAccessFile = new RandomAccessFile(filePathRus, "rw");
+             FileChannel fileChannel = randomAccessFile.getChannel();                 // Создаём канал
+        ) {
+            ByteBuffer byteBuffer = ByteBuffer.allocate(25);                          // Создаём буффер на 25 байт
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+===================================================================================================
+
+- randomAccessFile.getChannel()               -  создать канал
+- ByteBuffer.allocate(n)                      -  cоздать буффер на n байт
+- fileChannel.read(byteBuffer)                -  заполняет байтами буффер
+- ByteBuffer.allocate(str.getBytes().length)  -  cоздать буффер равный длине строки str
+- byteBuffer.put(str.getBytes());             -  поместить в буффер все байты строки
+- byteBuffer.flip()                           -  перевод position на противоположную сторону буффера
+                                                 (используется перед переходом с режима записи на режим чтения
+- fileChannel.write(byteBuffer);              -  дописать в файл
+- byteBuffer.hasRemaining()                   -  Пока из буффера есть что читать
+                                                 (используется в цикле while)
+- (char) byteBuffer.get()                     -  Получает байты из буффера
+                                                 (можно делать кастинг, например в (char))
+- byteBuffer.clear()                          -  переводит position на нулевой индекс буффера
+                                                 (используется после чтения, перед записью новых байтов)
+                                                 (непрочитанные байты перезаписываются)
+- ByteBuffer.wrap(string.getBytes())          -  wrap - сам делает flip и clear
+                                                 (после - fileChannel.write(byteBuffer))
+- byteBuffer.rewind()                         -  position на 0 индекс, для повторного чтения
+- byteBuffer.compact()                        -  переводит position на нулевой индекс буффера
+                                                 (используется после чтения, перед записью новых байтов)
+                                                 (непрочитанные байты не перезаписываются и перемещаются ниже)
+- byteBuffer.mark()                           -  поставит отметку, для повторного чтения
+- byteBuffer.reset()                          -  вернёт position на отметку, для повторного чтения
+
+===================================================================================================================
+
+String filePathEng = File.separator + "home" + File.separator + "serega" + File.separator + "Atom_NoteBook"
+        + File.separator + "Lessons" + File.separator + "ForFileStudy" + File.separator + "RandomAccess.txt";
+
+try (RandomAccessFile randomAccessFile = new RandomAccessFile(filePathEng, "rw");
+     FileChannel fileChannel = randomAccessFile.getChannel();  // Создаём канал
+) {
+
+    ByteBuffer byteBuffer = ByteBuffer.allocate(25);   // Создаём буффер на 25 байт
+    StringBuilder stringBuilder = new StringBuilder();         // В строку будем записывать
+
+    int byteQuantity = fileChannel.read(byteBuffer);           // Заполняем переменную байтами
+
+
+    while (byteQuantity > 0) {                                 // Пока количество байт в буффере > 0
+        System.out.println("Прочитано " + byteQuantity + " байт.");
+        byteBuffer.flip();                                     // После заполнения буффера, переводим position
+                                                                  // на нулевой индекс
+        while (byteBuffer.hasRemaining()) {                    // Пока из буффера есть что читать
+            stringBuilder.append((char)byteBuffer.get());     // Добавляем символы в stringBuilder
+        }                                                      // По окончании чтения position на 24 индексе
+
+        byteBuffer.clear();                                    // Переводим position на нулевой индекс буффера
+                                                                  // перед перезаписью новых байтов
+
+        byteQuantity = fileChannel.read(byteBuffer);           // Заполняем переменную новыми байтами
+    }
+    System.out.println(stringBuilder);                         // Не читает русский текст ?!!
+
+    String str = "\nThis is my favourite verse !!!";           // Нам нужно добавить строку
+    ByteBuffer byteBuffer2 =
+            ByteBuffer.allocate(str.getBytes().length);        // Создаст буффер равный строке
+    byteBuffer2.put(str.getBytes());                           // В буффере все байты строки
+    byteBuffer2.flip();                                        // Буффер заполнен - переводим position на 0
+    fileChannel.write(byteBuffer2);                            // Дописать в файл
+
+                      // НАИЛУЧШИЙ СПОСОБ !!!
+    String string = "\n\nPushkin - is the BEST poet !!! ";
+    ByteBuffer bestBuffer = ByteBuffer.wrap(string.getBytes()); // wrap - сам делает flip и clear
+    fileChannel.write(bestBuffer);
+
+} catch (IOException e) {
+    throw new RuntimeException(e);
+}
+
+--------------------------------------------------------------------------------------------------------------
+
+try(RandomAccessFile file = new RandomAccessFile("folderTest" + File.separator
+                                                                    + "ChannelBufferOnlyRead.txt", "r");
+    FileChannel channel = file.getChannel();) {
+
+    ByteBuffer buffer = ByteBuffer.allocate(5);         // Размер буффера - 5 байт
+    channel.read(buffer);                                       // Канал заполнел буффер
+    buffer.flip();                                              // Position на 0 индекс, для чтения
+    System.out.println((char) buffer.get());
+    System.out.println((char) buffer.get());
+    System.out.println((char) buffer.get());                    // Прочитано 3 байта "abc"
+    buffer.rewind();                                            // Position на 0 индекс, для повторного чтения
+    System.out.println((char) buffer.get());                    // Прочитан 1 байт "a"
+    System.out.println("--------------------------------------------------------------------");
+    buffer.compact();                           // a  после compact()  // b
+                                  // position - // b                   // c
+                                                // c                   // d
+                                                // d                   // e
+                                                // e                   //   - position
+                                 // compact() - оставляет в буффере непрочитанные байты перед перезаписью
+    channel.read(buffer);
+    buffer.flip();
+    while (buffer.hasRemaining()) {
+        System.out.println((char) buffer.get());                 // Прочитано 5 байт "bcdef"
+    }
+    System.out.println("--------------------------------------------------------------------");
+    buffer.clear();                                              // Position на 0 индекс, для записи
+    channel.read(buffer);
+    buffer.flip();
+    System.out.println((char) buffer.get());                     // g  -  Прочитан 1 байт "g"
+    buffer.mark();                                               // h  *  mark() поставит отметку
+    System.out.println((char) buffer.get());                     // i  -  Прочитано ещё два байта
+    System.out.println((char) buffer.get());                     // j
+    buffer.reset();                                              // -  -  reset() вернёт position на отметку
+    System.out.println("--------------------------------------------------------------------");
+    while (buffer.hasRemaining()) {
+        System.out.println((char) buffer.get());                 // Прочитано 3 байт "hij"
+    }
+
+} catch (IOException e) {
+    throw new RuntimeException(e);
+}
+
+----------------------------------------------------------------------------------------------------------------------
+
+String stringFile = "/home/serega/Atom_NoteBook/Lessons/ForFileStudy/TestForFile/FilesExample.txt";
+String stringFile2 = "/home/serega/Atom_NoteBook/Lessons/ForFileStudy/TestForFile/FilesExample2.txt";
+String stringDir = "/home/serega/Atom_NoteBook/Lessons/ForFileStudy/TestForFile";
+String stringDir2 = "/home/serega/Atom_NoteBook/Lessons/ForFileStudy/TestForFile2";
+Path filePath = Path.of(stringFile);
+Path filePath2 = Path.of(stringFile2);
+Path dirPath = Path.of(stringDir);
+Path dirPath2 = Path.of(stringDir2);
+
+Files.copy(filePath, dirPath2.resolve(filePath.getFileName()));  // Скопирует
+Files.copy(filePath, dirPath2.resolve(filePath2.getFileName()));   // Скопирует и переименует
+
+    // При копировании перезапишет уже существующий файл
+Files.copy(filePath, dirPath2.resolve(filePath.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+
+    // Переименование файла - методом перемещения
+Files.move(Path.of(dirPath2 + "/FilesExample2.txt"), Path.of(dirPath2 + "/FilesExample2Rename.txt"));

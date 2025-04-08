@@ -1,0 +1,37 @@
+
+      String str = null;
+      Optional<String> optional = Optional.ofNullable(str);
+
+- Optional.ofNullable(T t)  -  Принимает любой тип и создает контейнер.
+                               (Если в параметры этого метода передать null, то будет создан пустой контейнер)
+- Optional.of(T t)          -  Этот метод аналогичен Optional.ofNullable
+                               (Если передать в параметр null значение, то получим - NullPointerException)
+- Optional.empty()          -  Возвращает пустой Optional
+                               (Лучше вернуть пустой Optional вместо null !!!)
+
+--------------------------------------------------------------------------------------------------------------
+- get()                     -  достаёт объект из контейнера
+- isPresent()               -  возвращает true, если в контейнере есть объект, и false в противном случае
+                               (if(optionalSomeClass.isPresent()))
+- isEmpty()                 -  возвращает false, если в контейнере есть объект, и true в противном случае
+- ifPresent(_)              -  Если true, то функция в скобках
+                               (collection.method(return Optional.ofNullable).ifPresent(v -> System.out.println(v.method))) - example...
+- ifPresentOrElse()         -  Если true, то функция в скобках, если false, то что через запятую
+                               (collection.method(return Optional.ofNullable).ifPresent(v -> System.out.println(v.method)),
+                                                                                        () -> System.out.println("Sorry"));
+- orElse()                  -  возвращает значение в контейнере или значение по-умолчанию, которое вы указали
+                               (return personRepository.findById(id).orElse(new Person(1, "anon", "anon", "anon"));)
+- orElseGet()               -  вместо возвращения значения, он выполнит функциональный интерфейс Supplier
+                               (return personRepository.findById(id).orElseGet(() -> {System.out.println("Пользователь не найден");
+                                return new Person(-1L, "anon", "anon", "anon");)
+- orElseThrow()             -  вернет объект если он есть, в противном случае выбросит стандартное исключение NoSuchElementException
+- orElseThrow(Supplier s)   -  позволяет вернуть любое исключение вместо стандартного NoSuchElementException, если объекта нет
+- filter()                  -  фильтрация в Optional объекте
+                               (return personRepository.findById(id).filter(person -> person.getAge() > 18))
+- map()                     -  Если внутри контейнера есть значение, то к значению применяется переданная функция,
+                               результат помещается в новый Optional и возвращается, в случае отсутствия значения будет возвращен пустой контейнер
+                               (return personRepository.findById(id).map(person -> person.getFirstName() + " " + person.getLastName());)
+- flatMap()                 -  Используется если объект дважды упакован - Optional<Optional<T>>
+- stream()                  -  вызывает стрим
+- or()                      -  позволяет изменить пустой Optional передав новый объект
+                               (return personRepository.findById(id).or(() -> Optional.of(new Person(-1L, "anon", "anon", "anon", 0L)));)

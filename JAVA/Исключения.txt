@@ -1,0 +1,245 @@
+
+Использование исключений в Java позволяет повысить отказоустойчивость программы
+за счет использования «запасных» путей, отделить логику основного кода от
+кода обработки исключительных  ситуаций за счет использования блоков catch,
+а также дает нам возможность переложить  обработку исключений на пользователя нашего кода
+с помощью throws.
+-------------------------------------------------------------------------------------------
+
+* try – определяет блок кода, в котором может произойти исключение;
+* catch – определяет блок кода, в котором происходит обработка исключения;
+* finally – определяет блок кода, который является необязательным,
+          но при его наличии выполняется в любом случае,
+          независимо от результатов выполнения блока try.
+* throw – используется для возбуждения исключения;
+* throws – используется в сигнатуре методов для предупреждения,
+         о том что метод может выбросить исключение.
+- try{}catch, try{}catch{}finally, try{}finally{}.
+------------------------------------------------------------------------------------------
+- exception.printStackTrace()  -  будет выведен стек-трейс ошибки
+- exception.getMessage()       -  получить в catch короткое сообщение с описанием ошибки
+
+- getStackTrace()              -  возвращает массив элементов, представленных классом StackTraceElement
+- getClassName()               -  возвращает название класса, где произошло исключение
+- getMethodName()              -  позволяет получить имя метода вызвавшего исключение
+- getFileName()                -  подскажет имя файла, где было исключение
+- getLineNumber()              -  отобразит номер линии в файле, где было исключение
+
+catch (ArithmeticException exception) {
+            for (StackTraceElement stack : exception.getStackTrace()) {
+                System.out.println(String.format("Класс: " + stack.getClassName() + ", " +
+                        "метод: " + stack.getMethodName() + ", " +
+                        "имя файла: " + stack.getFileName() + ", " +
+                        "строка кода: " + stack.getLineNumber()));
+            }
+        }
+------------------------------------------------------------------------------------------
+                          СВОЁ исключение
+
+  У суперкласса всех исключений Throwable четыре публичных конструктора.
+Throwable() — без параметров, Throwable(String message) — с передачей короткого описания ошибки,
+Throwable(String message, Throwable cause) — с передачей текста об ошибке и информации о её причине,
+Throwable(Throwable cause) — только с информацией о причине.
+Чтобы использовать их в своём классе исключения, их нужно переопределить.
+Можно оставить только те, которые нужны для целей вашей программы, или добавить любые свои.
+----------------------------------------------------------------------------------------------
+
+public class InputException extends Exception {  -  ОБЯЗАТЕЛЬНО extends Exception !!!
+
+    public MyException() {
+    }
+
+    public MyException(final String message) {
+        super(message);
+    }
+
+    public MyException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
+
+    public MyException(final Throwable cause) {
+        super(cause);
+    }
+}
+----------------------------------------------------------------------------------------------
+
+public class LimitException extends RuntimeException{
+    private int attempts;
+    private String message;
+
+    public LimitException(String message, int attempts) {
+        super(message);
+        this.attempts = attempts;
+        this.message = message;
+    }
+
+    public void finishMessage() {
+        System.out.println(message + attempts);
+    }
+}
+----------------------------------------------------------------------------------------------
+
+try {
+    if (...) {                                // если возникла определённая ситуация
+        throw new MyException(parameters);    // сгенерировали исключение
+    }
+}
+catch (MyException e) {
+                                              // настроили обработку исключения, сгенерированного в try
+}
+------------------------------------------------------------------------------------------
+
+
+* public static void main(String[] args) {
+      File file = new File("Test");
+      try {
+          Scanner scanner = new Scanner(file);
+      } catch (FileNotFoundException e) {
+          System.out.println("Файл не найден");
+      }
+  }
+                  ВЫБРАСЫВАНИЕ ИСКЛЮЧЕНИЯ
+
+*  public static void main(String[] args) {
+      Scanner scanner = new Scanner(System.in);
+      int sum = 0;
+      ArrayList<String> errorList = new ArrayList<>();
+      while (sum < 20) {
+          int input = scanner.nextInt();
+          if (input > 0) {
+              sum += input;
+          } else {  ((throw new MyException();)) - если он есть
+              try {
+                  throw new IOException();
+              } catch (IOException e) {
+                  errorList.add(String.valueOf(input));
+                  System.out.println("Число " + input + " меньше нуля");
+              }
+          }
+      }
+      System.out.println(sum);
+  }
+
+              СОЗДАНИЕ СВОЕГО ИСКЛЮЧЕНИЯ
+
+* package Notebook;
+
+public class MyException extends Exception{
+    public MyException () {
+        System.out.println("Вы допустили ошибку");
+        System.out.println("Попробуйте ещё раз");
+    }
+}
+--------------------------------------------------------------------------
+//метод считывает строку с клавиатуры
+
+public String input() throws MyException {  //предупреждаем с помощью throws,
+// что метод может выбросить исключение MyException
+    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+  String s = null;
+//в блок try заключаем код, в котором может произойти исключение, в данном
+// случае компилятор нам подсказывает, что метод readLine() класса
+// BufferedReader может выбросить исключение ввода/вывода
+  try {
+      s = reader.readLine();
+// в блок  catch заключаем код по обработке исключения IOException
+  } catch (IOException e) {
+      System.out.println(e.getMessage());
+// в блоке finally закрываем поток чтения
+  } finally {
+// при закрытии потока тоже возможно исключение, например, если он не был открыт,
+ поэтому “оборачиваем” код в блок try
+      try {
+          reader.close();
+// пишем обработку исключения при закрытии потока чтения
+      } catch (IOException e) {
+          System.out.println(e.getMessage());
+      }
+  }
+
+  if (s.equals("")) {
+// мы решили, что пустая строка может нарушить в дальнейшем работу нашей программы,
+ например, на результате этого метода нам надо вызывать метод substring(1,2),
+ поэтому мы вынуждены прервать выполнение программы с генерацией своего типа исключения
+ MyException с помощью throw
+      throw new MyException("String can not be empty!");
+  }
+  return s;
+}
+-------------------------------------------------------------------------------------------
+public class Print {
+
+   void print(String s) {
+      if (s == null) {
+          throw new NullPointerException("Exception: s is null!");
+      }
+      System.out.println("Inside method print: " + s);
+  }
+
+  public static void main(String[] args) {
+      Print print = new Print();
+      List list= Arrays.asList("first step", null, "second step");
+
+      for (String s:list) {
+          try {
+              print.print(s);
+          }
+          catch (NullPointerException e) {
+              System.out.println(e.getMessage());
+              System.out.println("Exception was processed. Program continues");
+          }
+          finally {
+              System.out.println("Inside bloсk finally");
+          }
+          System.out.println("Go program....");
+          System.out.println("-----------------");
+      }
+
+Результаты работы метода main:
+
+Inside method print: first step
+Inside bloсk finally
+Go program....
+-----------------
+Exception: s is null!
+Exception was processed. Program continues
+Inside bloсk finally
+Go program....
+-----------------
+Inside method print: second step
+Inside bloсk finally
+Go program....
+-----------------
+
+-----------------------------------------------------------------------------------
+Блок finally обычно используется для того,
+чтобы закрыть открытые в блоке try потоки или освободить ресурсы.
+
+Конструкция "try-with-resources" автоматически закрывает ресурсы, открытые в блоке try.
+
+public String input() throws MyException {
+  String s = null;
+  try(BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))){
+      s = reader.readLine();
+ } catch (IOException e) {
+     System.out.println(e.getMessage());
+ }
+  if (s.equals("")){
+      throw new MyException ("String can not be empty!");
+  }
+  return s;
+}
+------------------------------------------------------------------------------------------
+                                   ИЛИ
+public String input() {
+  String s = null;
+  try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+      s = reader.readLine();
+      if (s.equals("")) {
+          throw new MyException("String can not be empty!");
+      }
+  } catch (IOException | MyException e) {
+      System.out.println(e.getMessage());
+  }
+  return s;
+}

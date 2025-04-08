@@ -1,0 +1,29 @@
+@SpringBootTest
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+class FilmoRateApplicationTests {
+    private final UserDbStorage userStorage;
+
+    @Test
+    public void testFindUserById() {
+
+        Optional<User> userOptional = userStorage.findUserById(1);
+
+        assertThat(userOptional)
+                .isPresent()
+                .hasValueSatisfying(user ->
+                        assertThat(user).hasFieldOrPropertyWithValue("id", 1)
+                );
+    }
+}
+
+
+  Обратите внимание:
+
+-  по аннотации @AutoConfigureTestDatabase Spring понимает, что перед запуском теста необходимо сконфигурировать тестовую БД вместо основной;
+-  аннотация @SpringBootTest, которой помечается класс с тестами, говорит о том, что перед запуском этих тестов необходим запуск всего приложения;
+-  аргумент аннотации @RequiredArgsConstructor указывает, что конструктор, созданный с помощью библиотеки Lombok,
+   сможет получать зависимости через механизм @Autowired.
+
+  Во время инициализации тестовой базы данных Spring прочитает SQL-запросы из стандартного файла schema.sql,
+который вы собрали в начале задания, и выполнит их для текущей базы данных. Этот скрипт должен создать схему в тестовой БД.

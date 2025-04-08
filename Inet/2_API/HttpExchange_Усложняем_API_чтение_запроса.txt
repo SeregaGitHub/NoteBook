@@ -1,0 +1,241 @@
+
+                                          Методы для чтения запроса
+- InputStream getRequestBody()
+
+  Метод возвращает тело запроса, то есть данные, которые клиент отправил на сервер.
+Это может быть JSON, простой текст (англ. plain text), картинка, любой файл — спецификация HTTP не устанавливает ограничений для типа данных.
+Важно, чтобы клиент мог закодировать их в бинарном виде, то есть в виде нулей и единиц, а сервер — правильно раскодировать и обработать.
+Поэтому со стороны сервера иногда добавляются дополнительные проверки на тип передаваемых в запросе данных, на их размер и так далее.
+Так как метод getRequestBody() возвращает InputStream, входящий поток необходимо обработать.
+Можно, например, считать из него массив байтов методом inputStream.readAllBytes(),
+а затем с помощью конструктора String сконвертировать в строковый тип:
+
+  InputStream inputStream = httpExchange.getRequestBody();
+  String body = new String(inputStream.readAllBytes(), DEFAULT_CHARSET);
+  System.out.println("Тело запроса:\n" + body);
+
+  public class Practicum {
+      private static final int PORT = 8080;
+      private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+
+      public static void main(String[] args) throws IOException {
+          HttpServer httpServer = HttpServer.create();
+
+          httpServer.bind(new InetSocketAddress(PORT), 0);
+          httpServer.createContext("/hello", new HelloHandler());
+          httpServer.start();
+
+          System.out.println("HTTP-сервер запущен на " + PORT + " порту!");
+      }
+
+      static class HelloHandler implements HttpHandler {
+          @Override
+          public void handle(HttpExchange httpExchange) throws IOException {
+              System.out.println("Началась обработка /hello запроса от клиента.");
+
+              InputStream inputStream = httpExchange.getRequestBody();
+              String body = new String(inputStream.readAllBytes(), DEFAULT_CHARSET);
+              System.out.println("Тело запроса:\n" + body);
+
+              String response = "Привет! Рады видеть на нашем сервере.";
+              httpExchange.sendResponseHeaders(200, 0);
+
+              try (OutputStream os = httpExchange.getResponseBody()) {
+                  os.write(response.getBytes());
+              }
+          }
+      }
+  }
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+- String getRequestMethod()
+
+  getRequestMethod() возвращает HTTP-метод, который клиент использовал при отправке запроса.
+По нему сервер определяет, какое действие нужно выполнить. С помощью этого метода можно сделать из одного эндпоинта /hello несколько.
+
+            String method = httpExchange.getRequestMethod();
+            System.out.println("Началась обработка " + method + " /hello запроса от клиента.");
+
+            String response;
+            switch(method) {
+                case "POST":
+                    response = "Вы использовали метод POST!";
+                    break;
+                case "GET":
+                    response = "Вы использовали метод GET!";
+                    break;
+                default:
+                    response = "Вы использовали какой-то другой метод!";
+            }
+
+
+
+            public class Practicum {
+                private static final int PORT = 8080;
+
+                public static void main(String[] args) throws IOException {
+                    HttpServer httpServer = HttpServer.create();
+
+                    httpServer.bind(new InetSocketAddress(PORT), 0);
+                    httpServer.createContext("/hello", new HelloHandler());
+                    httpServer.start();
+
+                    System.out.println("HTTP-сервер запущен на " + PORT + " порту!");
+                }
+
+                static class HelloHandler implements HttpHandler {
+                    @Override
+                    public void handle(HttpExchange httpExchange) throws IOException {
+
+                        String method = httpExchange.getRequestMethod();
+                        System.out.println("Началась обработка " + method + " /hello запроса от клиента.");
+
+                        String response;
+                        switch(method) {
+                            case "POST":
+                                response = "Вы использовали метод POST!";
+                                break;
+                            case "GET":
+                                response = "Вы использовали метод GET!";
+                                break;
+                            default:
+                                response = "Вы использовали какой-то другой метод!";
+                        }
+
+                        httpExchange.sendResponseHeaders(200, 0);
+
+                        try (OutputStream os = httpExchange.getResponseBody()) {
+                            os.write(response.getBytes());
+                        }
+                    }
+                }
+            }
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Headers getRequestHeaders()
+
+  С помощью этого метода можно прочитать заголовки, которые передал клиент. Заголовки используются по-разному:
+
+    * Клиент может передать серверу предпочтительный язык. Эта возможность важна для крупных международных сайтов,
+      которыми пользуются люди из разных стран, говорящие на разных языках.
+    * Клиент может передать секретные данные (обычно логин и пароль или ключ) для авторизации пользователя.
+      Такие заголовки часто применяются при разработке личных кабинетов пользователя: в банках, социальных сетях и других сервисах.
+    * В заголовке может сообщаться тип передаваемых данных.
+      Например, заголовок Content-type: application/json говорит, что тело запроса передаётся в формате JSON.
+
+Метод getRequestHeaders() возвращает Headers — имплементацию Map<String,List<String>>. При его помощи можно, например, вывести все заголовки.
+
+    Headers requestHeaders = httpExchange.getRequestHeaders();
+    System.out.println("Заголовки запроса: " + requestHeaders.entrySet());
+
+Или проверить конкретный заголовок.
+
+    List<String> contentTypeValues = requestHeaders.get("Content-type");
+    if ((contentTypeValues != null) && (contentTypeValues.contains("application/json"))) {
+        System.out.println("Это JSON!");
+    }
+
+  Некоторые заголовки заполняются браузером автоматически — например, User-Agent.
+Он содержит информацию о ПО, которое использует клиент. Структура User-Agent может отличаться.
+Обычно в этом заголовке передаются данные об операционной системе и браузере — их название и версия.
+
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36
+
+public class Practicum {
+    private static final int PORT = 8080;
+
+    public static void main(String[] args) throws IOException {
+        HttpServer httpServer = HttpServer.create();
+
+        httpServer.bind(new InetSocketAddress(PORT), 0);
+        httpServer.createContext("/hello", new HelloHandler());
+        httpServer.start();
+
+        System.out.println("HTTP-сервер запущен на " + PORT + " порту!");
+    }
+
+    static class HelloHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+
+            String method = httpExchange.getRequestMethod();
+            System.out.println("Началась обработка " + method + " /hello запроса от клиента.");
+
+            Headers requestHeaders = httpExchange.getRequestHeaders();
+            System.out.println("Заголовки запроса: " + requestHeaders.entrySet());
+
+            String response = "Hello!";
+            httpExchange.sendResponseHeaders(200, 0);
+
+            try (OutputStream os = httpExchange.getResponseBody()) {
+                os.write(response.getBytes());
+            }
+        }
+    }
+}
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+- URI getRequestURI()
+
+  Этот метод возвращает URI, использованный клиентом при вызове сервера. У URI несколько элементов, но в данном случае важен path.
+С его помощью API будет принимать параметры пути (англ. path parameters) — это части пути, которые можно использовать при обработке запроса.
+Параметры пути обычно заключаются в фигурные скобки, например:
+
+    POST user/{id} создаст пользователя с указанным id.
+    GET index/{city}/{street}/{building} вернёт почтовый индекс города city на улице street, здания номер building.
+    DELETE user/{email}/comments удалит комментарии пользователя с переданным email.
+
+  В нашем примере эндпоинт hello/{name} может возвращать приветствие по переданному имени — на запрос hello/Игорь сервер вернёт «Привет, Игорь!».
+Строку httpServer.createContext("/hello", new HelloHandler()); менять не понадобится — запросы и к /hello, и к hello/Игорь,
+и к hello/очень/большой/запрос будут обрабатываться одним и тем же обработчиком. Чтобы вернуть в ответе полученный параметр пути, нужно:
+
+Из экземпляра URI получить path.
+
+ String path = requestURI.getPath();
+
+Получить строку вида /hello/имя. Её необходимо разбить на составляющие. Для этого можно воспользоваться методом split(...) для строк.
+
+ String[] splitStrings = path.split("/");
+
+Взять второй элемент (элемент под нулевым индексом — от начала строки до первого / — будет пустой строкой, первый — hello, второй — тот, который нужен).
+
+ String name = splitStrings[2];
+
+Теперь полученный параметр можно возвращать в ответе!
+Убедитесь сами: запустите следующий код и отправьте запрос вида http://localhost:8080/hello/{имя} из Insomnia.
+
+
+public class Practicum {
+    private static final int PORT = 8080;
+
+    public static void main(String[] args) throws IOException {
+        HttpServer httpServer = HttpServer.create();
+
+        httpServer.bind(new InetSocketAddress(PORT), 0);
+        httpServer.createContext("/hello", new HelloHandler());
+        httpServer.start();
+
+        System.out.println("HTTP-сервер запущен на " + PORT + " порту!");
+    }
+
+    static class HelloHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+
+            String method = httpExchange.getRequestMethod();
+            System.out.println("Началась обработка " + method + " /hello запроса от клиента.");
+
+            String path = httpExchange.getRequestURI().getPath();
+            String name = path.split("/")[2];
+            System.out.println("Имя: " + name);
+
+            String response = "Привет, " + name + "!";
+            httpExchange.sendResponseHeaders(200, 0);
+
+            try (OutputStream os = httpExchange.getResponseBody()) {
+                os.write(response.getBytes());
+            }
+        }
+    }
+}

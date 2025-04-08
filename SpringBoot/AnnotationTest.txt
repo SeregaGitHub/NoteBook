@@ -1,0 +1,4 @@
+https://www.baeldung.com/java-bean-validation-not-null-empty-blank
+
+
+https://sysout.ru/testirovanie-spring-boot-prilozheniya-s-testresttemplate/?ysclid=ldh4btwns5528458845

@@ -1,0 +1,239 @@
+                                            Заголовки и тело HTTP-сообщения
+
+  Заголовки помогают клиенту и серверу задать дополнительные значения, полезные при обработке.
+Представьте, насколько сложнее была бы жизнь курьера, если бы телефон получателя указывался внутри посылки, а не на упаковке.
+Так же и с заголовками — они делают обработку запросов более эффективной.
+Например, с помощью одного заголовка Authorization можно пройти авторизацию без распаковки тела запроса.
+
+  Напомним, что заголовки состоят из названия и значения, разделённых двоеточием. При этом название не чувствительно к регистру.
+То есть postal-code и Postal-Code считаются одним названием.
+  Заголовков много. Более того — разработчик может создать свои собственные.
+Главное, чтобы их названия не вступали в конфликт с уже существующими стандартными наименованиями.
+Подробнее о заголовках вы можете узнать из документации компании Mozilla.
+https://developer.mozilla.org/ru/docs/Web/HTTP/Headers
+
+  Тело HTTP-сообщения — это информация, которую необходимо передать. По сути — содержимое посылки.
+В тело сообщения можно, например, поместить текст поста для публикации в социальной сети или же информацию о самом посте.
+
+{
+  "id": 1,
+  "author": "gold",
+  "creationDate": "2022-01-01T00:00:00Z",
+  "description": "Мой любимый котик!",
+  "edited": false
+}
+
+  Тело может отсутствовать. Чаще всего так бывает в запросах на получение информации — например, в GET-запросах.
+С телом сообщения неразрывно связан один из стандартных заголовков — Content-Type (англ. «тип содержимого»).
+Он содержит информацию о том, в каком формате передаётся тело HTTP-сообщения.
+То есть помогает клиенту или серверу правильно интерпретировать поступающие данные.
+У этого заголовка могут быть разные значения. Обычно они записываются через слеш (/): тип информации/специализированный формат. Например:
+
+    application/json говорит о том, что тело представляет собой JSON-объект;
+    audio/mpeg — аудиофайл в формате MPEG;
+    image/jpeg — изображение в формате JPEG;
+    text/plain — обычный текст;
+    video/mp4 — видеофайл в формате mp4.
+
+  Мы освежили ваши знания по протоколу HTTP. Напомним, что более подробно о нём вы можете прочитать в сетевой документации компании Mozilla.
+https://developer.mozilla.org/ru/docs/Web/HTTP/Overview
+
+  Теперь разберёмся, как подготовить объект к отправке или обработать вернувшийся, а также какие механизмы в Spring Boot помогают решить эти задачи.
+
+                                            Библиотека Jackson и Spring Boot
+
+  Самый распространённый формат для обмена данными в современных сервисах — JSON. С его помощью удобно представить любой объект из программы.
+Мы говорили, что процесс преобразования Java-объекта в другой формат, в том числе в JSON, называется сериализация.
+Обратный процесс, то есть воссоздание объекта из сериализованного состояния, — это десериализация.
+  Когда вы создавали эндпоинты без Spring, вам приходилось сериализовать и десериализовать объекты вручную с помощью библиотеки GSON.
+В Spring Boot для этого по умолчанию используется библиотека Jackson.
+В начале работы с приложением Catsgram вы подключили зависимость Spring Web.
+Она содержит настройки и библиотеки, необходимые для быстрого создания и конфигурирования веб-сервисов, — в том числе и библиотеку Jackson.
+В ней есть класс ObjectMapper, который умеет сериализовать и десериализовать JSON.
+Spring Boot настраивает объект ObjectMapper и преобразует его в бин. Разработчику не приходится ничего делать самостоятельно.
+  Преимущество библиотеки Jackson в том, что с ней не нужно писать код сериализации и десериализации объектов.
+Магия произойдёт благодаря применению аннотаций. Рассмотрим эти аннотации подробнее.
+
+                              Аннотации @RequestBody, @ResponseBody и @RestController
+                              https://www.baeldung.com/spring-request-response-body
+
+  Вы уже сталкивались с аннотацией @RequestBody.
+С помощью неё можно указать Spring, в какой аргумент метода контроллера необходимо записать значение тела запроса.
+
+@PostMapping(value = "/posts")
+public void create(@RequestBody Post post) {
+    posts.add(post);
+}
+
+  Благодаря аннотации Spring автоматически преобразовал тело запроса из JSON в объект типа Post.
+Аннотация @ResponseBody позволяет сделать противоположное — преобразовать объект, возвращаемый методом, в JSON.
+Например, если нужно вернуть объект постов из контроллера.
+
+@Controller
+public class PostController{
+
+    @GetMapping(value = "/posts/{postId}")
+    @ResponseBody
+    public Optional<Post> findById(@PathVariable int postId) {
+        return posts.stream()
+            .filter(x -> x.getId() == postId)
+            .findFirst();
+    }
+}
+
+  С аннотацией преобразование из объекта в JSON произойдёт автоматически.
+Есть ещё один способ конвертировать объект в тело ответа — объявить контроллер с помощью аннотации @RestController.
+Она делает всё то же самое, что и аннотация @Controller, а также добавляет аннотацию @ResponseBody для каждого метода обработчика запросов.
+Это позволяет немного упростить написание контроллера.
+
+@RestController
+public class PostController{
+
+    @GetMapping(value = "/posts/{postId}")
+    // аннотации @ResponseBody больше нет
+    public Optional<Post> findById(@PathVariable int postId) {
+        return posts.stream()
+            .filter(x -> x.getId() == postId)
+            .findFirst();
+    }
+}
+
+==================================================================================================================================
+
+                                              @RequestBody
+
+  Проще говоря, аннотация @RequestBody сопоставляет тело Http-запроса с объектом передачи или домена,
+позволяя автоматическую десериализацию тела входящего HttpRequest в объект Java.
+
+Во-первых, давайте взглянем на метод Spring controller:
+
+@PostMapping("/request")
+public ResponseEntity postController(
+  @RequestBody LoginForm loginForm) {
+
+    exampleService.fakeAuthenticate(loginForm);
+    return ResponseEntity.ok(HttpStatus.OK);
+}
+
+  Spring автоматически десериализует JSON в тип Java, предполагая, что указан соответствующий тип.
+
+  По умолчанию тип, который мы аннотируем аннотацией @RequestBody, должен соответствовать JSON,
+отправленному с нашего контроллера на стороне клиента:
+
+public class LoginForm {
+    private String username;
+    private String password;
+    // ...
+}
+
+Здесь объект, который мы используем для представления тела Http-запроса, сопоставляется с нашим объектом LoginForm.
+
+Давайте протестируем это с помощью CURL:
+
+curl -i \
+-H "Accept: application/json" \
+-H "Content-Type:application/json" \
+-X POST --data
+  '{"username": "johnny", "password": "password"}' "https://localhost:8080/.../request"
+
+Это все, что нам нужно для Spring REST API и клиента Angular, использующего аннотацию @RequestBody.
+
+
+                                              @ResponseBody
+
+  Аннотация @ResponseBody сообщает контроллеру, что возвращаемый объект автоматически сериализуется в JSON и передается обратно в объект HttpResponse.
+
+Предположим, у нас есть пользовательский объект Response:
+
+public class Response Transfer {
+    private String text;
+
+    // standard getters/setters
+}
+
+Далее, соответствующий контроллер может быть реализован:
+
+@Controller
+@RequestMapping("/post")
+public class Example Postscontroller {
+
+    @Autowired
+    ExampleService exampleService;
+
+    @PostMapping("/response")
+    @ResponseBody
+    public ResponseTransfer postResponseController(
+      @RequestBody LoginForm loginForm) {
+        return new ResponseTransfer("Thanks For Posting!!!");
+     }
+}
+
+В консоли разработчика нашего браузера или с помощью такого инструмента, как Postman, мы можем увидеть следующий ответ:
+
+{"текст":"Спасибо за публикацию!!!"}
+
+Помните, нам не нужно аннотировать контроллеры с аннотациями @RestController аннотацией @ResponseBody, поскольку Spring делает это по умолчанию.
+
+
+                                            Настройка типа содержимого
+
+  Когда мы используем аннотацию @ResponseBody, мы все еще можем явно задать тип содержимого, который возвращает наш метод.
+Для этого мы можем использовать атрибут products @RequestMapping.
+Обратите внимание, что такие аннотации, как @PostMapping, @GetMapping и т.д., определяют псевдонимы для этого параметра.
+
+  Давайте теперь добавим новую конечную точку, которая отправляет ответ в формате JSON:
+
+@PostMapping(value = "/content", produces = MediaType.APPLICATION_JSON_VALUE)
+@ResponseBody
+public ResponseTransfer postResponseJsonContent(
+  @RequestBody LoginForm loginForm) {
+    return new ResponseTransfer("JSON Content!");
+}
+
+  В приведенном примере мы использовали Константу Media Type.APPLICATION_JSON_VALUE.
+В качестве альтернативы, мы можем использовать application / json напрямую.
+
+  Далее давайте реализуем новый метод, сопоставленный с тем же путем /content, но возвращающий вместо этого XML-содержимое:
+
+@PostMapping(value = "/content", produces = MediaType.APPLICATION_XML_VALUE)
+@ResponseBody
+public ResponseTransfer postResponseXmlContent(
+  @RequestBody LoginForm loginForm) {
+    return new ResponseTransfer("XML Content!");
+}
+
+  Теперь, в зависимости от значения параметра Accept, отправленного в заголовке запроса, мы получим разные ответы.
+
+Давайте посмотрим на это в действии:
+
+curl -i \
+-H "Accept: application/json" \
+-H "Content-Type:application/json" \
+-X POST --data
+  '{"username": "johnny", "password": "password"}' "https://localhost:8080/.../content"
+
+Команда CURL возвращает ответ в формате JSON:
+
+HTTP/1.1 200
+Content-Type: application/json
+Transfer-Encoding: chunked
+Date: Thu, 20 Feb 2020 19:43:06 GMT
+
+{"text":"JSON Content!"}
+
+Теперь давайте изменим параметр Accept:
+
+curl -i \
+-H "Accept: application/xml" \
+-H "Content-Type:application/json" \
+-X POST --data
+  '{"username": "johnny", "password": "password"}' "https://localhost:8080/.../content"
+
+Как и ожидалось, на этот раз мы получаем XML-контент:
+
+HTTP/1.1 200
+Content-Type: application/xml
+Transfer-Encoding: chunked
+Date: Thu, 20 Feb 2020 19:43:19 GMT
+
+<ResponseTransfer><text>XML Content!</text></ResponseTransfer>

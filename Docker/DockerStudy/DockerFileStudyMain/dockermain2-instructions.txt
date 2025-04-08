@@ -1,0 +1,14 @@
+
+sudo docker build -t main-image2 .                       #  соберёт образ
+
+sudo docker run --name main-container2 -it main-image2   #  соберёт контейнер из образа и запустит его
+
+sudo docker stop main-container2                         #  остановит контейнер
+
+sudo docker start -i main-container2                     #  запустит контейнер в интерактивном режиме и выполнит команду в CMD
+
+
+
+sudo docker start main-container2                        #  запустит контейнер
+
+sudo docker exec -it main-container2 java src/Main.java  #  в запущенном контейнере, выполнит команду - java src/Main.java

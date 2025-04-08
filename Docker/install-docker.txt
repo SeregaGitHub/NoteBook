@@ -1,0 +1,65 @@
+sudo apt-get update
+sudo apt-get upgrade
+
+
+    Откройте терминал. Сначала запустите команду удаления старых версий Docker. Скорее всего, их на вашем компьютере нет, так что это шаг для подстраховки.
+
+sudo apt remove docker docker-engine [docker.io](http://docker.io/) containerd runc
+
+    Вывод будет примерно таким.
+
+E: Unable to locate package docker-engine
+
+    Чтобы устанавливать новые версии пакетов и утилит, обновите их список для менеджера пакетов ATP.
+
+    # обновить список пакетов
+
+sudo apt update
+
+    Затем установите пакеты для работы через протокол HTTPS. Это нужно для получения доступа к репозиторию Docker-а.
+
+     # установить необходимые пакеты для загрузки через HTTPS
+sudo apt install \
+  apt-transport-https \
+  ca-certificates \
+  curl \
+  gnupg-agent \
+  software-properties-common -y
+
+    Добавьте ключ GPG для подтверждения подлинности в процессе установки.
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+    # в консоли должно вывестись ОК
+
+    Команда apt-key добавляет ключ от репозиториев в систему. Ключи защищают репозитории от подделки пакета.
+    Добавьте репозиторий Docker в пакеты apt.
+
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+    Так как в APT был добавлен новый репозиторий, снова обновите индекс пакетов.
+
+sudo apt update
+
+    Теперь можно устанавливать Docker. У него есть две версии:
+
+    Community Edition (CE) — бесплатная и общедоступная;
+    Enterprise Edition (EE) — платная с расширенными возможностями; используется для продуктовой разработки и позволяет работать с сертифицированными образами и плагинами Docker.
+
+    Вы будете работать с бесплатной версией. Она подходит для решения базовых задач по контейнеризации.
+    Установите Docker, а вместе с ним Docker Compose — без него не получится развернуть проект, а это будет вашей основной задачей в спринте.
+
+sudo apt install docker-ce docker-compose -y
+
+    Проверьте, что Docker работает.
+
+sudo systemctl status docker
+
+    Команда откроет режим просмотра состояния демона (службы) Docker-а. Вывод в консоль будет примерно такой.
+
+
+Active:       active (running)
+TriggeredBy:  * docker.socket
+
+
+    Готово, Docker установлен! Чтобы выйти из режима просмотра состояния демона, нажмите Ctrl+C.

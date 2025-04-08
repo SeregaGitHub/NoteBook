@@ -1,0 +1,10 @@
+
+- docker run -v ${PWD}:/usr/share/nginx/html -p 8008:80 -d nginx         -    содержимое папки /usr/share/nginx/html будет заменено
+                                                                            на текущей папки + проброс портов (у nginx по умолчанию - 80)
+  PWD - абсолютный путь к текущей папке (можно прописать путь в ручную)
+
+docker
+   |
+   |nginx ---- index.html 
+
+  В папке nginx 

@@ -1,0 +1,74 @@
+
+-  Измените файл application.properties, чтобы значения загружались из переменных окружения:
+
+...
+jdbc.url=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+jdbc.username=${POSTGRES_USER}
+jdbc.password=${POSTGRES_PASSWORD}
+...
+
+-  Не забудьте пересобрать проект с помощью mvn clean package. Также убедитесь, что в файле pom.xml присутствует соответствующий плагин.
+-  Создать в корневой папке проекта (рядом с src) файлы: Dockerfile и docker-compose.yaml
+
+
+Dockerfile :
+
+FROM amazoncorretto:11-alpine-jdk
+COPY target/*.jar app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]
+
+
+docker-compose.yaml :
+
+# версия Docker Compose
+version: '3.8'
+
+# имена и описания контейнеров, которые должны быть развёрнуты
+services:
+  # описание контейнера db
+  db:
+    # образ, из которого должен быть запущен контейнер
+    image: postgres:13.7-alpine
+    # volume и связанная с ним директория в контейнере
+            # какой путь прописывать в volumes - смотри в техдокументации на hub.docker.com 
+    volumes:
+      - /var/lib/postgresql/data/
+
+      # если необходимо сохранять DB, не только в контейнере, но и на локальном компе:
+      # например: создаём в корне проекта папку databases и в volumes прописываем:
+      # - ./databases:/var/lib/postgresql/data/    
+      
+    # volumes:                Если томов несколько, то достаточно перечислить их имена. 
+
+      # volume-first-name:    После имён остаются двоеточия, потому что для каждого тома могут быть указаны дополнительные параметры
+      # volume-second-name:   подробнее об этом в документации:    https://docs.docker.com/storage/volumes/
+
+    # переменные окружения
+    environment:
+          # автоматическое создание БД later
+      - POSTGRES_DB=later
+
+          # автоматическое создание суперпользователя root
+      - POSTGRES_USER=root
+
+          # автоматическое создание присвиение пароля root
+      - POSTGRES_PASSWORD=root
+
+  web:
+      # должно быть либо image либо build !!!
+    build: .
+    ports:
+      - "8080:8080"
+    # "зависит от",
+    depends_on:
+      - db
+    # переменные окружения
+    environment:
+      - DB_NAME=later
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - DB_HOST=db
+      - DB_PORT=5432
+
+      # установка временной зоны (в Docker по умолчанию - +0)
+      TZ: Europe/Moscow

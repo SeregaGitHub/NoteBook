@@ -1,0 +1,48 @@
+
+# Разные version отличаются набором команд. Обычно version > 3. Можно не прописывать (вроде !!!)
+version: '3.1'
+
+# services: - образы, которые будут подключаться.
+services:
+
+
+  ###############################################################################################
+
+  # Если есть уже готовый Dockerfile - можно сделать так:
+  java:
+    build: ./dock
+    restart: always
+    # Главное, чтобы отличались локальные порты !!! (8081 и 8082)
+    ports:
+           # Если внутри уже прописан порт, например Tomcat - 8080, то именно его и нужно указывать !!!
+      - 8081:8080
+    container_name: java-container
+
+  ###############################################################################################
+
+
+  # Название может быть произвольным
+  db:
+    # Сам образ
+    image: mysql
+    # command аналог CMD в Dockerfile
+    command: --default-authentication-plugin=mysql_native_password
+    # При остановке образа: no - образ не будет перезапускаться
+    restart: always
+    # Переменные окружения
+    environment:
+      #
+      MYSQL_ROOT_PASSWORD: somepassword
+    # Имя контейнера
+    container_name: mysql-container
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    # порты: локальный:виртуальный
+    ports:
+      - 8082:80
+    environment:
+      # Стандартная настройка phpmyadmin
+      - PMA_ARBITRARY=1
+    container_name: phpmyadmin-container

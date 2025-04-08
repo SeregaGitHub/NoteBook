@@ -1,0 +1,10 @@
+sudo snap install codium --classic
+
+sudo snap refresh codium
+
+sudo snap remove codium
+
+==========================================
+
+В квадратиках установить - Docker
+

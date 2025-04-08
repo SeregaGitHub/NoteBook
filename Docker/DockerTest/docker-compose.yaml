@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: mariadb
+    restart: on-failure
+    environment:
+      MARIADB_ROOT_PASSWORD: 12345
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: on-failure
+    container_name: phpmyadmin-cont-test2
+
+    ports:
+      - 8085:80
+    environment:
+      - PMA_ARBITRARY=1

@@ -1,0 +1,28 @@
+
+    Есть два контейнера: 
+        
+        ping-service-container
+        pong-service-container
+
+
+  Создать сеть с именем  -  ping-pong-network:
+
+    - docker network create ping-pong-network
+
+
+  Получить полную информацию о сети ping-pong-network:
+
+    - docker network inspect ping-pong-network
+      -> контейнеры в сети - отсутствуют
+
+  
+  Добавить запущенные контейнеры в эту сеть:
+
+    - docker network connect ping-pong-network ping-service-container
+    - docker network connect ping-pong-network pong-service-container
+  
+
+  Получить полную информацию о сети ping-pong-network:
+
+    - docker network inspect ping-pong-network
+      -> в сети присутствуют 2 контейнера

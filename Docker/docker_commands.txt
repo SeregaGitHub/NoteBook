@@ -1,0 +1,137 @@
+
+- docker                                           -  список команд докера
+- docker run --help                                -  список флагов команды run (применимо к любой команде)
+- docker info                                      -  текущее состояние докера 
+
+===========================================================================================================================
+
+  для старта Java-приложения из jar-файла необходимо выполнить команду java -jar [название файла].jar
+
+===========================================================================================================================
+
+- sudo usermod -aG docker your_user_name           -  добавление вашего пользователя ОС в docker как супер-пользователя
+- sudo service docker restsrt                      -  после, необходимо перезапустить docker
+
+===========================================================================================================================
+
+                                                 Разбитие команды построчно
+
+- docker run -v ${PWD}:/usr/share/nginx/html -p 8008:80 -d --rm nginx
+  
+  docker run \
+      -v ${PWD}:/usr/share/nginx/html \
+      -p 8008:80 \
+      -d \
+      --rm \
+      nginx
+
+===========================================================================================================================
+
+-  docker container                                -  список команд для работы с контейнерами
+                                                      https://docs.docker.com/engine/reference/commandline/container/
+
+===========================================================================================================================
+
+                        - docker run  -  создаёт и запускает новый контейнер из образа 
+
+                      (если выполнить два раза на одном образе - будет два контейнера !!!)
+
+- docker run image_name                            -  запуск контейнера (если его нет на компе, то запустится его поиск на DockerHub)
+- docker run -d image_name                         -  запуск в фоновом режиме
+- docker run -it image_name                        -  запуск в интерактивном режиме (в этом же терминале можно прописывать команды для запущенной программы)
+- docker run -it --rm image_name                   -  запуск в интерактивном режиме + после остановки контейнера он будет УДАЛЁН !!!
+- docker run -d -p 8000:8080 image_name            -  -p соединение портов 8000-локальный комп, 8080-виртуальный комп
+- docker run --name dock_container -p 8080:8080 dock_image
+- docker run --env MARIADB_PASSWORD=password       -  --env (-e) установка переменных окружения
+- docker run -h host_name -it ubuntu bash          -  запуск контейнера и чтобы задать имя хоста добавляем -h host_name
+- docker run --name my_name -it ubuntu bash        -  запуск контейнера и чтобы задать имя контейнера добавляем --name my_name
+
+- docker restart                                   -  перезапуск контейнера
+- docker pause container_id                        -  постановка контейнера на паузу
+- docker unpause container_id                      -  запуск контейнера, ранее поставленного на паузу
+---------------------------------------------------------------------------------------------------------------------------
+                                              Соединение контейнеров
+
+- docker run --detach --name myDB_name --env MARIADB_USER=some_user                                    -  меняем имя БД (--name myDB_name) и пароли
+  --env MARIADB_PASSWORD=some_password --env MARIADB_ROOT_PASSWORD=some_root_password  mariadb:latest
+
+- docker run --link myDB_name:db -p 8080:8080 adminer                                                  -  --link     -  указывает на соединение
+                                                                                                       -  myDB_name  -  имена БД должны совпадать !!!
+
+- Так же есть метод публикации сервисов (publish services)
+---------------------------------------------------------------------------------------------------------------------------
+
+- docker run -it ubuntu bash
+
+-it                           -  сеанс интерактивной работы на подключаемом терминальном устройстве
+bash                          -  инициализация командной оболочки bash
+
+exit                          -  выход из командной оболочки
+
+
+- docker build                                     -  поочерёдно выполняет инструкции из Dockerfile
+- docker build -t dockerhub_userName/image_name .  -  -t отвечает за имя образа
+
+---------------------------------------------------------------------------------------------------------------------------
+
+- docker images                                    -  список образов
+- docker build -t image_name .                     -  создаст образ с именем image_name, в папке где открыт терминал из Dockerfile
+- docker image rm image_id                         -  удалит образ по его айди
+
+---------------------------------------------------------------------------------------------------------------------------
+
+- docker container ls -a
+  docker ps -a                                     -  список всех контейнеров из которых был совершен выход
+                                                      такие контейнеры могут быть перезапущены командой:
+- docker start conteiner_name
+  docker container start <CONTAINER ID>
+
+- docker ps                                        -  список всех контейнеров (работающих ???)
+
+- docker container ls                              -  список запущеных контейнеров
+- docker stop conteiner_name                       -  останавливает контейнер
+  docker container stop <CONTAINER ID>
+
+- docker inspect conteiner_name                    -  получение подробной информации о контейнере
+- docker diff conteiner_name                       -  увидить изменения в контейнере
+- docker logs conteiner_name                       -  увидить события контейнера (логи)
+- docker rm conteiner_name                         -  удаление контейнера
+- docker container prune                           -  удаление всех неиспользуемых контейнеров
+
+- docker ps -ag -f status=exited                   -  вывод всех остановленных контейнеров
+- docker rm -v $(docker ps -ag -f status=exited)   -  удаление всех остановленных контейнеров, путем подстановки их вывода $(___)
+- docker conteiner prune                           -  удаление всех остановленных контейнеров
+
+
+- docker exec -it dock_container /bin/sh           -  Что есть что в этой команде:
+
+                                                      exec — команда Docker, которая позволяет выполнять команды в запущенном контейнере.
+                                                      -it — параметры, отвечающие за интерактивный режим, — без них контейнер не будет ждать от вас команд
+                                                   и не будет выводить ответ.
+                                                      dock_container — имя контейнера, в котором необходимо выполнить команду.
+                                                      /bin/sh — запуск командной строки.
+
+                                             В зависимости от базового слоя запуск командной строки может отличаться.
+                                             В нашем случае для образа alpine командная строка запускается как /bin/sh,
+                                             тогда как для ubuntu будет запускаться как /bin/bash.
+
+
+---------------------------------------------------------------------------------------------------------------------------
+- docker login                                                              
+- docker login -u user_name                                                 -  авторизация в dockerhub
+
+- docker build -t dockerhub_userName/image_name ./path                      -  создать образ с именем - dockerhub_userName/image_name
+- docker push dockerhub_userName/image_name:latest                          -  запушить на dockerhub
+                                                                               (Добавить описание: например, по какому порту подключаться[80])
+- docker pull dockerhub_userName/image_name                                 -  стянуть образ
+- docker run -p 8001:80 --name dockerhub_userName/image_name                -  запустить
+---------------------------------------------------------------------------------------------------------------------------
+- docker run --name conteiner_name image_name
+- docker commit conteiner_name dockerhub_userName/new_imageName             -  превращение контейнера в образ
+- docker push dockerhub_userName/image_name                                 -  запушить образ на свой репозиторий
+---------------------------------------------------------------------------------------------------------------------------
+
+- docker push dockerhub_userName/image_name                                 -  запушить образ на свой репозиторий
+- docker pull dockerhub_userName/image_name                                 -  запулить образ
+- docker pull dockerhub_userName/image_name:latest                          -  запулить образ версии latest
+- docker pull openjdk:latest                                                -  стянуть образ openjdk (последняя версия)

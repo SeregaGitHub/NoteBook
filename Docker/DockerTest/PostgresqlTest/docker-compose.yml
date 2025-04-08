@@ -1,0 +1,39 @@
+version: '3.1'
+
+services:
+
+  postgres-test22:
+    image: postgres
+    restart: always
+    container_name: postgres-cont-test22
+    ports:
+      - 2345:5432
+
+    volumes:
+      - /var/lib/postgresql/data/
+
+    environment:
+      POSTGRES_USER: root
+      # POSTGRES_ROOT_PASSWORD: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: shareittest22
+
+
+  adminer22:
+    image: adminer
+    restart: always
+    ports:
+      - 8084:8080
+    container_name: adminer-cont-test22
+
+#  phpmyadmin - не работает с postgres !!!
+
+#  phpmyadmin-test:
+#    image: phpmyadmin
+#    restart: on-failure
+#    container_name: phpmyadmin-cont-test
+
+#    ports:
+#      - 8084:80
+#    environment:
+#      - PMA_ARBITRARY=1

@@ -1,0 +1,42 @@
+
+# Разные version отличаются набором команд. Обычно version > 3. Можно не прописывать (вроде !!!)
+version: '3.1'
+
+# services: - образы, которые будут подключаться.
+services:
+
+
+  ###############################################################################################
+
+  # Если есть уже готовый Dockerfile - можно сделать так:
+  java:
+    build: ./dock
+    # Главное, чтобы отличались локальные порты !!! (8080 и 8081)
+    ports:
+      - 8080:80
+
+  ###############################################################################################
+
+
+  # Название может быть произвольным
+  db:
+    # Сам образ
+    image: mysql
+    # command аналог CMD в Dockerfile
+    command: --default-authentication-plugin=mysql_native_password
+    # При остановке образа: no - образ не будет перезапускаться
+    restart: always
+    # Переменные окружения
+    environment:
+      #
+      MYSQL_ROOT_PASSWORD: somepassword
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    # порты: локальный:виртуальный
+    ports:
+      - 8081:80
+    environment:
+      # Стандартная настройка phpmyadmin
+      - PMA_ARBITRARY=1

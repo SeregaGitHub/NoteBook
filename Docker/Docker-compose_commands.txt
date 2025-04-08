@@ -1,0 +1,24 @@
+
+                                        docker-compose.yaml
+
+                           В файле НЕ ДОЛЖНО БЫТЬ \t - только пробелы !!!
+
+
+- docker -v                                                         -  проверка версии docker
+- docker-compose -v                                                 -  проверка версии docker-compose
+
+- https://docs.docker.com/compose/compose-file/compose-versioning/  -  здесь можно узнать какую версию Docker Compose прописывать
+
+=====================================================================================================================================
+-------------------------------------------------------------------------------------------------------------------------------------
+- docker-compose build                                              -  сборка 
+- docker-compose up                                                 -  запуск docker-compose.yaml
+-------------------------------------------------------------------------------------------------------------------------------------
+
+- docker-compose down                                               -  остановка docker-compose.yaml
+- docker-compose up -d                                              -  запуск docker-compose.yaml в фоновом режиме
+- docker-compose run some_command                                   -  запуск docker-compose.yaml + запуск одной команды
+
+- docker-compose ps                                                 -  просмотр запущенных контейнеров
+- docker-machine ip default                                         -  узнать ip-адрес для подключения через браузер (для WINDOWS)
+- docker image rm -f image_id                                       -  принудительное удаление образа

@@ -1,0 +1,10 @@
+sudo su
+
+killall gnome-software
+
+apt-get update
+
+killall snap-store
+
+snap refresh
+

@@ -1,0 +1,14 @@
+sudo apt update
+
+sudo apt dist-upgrade
+
+sudo apt autoremove
+
+sudo reboot
+
+sudo do-release-upgrade -f DistUpgradeViewGtk3    (!!!)
+        Или
+update-manager -d                                 (???)
+
+В процессе обновления необходимо будет выбрать способ переключения раскладки:
+        Alt + Shift

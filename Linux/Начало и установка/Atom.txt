@@ -1,0 +1,13 @@
+
+  sudo snap install atom --classic
+
+  ctrl + , или Packages => Settings View => Install Packages
+ ищем пакет wrap-guide => отключаем (пропадёт вертикальная полоса на экране)
+
+  Установить emmet
+             (teletype ?)
+
+  Packages => spell-check  -  включает/отключает проверку орфографии
+  ---------------------------------------------------------------------
+  platformio-ide-terminal  -  терминал в атоме
+  ctrl + `                 -  открыть терминал

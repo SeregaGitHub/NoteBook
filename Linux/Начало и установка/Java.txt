@@ -1,0 +1,8 @@
+        Java
+
+Скачать IntellinjIdea с официального сайта www.jetbrains.com
+
+Скачать jdk => В браузере пишем: jdk, переходим на oracle
+jdk-17_linux-x64_bin.tar.gz
+Разархивировать
+Создать проект

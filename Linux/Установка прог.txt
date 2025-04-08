@@ -1,0 +1,26 @@
+sudo dpkg -i packageName.deb (1)  -  установка пакета .deb
+sudo apt-get -f install      (2)  -  установка зависимостей
+packageName                       -  запуск программы из пакета (после установки)
+ 
+ping www.google.com               -  проверка наличия соединения 
+   (ctrl + c  -  выход)              с сайтом www.google.com
+ping -c 10 www.google.com         -  проверить только 10 раз
+host www.google.com               -  проверка IP-адресов сайта
+netstat                           -  показ работающих соединений
+netstat | grep localhost          -  показ работающих соединений localhost
+
+ifconfig                          -  инф о сети локального компа
+ip addr show                      -  инф о сети локального компа
+route                             -  инф о роутере к которому подкл комп
+
+w                                 -  просмотр пользователей
+
+		SSH  -  безопасное соединение с web-сайтом
+Перед использованием необходимо устоновить пакет
+sudo apt-get install openssh-server
+ssh web-serverName                -  подключение к web-серверу
+Возможно понадобится открыть доп порт:
+sudo ufw allow 22
+
+
+

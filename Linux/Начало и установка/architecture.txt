@@ -1,0 +1,26 @@
+dpkg --print-architecture
+
+dpkg --remove-architecture i386
+
+sudo dpkg --add-architecture i386
+
+sudo apt update
+
+--------------------------------------------------------------------------
+dpkg --print-architecture             -  проверка основной архитектуры
+
+sudo dpkg --add-architecture i386     -  добавление архитектуры i386
+sudo apt update
+
+dpkg --print-foreign-architectures    -  проверка дополнительной архитектуры
+
+sudo dpkg --remove-architecture i386  -  удаление архитектуры i386
+--------------------------------------------------------------------------
+
+ sudo -H gedit /etc/apt/sources.list.d/pgdg.list
+
+ deb http://apt.postgresql.org/pub/repos/apt focal-pgdg main
+     меняем на
+deb [arch=amd64] http://apt.postgresql.org/pub/repos/apt focal-pgdg main
+
+sudo apt-get update

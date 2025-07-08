@@ -1,0 +1,32 @@
+Just set COMPOSE_BAKE=true как прописать
+
+C:\Users\user_name\.docker\config.json
+
+
+{
+  ...
+  "plugins": {
+    "compose": {
+      "build": "bake"
+    }
+  }
+  ...
+}
+
+EXAMPLE:
+{
+  "auths": {},
+  "credsStore": "desktop",
+  "currentContext": "desktop-linux",
+  "plugins": {
+    "-x-cli-hints": {
+      "enabled": "true"
+    },
+    "compose": {
+      "build": "bake"
+    }
+  },
+  "features": {
+    "hooks": "true"
+  }
+}

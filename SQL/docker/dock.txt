@@ -1,0 +1,19 @@
+Add New Server  ->  
+
+General
+    Name: some_name  -> 
+
+Connection
+    Hostname: *actions
+
+    Port: 5432
+    Maintenance database: db_name
+    Username: sa
+    Password: sapassword
+
+
+*actions:
+    docker ps -> скопировать id контейнера с postgres (cont_id)
+    docker inspect cont_id -> чуть выше IPAddress -> запомнить
+    -> его прописать в Connection
+                           Hostname:

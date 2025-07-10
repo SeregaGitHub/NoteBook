@@ -1,0 +1,34 @@
+# version: '3.8'
+services:
+
+  db-postgres:
+    image: postgres:17-alpine
+    restart: on-failure
+    container_name: postgresql-container
+    ports:
+      - "12222:5432"
+    volumes:
+      - thdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: db_name
+      POSTGRES_USER: sa
+      POSTGRES_PASSWORD: sapassword
+
+
+  pgadmin4:
+    image: dpage/pgadmin4
+    container_name: pgadmin4-container
+    restart: on-failure
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin@mail.com
+      PGADMIN_DEFAULT_PASSWORD: pgpassword
+    ports:
+      - "12221:80"
+    depends_on:
+      - db-postgres
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+
+volumes:
+  thdata:
+  pgadmin:

@@ -1,0 +1,59 @@
+no main manifest attribute, in /app.jar
+
+==========================================================================
+
+add in pom.xml ->
+
+Некоторые возможные причины ошибки и способы её устранения:
+
+1 Отсутствие плагинов spring-boot-maven-plugin или spring-boot-gradle-plugin.
+
+2 Отсутствие объявления свойства Main-Class в файле MANIFEST.MF. Он находится в папке META-INF. 
+  Решение: проверить файл MANIFEST.MF и добавить объявление свойства Main-Class.
+
+1:
+<build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+2:
+\target\file_name.jar -> открыть (с помощью 7zip) ->
+						     META-INF\MANIFEST>MF ->
+			прописать Main-Class (возможно Main-Class: ru.kraser.technical_helper.BreakageServer ???)
+Manifest-Version: 1.0
+Created-By: Maven JAR Plugin 3.4.2
+Build-Jdk-Spec: 21
+Implementation-Title: breakage-server
+Implementation-Version: 0.0.1-SNAPSHOT
+Main-Class: org.springframework.boot.loader.launch.JarLauncher
+Start-Class: ru.kraser.technical_helper.BreakageServer
+Spring-Boot-Version: 3.4.4
+Spring-Boot-Classes: BOOT-INF/classes/
+Spring-Boot-Lib: BOOT-INF/lib/
+Spring-Boot-Classpath-Index: BOOT-INF/classpath.idx
+Spring-Boot-Layers-Index: BOOT-INF/layers.idx

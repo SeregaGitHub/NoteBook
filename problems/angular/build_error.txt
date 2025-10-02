@@ -1,0 +1,19 @@
+bundle initial exceeded maximum budget. Budget 500.00 kB was not met by 536.67 kB with a total of 1.04 MB.
+
+==========================================================================================================
+
+Открыть файл angular.json -> 
+
+	    "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",  -> изменить на: "2MB"
+                  "maximumError": "1MB"       -> изменить на: "5MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ]
+

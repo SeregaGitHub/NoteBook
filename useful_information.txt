@@ -1,3 +1,39 @@
 Индексирование полнотекстовых данных в PostgreSQL
 https://habr.com/ru/companies/otus/articles/770674/
 ======================================================================
+Authurization and Request servers
+https://www.youtube.com/watch?v=xEkzWRcxMl8
+======================================================================
+https://github.com/DanWahlin/Angular-Core-Concepts
+======================================================================
+TH - full screen
+----------------
+<script> function requestFullScreen() {
+
+  var el = document.body;
+
+  // Supports most browsers and their versions.
+  var requestMethod = el.requestFullScreen || el.webkitRequestFullScreen 
+  || el.mozRequestFullScreen || el.msRequestFullScreen;
+
+  if (requestMethod) {
+
+    // Native full screen.
+    requestMethod.call(el);
+
+  } else if (typeof window.ActiveXObject !== "undefined") {
+
+    // Older IE.
+    var wscript = new ActiveXObject("WScript.Shell");
+
+    if (wscript !== null) {
+      wscript.SendKeys("{F11}");
+    }
+  }
+}
+
+
+</script>
+<a href="#" onClick="requestFullScreen();"> click </a>
+======================================================================
+

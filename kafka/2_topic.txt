@@ -1,0 +1,46 @@
+docker exec --workdir /opt/kafka/ -it --user=root container_name sh
+
+---------------------------------------------------------------------------------------------------
+
+    Поскольку мы подключаемся к брокеру Kafka, который запущен на том же самом компьютере, 
+на котором мы создаём консьюмера, то мы указываем в качестве хоста localhost, 
+а в качестве порта 9092 (стандартный порт, на котором по-умолчанию запускается брокер Kafka). 
+В нашем случае у нас всего один брокер. 
+Если у нас имеется несколько брокеров (кластер), то хосты и порты брокеров указываются через запятую.
+
+---------------------------------------------------------------------------------------------------
+Создание топика orders.status:
+
+create - указывает, что мы собираемся создать топик
+topic - после неё указывается название топика
+bootstrap-server - после неё указывается адрес брокера (-ов) Kafka, к которым мы будем подключаться
+
+bin/kafka-topics.sh --create --topic orders.status --bootstrap-server localhost:9092 
+                                                                                     --partitions 2         (в топике 2 партиции)
+                                                                                     --replication-factor 3 (у топика 3 репликации)
+                                                                                                            (кол-во репликаций не меньше кол-ва брокеров в кластере !!!)
+
+										     --config max.message.bytes=4000(максимальный размер сообщения (в байтах)(4 КБ))
+Если требуется указать сразу несколько настроек для топика, то каждую из них нужно прописывать в виде отдельного config, то есть в следующем виде:
+bin/kafka-topics.sh --create --topic multi.config.topic --bootstrap-server localhost:9092 --config max.message.bytes=4000 --config cleanup.policy=compact
+
+---------------------------------------------------------------------------------------------------
+Изменение топика orders.status: --alter
+
+            bin/kafka-topics.sh --alter --topic orders.status --partitions 5 --bootstrap-server localhost:9092 (Добавление партиций --partitions 5)
+
+---------------------------------------------------------------------------------------------------
+     
+Вывод списка топиков:      --list
+       bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+Получение описания топика: --describe
+       bin/kafka-topics.sh --describe --topic two.partitions.topic --bootstrap-server localhost:9092
+
+---------------------------------------------------------------------------------------------------
+Удаление топика orders.status: --delete
+
+           bin/kafka-topics.sh --delete --topic orders.status --bootstrap-server localhost:9092
+
+Можно удалить сразу несколько топиков, перечислив их через запятую:
+
+bin/kafka-topics.sh --delete --topic one.config.topic,multi.config.topic --bootstrap-server localhost:9092

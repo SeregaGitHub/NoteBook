@@ -2,7 +2,7 @@
 docker run -d --name container_name apache/kafka:latest
 
 Для взаимодействия с Kafka перейдите в интерактивную оболочку внутри контейнера:
-docker exec --workdir /opt/kafka/ -it --user=root broker sh
+docker exec --workdir /opt/kafka/ -it --user=root container_name sh
 
 ================================================================================
 

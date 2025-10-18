@@ -1,0 +1,149 @@
+Открыть файл package.json -> 
+
+"scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build --configuration production",                -> прописать
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
+  },
+
+-----------------------------------------------------------------------------------------
+
+Создать папку environments в папке src,
+в ней файлы: 
+
+environment.ts ->
+
+export const environment = {
+    production: false,
+    GATEWAY_URL: 'http://you_local_ip:12344', (это без environment в docker.compose.yml)
+    gatewayUrl: '${ENV_GATEWAY_URL}'           (это для docker.compose.yml, в нём: ENV_GATEWAY_URL=http://192.168.0.101:12344)
+}
+
+
+environment.prod.ts ->
+
+export const environment = {
+    production: true,
+    GATEWAY_URL: 'http://prod_server_ip:12344', (это без environment в docker.compose.yml)
+    gatewayUrl: '${ENV_GATEWAY_URL}'           (это для docker.compose.yml, в нём: ENV_GATEWAY_URL=http://192.168.0.101:12344)
+}
+
+-----------------------------------------------------------------------------------------
+
+				Получение значения переменной в коде
+
+import { environment } from '../../../environments/environment';
+
+environment.gatewayUrl
+
+-----------------------------------------------------------------------------------------
+
+Открыть файл angular.json -> 
+
+	"configurations": {
+            "production": {
+              "fileReplacements": [                                -> прописать
+                {
+                  "replace": "src/environments/environment.ts",    
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2MB",
+                  "maximumError": "5MB"
+                },
+
+-----------------------------------------------------------------------------------------
+
+Запуск сборки:
+
+ng build --configuration=production
+
+=========================================================================================
+
+					ДОПОЛНИТЕЛЬНЫЙ ВАРИАНТ
+
+<APP_FOLDER>/src/environments/
+                       └──environment.ts
+                       └──environment.prod.ts
+                       └──environment.qa.ts
+                       └──environment.staging.ts
+
+-----------------------------------------------------------------------------------------
+
+{
+   "architect":{
+      "build":{
+         "configurations":{
+            "production":{
+               "fileReplacements":[
+                  {
+                     "replace":"<APP_FOLDER>/src/environments/environment.ts",
+                     "with":"<APP_FOLDER>/src/environments/environment.production.ts"
+                  }
+               ]
+            },
+            "staging":{
+               "fileReplacements":[
+                  {
+                     "replace":"<APP_FOLDER>/src/environments/environment.ts",
+                     "with":"<APP_FOLDER>/src/environments/environment.staging.ts"
+                  }
+               ]
+            }
+         }
+      },
+      "serve":{
+         "configurations":{
+            "production":{
+               "browserTarget":"app-name:build:production"
+            },
+            "staging":{
+               "browserTarget":"app-name:build:staging"
+            }
+         }
+      },
+      "e2e":{
+         "configurations":{
+            "production":{
+               "browserTarget":"app-name:serve:production"
+            },
+            "staging":{
+               "browserTarget":"app-name:serve:staging"
+            }
+         }
+      }
+   }
+}
+
+-----------------------------------------------------------------------------------------
+
+ng build --configuration=staging
+ng start --configuration=staging
+ng e2e --configuration=staging
+
+Кстати
+ng build --prod 
+всего лишь сокращенный вариант
+ng build --configuration=production
+
+-----------------------------------------------------------------------------------------
+
+// environment-interface.ts
+export interface EnvironmentInterface {
+  production: boolean;
+  apiUrl: string;
+}
+
+// environment.ts
+export const environment: EnvironmentInterface = {
+  production: false,
+  apiUrl: 'https://api.url',
+};
+
+
+

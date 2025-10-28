@@ -1,0 +1,24 @@
+bin/kafka-console-consumer.sh --topic orders.status --bootstrap-server localhost:9092 
+           
+  Вы не увидите сообщений, которые мы ранее отправили в топик. 
+Если мы создаём консьюмер вышеуказанным образом, то мы увидим только те сообщения, 
+которые были отправлены в топик после создания консьюмера!
+
+
+Если мы хотим сперва прочитать исторические сообщения, а затем начать читать актуальные, следует воспользоваться опцией from-beginning.
+
+bin/kafka-console-consumer.sh --topic orders.status --from-beginning --bootstrap-server localhost:9092
+
+
+Вывод ключа и метки времени у сообщения
+
+Для того, чтобы помимо значения вывести ключ сообщения, нам требуется воспользоваться опцией property и указать параметр print.key, 
+равный true (при этом также следует прописать print.value=true, чтобы вывелось и значение сообщения):
+
+bin/kafka-console-consumer.sh --topic orders.status --property print.key=true --property print.value=true --bootstrap-server localhost:9092 
+
+                  
+Для того, чтобы вывести ещё и метку времени, требуется указать прописать print.timestamp=true:
+
+bin/kafka-console-consumer.sh --topic orders.status --property print.key=true --property print.value=true --property print.timestamp=true --bootstrap-server localhost:9092 --from-beginning
+

@@ -1,0 +1,34 @@
+Project_name: env_test
+
+===================================================================================
+
+environments.environment.ts
+
+-----------------------------------------------------------------------------------
+
+declare const some_field: string;
+
+export const environment = {
+      some_field
+    };
+
+===================================================================================
+
+Dockerfile
+
+-----------------------------------------------------------------------------------
+
+FROM node:22.14.0-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+RUN npx ngcc --properties es2023 browser module main --first-only --create-ivy-entry-points   
+COPY . .
+RUN npm run build -- --define some_field=\"some_value\"
+
+FROM nginx:stable-alpine
+COPY --from=build /app/dist/env_test/browser/ /usr/share/nginx/html
+EXPOSE 80
+
+-----------------------------------------------------------------------------------
+!!!  Project_name: env_test  !!!

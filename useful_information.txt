@@ -1,11 +1,18 @@
 Индексирование полнотекстовых данных в PostgreSQL
 https://habr.com/ru/companies/otus/articles/770674/
 ======================================================================
+
 Authurization and Request servers
 https://www.youtube.com/watch?v=xEkzWRcxMl8
 ======================================================================
+
 https://github.com/DanWahlin/Angular-Core-Concepts
 ======================================================================
+
+CSRF fullstack app
+https://github.com/serlesen/fullstack-csrf/tree/chapter_1
+======================================================================
+
 TH - full screen
 ----------------
 <script> function requestFullScreen() {

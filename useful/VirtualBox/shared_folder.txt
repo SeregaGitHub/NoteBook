@@ -1,0 +1,11 @@
+Create folder on local arm
+
+On virtual arm:
+- устройства, общие папки, настроить общие папки
+- папки машины, +, путь к папке, другой, выбрать папку на local arm
+- выбрать: автоподключение и постоянная папка
+- shutdown -r now
+- sudo apt install virtualbox-guest-utils (если не видит общую папку)
+- whoami - проверить текущего пользователя (current_user)
+- sudo adduser current_user vboxsf
+- shutdown -h now

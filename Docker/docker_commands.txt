@@ -45,7 +45,11 @@
 - docker run --env MARIADB_PASSWORD=password       -  --env (-e) установка переменных окружения
 - docker run -h host_name -it ubuntu bash          -  запуск контейнера и чтобы задать имя хоста добавляем -h host_name
 - docker run --name my_name -it ubuntu bash        -  запуск контейнера и чтобы задать имя контейнера добавляем --name my_name
-
+- docker run --network network_name image_name     -  запуск контейнера в сети network_name
+- docker run -v vol_name:/vol/container/path image_name
+                                                   -  запуск контейнера с созданием для него тома
+- docker run nginx:stable-alpine nginx -g "daemon off;"         
+                                                   -  запуск контейнера с запуском nginx в нём командой: nginx -g "daemon off;"                                         
 - docker restart                                   -  перезапуск контейнера
 - docker pause container_id                        -  постановка контейнера на паузу
 - docker unpause container_id                      -  запуск контейнера, ранее поставленного на паузу
@@ -114,8 +118,13 @@ exit                          -  выход из командной оболоч
                                              В зависимости от базового слоя запуск командной строки может отличаться.
                                              В нашем случае для образа alpine командная строка запускается как /bin/sh,
                                              тогда как для ubuntu будет запускаться как /bin/bash.
+---------------------------------------------------------------------------------------------------------------------------
+docker network create --driver bridge network_name          -  создание внутренней сети
+docker network ls                                           -  список внутренних сетей
+---------------------------------------------------------------------------------------------------------------------------
 
-
+docker cp local_file.txt container_name:/path/in/container  -  Копирование файла из локальной файловой системы в работающий контейнер
+docker cp container_name:/path/in/container local_file.txt  -  Копирование файла из работающего контейнера в локальную файловую систему
 ---------------------------------------------------------------------------------------------------------------------------
 - docker login                                                              
 - docker login -u user_name                                                 -  авторизация в dockerhub

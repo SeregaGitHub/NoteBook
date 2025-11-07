@@ -13,6 +13,10 @@ CSRF fullstack app
 https://github.com/serlesen/fullstack-csrf/tree/chapter_1
 ======================================================================
 
+KeyCloak study
+https://www.youtube.com/playlist?list=PLHXvj3cRjbzs8TaT-RX1qJYYK2MjRro-P
+======================================================================
+
 TH - full screen
 ----------------
 <script> function requestFullScreen() {

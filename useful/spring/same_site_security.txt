@@ -1,0 +1,7 @@
+open application.properties ->
+
+write ->
+
+server.servlet.session.cookie.same-site=Strict
+
+(this is same site policy = enabled)

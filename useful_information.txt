@@ -24,6 +24,10 @@ simple example of liquibase
 https://github.com/Mikhail171/liquibase-start/tree/main
 ======================================================================
 
+JAVA-GURU
+https://www.youtube.com/@java-guru/playlists
+======================================================================
+
 TH - full screen
 ----------------
 <script> function requestFullScreen() {

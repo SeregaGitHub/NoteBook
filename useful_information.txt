@@ -17,6 +17,13 @@ KeyCloak study
 https://www.youtube.com/playlist?list=PLHXvj3cRjbzs8TaT-RX1qJYYK2MjRro-P
 ======================================================================
 
+testcontainers and liquibase
+https://www.youtube.com/@kismichel17/videos
+
+simple example of liquibase
+https://github.com/Mikhail171/liquibase-start/tree/main
+======================================================================
+
 TH - full screen
 ----------------
 <script> function requestFullScreen() {

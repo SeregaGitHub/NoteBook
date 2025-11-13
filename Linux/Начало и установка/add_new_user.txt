@@ -1,0 +1,5 @@
+sudo useradd -m -s /bin/bash user_name  -  создать пользователя
+
+sudo passwd user_name                   -  задать пароль
+
+sudo usermod -aG sudo user_name         -  добавить в группу sudo

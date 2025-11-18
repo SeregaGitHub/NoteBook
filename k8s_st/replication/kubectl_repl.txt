@@ -1,0 +1,26 @@
+                                Replication Controller
+
+- kubectl create -f rc-definition.yaml     - создание файла репликации
+- kubectl get replicationcontroller        - просмотр списка активных контроллеров репликации
+
+=============================================================================================
+
+                                Replication Set
+
+- kubectl create -f replicaset-definition.yaml                - создание файла реплика сет
+  ( Проверь, какой apiVersion подходит к ReplicaSet с помощью kubectl explain replicasets )
+- kubectl replace -f replicaset-definition.yaml               - обновление реплика сет (например: было увеличино количество реплик)
+- kubectl scale --replicas=6 -f replicaset-definition.yaml    - обновление количества реплик реплика сет до 6-ти
+- kubectl get replicaset                                      - просмотр списка активных реплик сетов
+  ( В DESIRED видно сколько pods установлено )
+- kubectl delete replicaset replicaset_name                   - удаление реплика сета replicaset_name (удалит все поды в нём)
+
+-----------------------------------------------------------------------------------------------
+Запусти команду: kubectl edit replicaset replica_set_name
+
+Измени значение image и сохрани файл.
+
+Удали предыдущие pods, чтобы получить новые с правильным образом.
+
+Все pods можно удалить командой kubectl delete pod --all
+-----------------------------------------------------------------------------------------------

@@ -1,0 +1,25 @@
+                                        kubectl
+
+- kubectl get nodes                                - сколько нод в кластере
+                    -owide                         - дополнительная информация о нодах
+- kubectl run pod_name --image image_name          - создание пода
+- kubectl get pod/pod_name -o jsonpath="{..image}" - узнать из какого образа развёрнут под
+- kubectl describe pods                            - узнать состояние контейнеров
+- kubectl describe pod --help                      - справка по команде "kubectl describe"
+- kubectl delete pod pod_name                      - удалить под
+                     --all                         - удалить все поды
+
+-------------------------------------------------------------------------------------------------
+                        Создание пода с redis из файла манифеста
+
+- создать файл манифеста
+  * новый pod с названием redis
+  * из образа redis123
+  kubectl run redis --image=redis --dry-run=client -o yaml > redis-definition.yaml
+
+- создать ресурс из файла-манифеста
+  kubectl create -f redis-definition.yaml  
+
+- проверить 
+  kubectl get pods
+-------------------------------------------------------------------------------------------------

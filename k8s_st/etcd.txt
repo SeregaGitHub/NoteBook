@@ -1,0 +1,11 @@
+DB - key - value
+
+DB:
+- nodes
+- pods
+- configs
+- secrets
+- accounts
+- roles
+- bindings
+- others

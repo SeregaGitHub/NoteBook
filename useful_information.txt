@@ -28,6 +28,10 @@ JAVA-GURU
 https://www.youtube.com/@java-guru/playlists
 ======================================================================
 
+spring_cours
+https://www.youtube.com/@mi.mi.mikhaylov/videos
+======================================================================
+
 TH - full screen
 ----------------
 <script> function requestFullScreen() {

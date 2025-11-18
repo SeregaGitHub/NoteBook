@@ -1,0 +1,49 @@
+<dependency>
+	<groupId>org.apache.poi</groupId>
+	<artifactId>poi-ooxml</artifactId>
+	<version>5.4.0</version>
+</dependency>
+
+------------------------------------------------------------------------------------------------------------------------
+
+                        Метод извлекающий числа, записанные в столбик, из файла формата .xlsx
+
+
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+
+    public static List<Integer> getNumbersFromFile(String filepath) {
+
+        List<Integer> numbersList = new ArrayList<>();
+
+        if (filepath.isEmpty()) {
+            filepath = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "numbers.xlsx";
+        }
+        Path path = Path.of(filepath);
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(path.toFile()))) {
+
+            XSSFSheet worksheet = workbook.getSheetAt(0);
+
+            for (int i = 0; i < worksheet.getPhysicalNumberOfRows(); i++) {
+                XSSFRow row = worksheet.getRow(i);
+                double x = row.getCell(0).getNumericCellValue();
+                int n = (int) Math.round(x);
+                numbersList.add(n);
+            }
+
+        } catch (IOException e) {
+            return numbersList;
+        }
+
+        return numbersList;
+    }

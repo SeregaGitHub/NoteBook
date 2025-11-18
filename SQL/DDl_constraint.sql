@@ -29,7 +29,9 @@ ALTER TABLE table_name                       -  изменить таблицу
     ADD PRIMARY KEY column_name                                   -  назначить столбцу PRIMARY KEY
     DROP COLUMN column_name                                       -  удалить столбец
     DROP CONSTRAINT constraint_name                               -  удалит ограничение
+    ALTER COLUMN column_name DROP NOT NULL                        -  удалит ограничение NOT NULL
     ADD CONSTRAINT constraint_name constraint_type (column_name)  -  назначить столбцу ограничение
+    ALTER COLUMN column_name SET NOT NULL                         -  назначить столбцу ограничение NOT NULL
 
         CONSTRAINT PK_book_book_id PRIMARY KEY (book_id),
         CONSTRAINT FK_books_publisher FOREIGN KEY (publisher_id) REFERENCES publisher(publisher_id)

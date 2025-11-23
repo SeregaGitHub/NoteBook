@@ -12,6 +12,7 @@ mysql.connect("db-service.dev.svc.cluster.local")
 - kubectl get pods --namespace=kube-system                 - получить количество подов в пространстве имён kube-system
 - kubectl get pods --all-namespaces                        - получить количество подов во всех пространств имён
   kubectl get pods -A
+- kubectl get all -A --show-labels                         - получить все метки в кластере Kubernetes
 
 - kubectl create -f pod-definition.yaml --namespace=dev    - создать под в простраснтве имён = dev
                                                              (или поместить --namespace=dev в файле в секции metadata: внизу kind)  

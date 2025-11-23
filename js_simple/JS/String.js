@@ -31,3 +31,7 @@ const str3 = `Это строка
 
 'JavaScript'.slice(0, 4);   // => 'Java'  — возвращает часть строки от индекса start до end (не включая end)
 'programming'.slice(3, 7);  // => 'gram'
+
+// Явное преобразование
+const str = '42';
+const num = Number(str); 

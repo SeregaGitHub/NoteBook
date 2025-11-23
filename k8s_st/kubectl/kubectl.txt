@@ -1,0 +1,22 @@
+        
+        Imperative  - подход (прямое указание)
+                                        kubectl
+
+- kubectl run --image=nginx nginx                        - создание подов
+- kubectl create deployment --image=nginx nginx          - создание деплойментов
+- kubectl expose deployment nginx --port 80              - создание службы(сервиса) для этого деплоймента
+
+- kubectl edit deployment nginx                          - редактирование ресурса
+- kubectl scale deployment nginx --replicas=5            - изменения для масштабирования
+- kubectl set image deployment nginx nginx=nginx:1.18    - обновление образа в деплойменте
+
+- kubectl create -f nginx.yaml                           - создание ресурса из yaml файла        
+- kubectl replace -f nginx.yaml                          - изменение ресурса из yaml файла
+- kubectl replace --force -f nginx.yaml                  - изменение ресурса из yaml файла (путём удаления и создания ресурса заново)
+- kubectl delete -f nginx.yaml                           - удаление ресурса из yaml файла
+
+---------------------------------------------------------------------------------------------------------
+
+        Declfrftive  - подход (создание файлов, определяющих желаемое состояние приложений и служб)
+
+- kubectl applay -f nginx.yaml                           - единая команда для ресурса из yaml файла 

@@ -1,0 +1,25 @@
+replicaset-definition.yaml
+
+apVersion: apps/v1               - версия api (у репликасета apps/v1)     
+kind: ReplicaSet                 - тип создаваемого объекта
+metadata:                        - данные о создаваемом объекте
+    name: myapp-rs               - имя репликасета
+    labels:                      - словарь меток (метки позволяют отслеживать созданные объекты)
+      app: myapp                   labels может содержать любые пары ключ/значение 
+      type: front-end
+spec:                            - спецификация. дополнительная информация для k8s о создаваемом объекте
+  template:                      - определение пода |
+    metadata:                    -                  |
+      name: myapp-pod            -                  |
+      labels:                    -                  |
+        app: myapp               -                  |
+        type: front-end          -                  |
+    spec:                        -                  |
+      containers:                -                  |
+        - name: nginx-container  -                  |
+          image: nginx           - определение пода |
+
+  replicas: 3                    - количество реплик
+  selector:                      - определяет какие поды принадлежат репликасету
+    matchLabels:                 - сопоставляет свои метки с метками из пода
+        type: front-end

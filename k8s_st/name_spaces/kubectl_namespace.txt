@@ -9,6 +9,7 @@ mysql.connect("db-service.dev.svc.cluster.local")
 
 ---------------------------------------------------------------------------------------------------------
 
+- kubectl config view --minify | grep namespace            - узнать в каком пространстве имён находишься сейчас
 - kubectl get pods --namespace=kube-system                 - получить количество подов в пространстве имён kube-system
 - kubectl get pods --all-namespaces                        - получить количество подов во всех пространств имён
   kubectl get pods -A

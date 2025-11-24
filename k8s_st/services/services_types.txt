@@ -37,6 +37,10 @@
   NAME         TYPE
 kubernetes   ClusterIP        - эта служба запускается самим Kubernetes по умолчанию при запуске.
 
+- kubectl create service clusterip service_name             - создать service типа clusterip
+- kubectl expose pod redis --port=6379 --name redis-service - создать service redis-service для пода redis, 
+                                                              выставив приложение redis внутри кластера на порту 6379
+
 =====================================================================================================
 
                                    LoadBalancer

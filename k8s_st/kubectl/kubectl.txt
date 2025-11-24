@@ -4,11 +4,13 @@
 
 - kubectl run --image=nginx nginx                        - создание подов
 - kubectl create deployment --image=nginx nginx          - создание деплойментов
-- kubectl expose deployment nginx --port 80              - создание службы(сервиса) для этого деплоймента
+- kubectl expose deployment nginx --port 80              - создание службы(сервиса) для деплоймента (nginx)
 
 - kubectl edit deployment nginx                          - редактирование ресурса
 - kubectl scale deployment nginx --replicas=5            - изменения для масштабирования
-- kubectl set image deployment nginx nginx=nginx:1.18    - обновление образа в деплойменте
+- kubectl set image deployment nginx nginx=nginx:1.18    - обновление образа в деплойментеудаление сервиса
+
+- kubectl delete svc service_name                        - 
 
 - kubectl create -f nginx.yaml                           - создание ресурса из yaml файла        
 - kubectl replace -f nginx.yaml                          - изменение ресурса из yaml файла

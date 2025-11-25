@@ -5,6 +5,8 @@
 - kubectl get pods                                 - сколько под в кластере
                     -o wide                        - дополнительная информация о подах
                     --selector app=webapp          - выбрать поды с меткой - app, значение которых - webapp
+                    --no-headers | wc -l           - узнать количество подов
+                    --show-labels                  - узнать метки
 - kubectl run pod_name --image=image_name          - создание пода
                        --labels="app=th,tier=db"     - добавление меток
 - kubectl get pod/pod_name -o jsonpath="{..image}" - узнать из какого образа развёрнут под

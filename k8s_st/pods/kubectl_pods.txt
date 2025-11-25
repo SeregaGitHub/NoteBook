@@ -1,7 +1,7 @@
                                         kubectl
 
 - kubectl get nodes                                - сколько нод в кластере
-                    -owide                         - дополнительная информация о нодах
+                    -o wide                        - дополнительная информация о нодах
 - kubectl run pod_name --image=image_name          - создание пода
                        --labels="app=th,tier=db"     - добавление меток
 - kubectl get pod/pod_name -o jsonpath="{..image}" - узнать из какого образа развёрнут под
@@ -23,4 +23,7 @@
 
 - проверить 
   kubectl get pods
+
+- проверить с доп инфой
+  kubectl get pods -o wide
 -------------------------------------------------------------------------------------------------

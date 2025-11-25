@@ -1,0 +1,27 @@
+replicaset-definition.yaml
+
+apVersion: apps/v1               
+kind: ReplicaSet                
+metadata:                     
+    name: myapp-rs               
+    labels:                      - метки репликасета ( по котрым ищут его )
+      app: myapp                   
+      type: front-end
+    annotations:
+      version: 2.0.0             - аннотации это доп инфо
+spec:                           
+  template:                     
+    metadata:                                      
+      name: myapp-pod                             
+      labels:                    - метки пода                 
+        app: myapp                                 
+        type: front-end                            
+    spec:                                          
+      containers:                                  
+        - name: nginx-container                    
+          image: nginx           
+
+  replicas: 3                    
+  selector:                      - настраивается, чтобы подключить поды к репликасету
+    matchLabels:                 - нужно, чтобы хотя бы одно поле соответствовало меткам из пода
+        type: front-end

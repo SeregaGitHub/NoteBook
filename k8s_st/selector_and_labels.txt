@@ -1,5 +1,9 @@
 replicaset-definition.yaml
 
+- kubectl label node node_name label_key=label_value    - задать метку для ноды
+
+-------------------------------------------------------------------------------------------------
+
 apVersion: apps/v1               
 kind: ReplicaSet                
 metadata:                     

@@ -8,7 +8,7 @@
 
 - kubectl edit deployment nginx                          - редактирование ресурса
 - kubectl scale deployment nginx --replicas=5            - изменения для масштабирования
-- kubectl set image deployment nginx nginx=nginx:1.18    - обновление образа в деплойментеудаление сервиса
+- kubectl set image deployment nginx nginx=nginx:1.18    - обновление образа в деплойменте удаление сервиса
 
 - kubectl delete svc service_name                        - 
 

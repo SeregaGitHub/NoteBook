@@ -61,3 +61,35 @@ preferredDuringSchedulingIgnoredDuringExecution:  - если не найдётс
 ( Планируется )
 requiredDuringSchedulingIgnoredDuringExecution:   - если не найдётся нода с меткой - под НЕ БУДЕТ создан
                                                     при удалении метки с ноды - под будет исключён из ноды  
+
+=====================================================================================================================
+
+deployment-definition.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blue
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      run: nginx
+  template:
+    metadata:
+      labels:
+        run: nginx
+    spec:
+      containers:
+      - image: nginx
+        imagePullPolicy: Always
+        name: nginx
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: color
+                operator: In
+                values:
+                - blue

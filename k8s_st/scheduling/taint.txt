@@ -1,0 +1,41 @@
+* taint      - метка, ограничивающая размещение пода
+               состоит из трёх частей:
+               - key
+               - value
+               - effect:     ( effect действует на intolerant поды ) 
+                 - NoSchedule        - запрещает размещение новых подов, если они без tolerant ( не влияет на уже запущеные поды )
+                 - PreferNoSchedule  - "мягкая версия", пытается не размещать новые поды без tolerant
+                 - NoExecute         - запрещает новые поды, а так же, удаляет все старые
+
+* Поды могут быть tolerant (имеющие разрешение) и intolerant (не имеющие разрешение)
+
+* tolerant поды могут быть размещены и на других нодах !!!
+
+========================================================================================================================================
+
+- kubectl taint nodes node_name key=value:taint-effect
+  kubectl taint nodes node_name app=green:NoSchedule  ( чтобы под был назначен на эту ноду, у него должна быть tolerantion - app=green )
+
+- kubectl describe node controlplane | grep Taint                                       - посмотреть taint на мастер ноде 
+                                                                                          (controlplane - имя мастер ноды)
+- kubectl taint nodes controlplane node-role.kubernetes.io/control-plane:NoSchedule-    - удалить taint NoSchedule с controlplane
+----------------------------------------------------------------------------------------------------------------------------------------
+
+pod.yaml
+
+apVersion: v1                         
+kind: Pod                      
+metadata:                     
+    name: app-db            
+    labels:                    
+      app: app07                 
+      function: DB
+spec:                           
+    containers:                  
+      - name: postgres    
+        image: postgres:10.4
+    tolerations:
+      - key: "app"
+        operator: "Equal"
+        value: "green"
+        effect: "NoSchedule" 

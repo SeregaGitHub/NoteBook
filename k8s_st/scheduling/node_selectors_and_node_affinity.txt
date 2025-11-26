@@ -1,0 +1,63 @@
+
+    Node Selectors - позволяет определить в поде на какую ноду он будет назначен.
+
+Вначале нужно назначить метку на ноду:
+- kubectl label nodes node_name size-large    - ставим метку большой по размеру ноды ( size-large это синтаксис k8s ) 
+
+После этого можно, при создании пода, указать - nodeSelector: 
+                                                    size: large
+                                                    
+---------------------------------------------------------------------------------------------------------------------
+
+pod.yaml
+
+apVersion: v1                         
+kind: Pod                      
+metadata:                     
+    name: app-db            
+spec:                           
+    containers:                  
+      - name: postgres    
+        image: postgres:10.4
+    nodeSelector:
+        size: large    - большой размер ноды ( size: large - НЕ ПРОИЗВОЛЬНАЯ переменная !!! )
+
+=====================================================================================================================
+
+    Node Affinity - расширенная версия Node Selectors
+
+---------------------------------------------------------------------------------------------------------------------
+
+pod.yaml
+
+apVersion: v1                         
+kind: Pod                      
+metadata:                     
+    name: app-db            
+spec:                           
+    containers:                  
+      - name: postgres    
+        image: postgres:10.4
+    affinity:                                                                  | эквивалент nodeSelector:
+      nodeAffinity:                                                            |                 size: large
+        requiredDuringSchedulingIgnoredDuringExecution:  - требуется во время назначения, игнорируется во время исполнения  
+            nodeSelectorTerms:
+              - matchExpressions:                        - условия для Node Selector
+                  - key: size
+                    operator: In                         - оператор размещения (In - или, NotIn - не, 
+                    values:                                                     Exists - либая нода с ключом size[values - не указывается]) есть и др.
+                      - large                            - если добавить  values:     то под будет размещён либо на large, либо на medium ноде
+                                                                            - large
+                                                                            - medium
+            
+---------------------------------------------------------------------------------------------------------------------
+
+requiredDuringSchedulingIgnoredDuringExecution:   - если не найдётся нода с меткой - под НЕ БУДЕТ создан
+                                                    при удалении метки с ноды - под останется на той же ноде 
+
+preferredDuringSchedulingIgnoredDuringExecution:  - если не найдётся нода с меткой - под БУДЕТ создан на любой ноде
+                                                    при удалении метки с ноды - под останется на той же ноде 
+
+( Планируется )
+requiredDuringSchedulingIgnoredDuringExecution:   - если не найдётся нода с меткой - под НЕ БУДЕТ создан
+                                                    при удалении метки с ноды - под будет исключён из ноды  

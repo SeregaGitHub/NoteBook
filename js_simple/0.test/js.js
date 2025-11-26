@@ -1,43 +1,26 @@
 "use strict";
-
-function timeToBrewCoffee(name) {
-    switch (name) {
-        case 'Эспрессо': 
-            return 1;
-        case 'Американо': 
-            return 2;
-        case 'Капучино': 
-            return 2;
-        case 'Латте': 
-            return 3;
-        case 'Мокко': 
-            return 4;            
-        default:
-            return 2.5;
-    }
+///////////////////////////////////////
+const book = {
+  title: '1984',
 };
 
+book.author = 'Джордж Оруэлл';
+book['year'] = 1949;
 
+const newKey = 'pages';
+book[newKey] = 328;
+///////////////////////////////////////
 
-function pendingOrders(timeLeft, orders) {
-    
-    while (orders.length > 0) {
-        
-        if (timeLeft > 0) {
-            const nextOrder = orders.shift();
-            const orderTime = timeToBrewCoffee(nextOrder);
-            timeLeft = timeLeft - orderTime;
-        } else {
-            return orders;
-        }
+function applyWeeklyRestock(bookCatalog) {
+
+    for (let key in bookCatalog) {
+        const book = bookCatalog[key];
+        bookCatalog[key] = book + 2;
     }
+    return bookCatalog;
+}
 
-    return orders;
-};
+console.log(applyWeeklyRestock({ "Герой нашего времени": 2, "Отцы и дети": 4, "Обломов": 1 }));
 
-let timeLeft1 = 10;
-let orders1 = ["Капучино", "Латте", "Мокко"];
-
-console.log(pendingOrders(timeLeft1, orders1));
 
 

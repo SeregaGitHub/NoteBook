@@ -23,3 +23,19 @@ splice     // Мощный метод для удаления, замены ил
 
 fruits.splice(1, 1, 'груша');
 console.log(fruits);  // => ['яблоко', 'груша', 'киви']
+
+
+const fruits_2 = [
+    'яблоко', 
+    'банан', 
+    'груша',
+    'лимон',
+    'ананас',
+    'киви',
+    'персик'];
+
+const [fruitOne, , fruitThree='someFruit', , , , , , someFruit='someFruit'] = fruits_2;
+
+console.log(fruitOne);    // яблоко
+console.log(fruitThree);  // груша
+console.log(someFruit);   // someFruit (index out of born)

@@ -7,6 +7,7 @@
                     --selector app=webapp          - выбрать поды с меткой - app, значение которых - webapp
                     --no-headers | wc -l           - узнать количество подов
                     --show-labels                  - узнать метки
+- kubectl describe pod pod_name                    - подробное описание пода
 - kubectl run pod_name --image=image_name          - создание пода
                        --labels="app=th,tier=db"     - добавление меток
 - kubectl get pod/pod_name -o jsonpath="{..image}" - узнать из какого образа развёрнут под
@@ -31,4 +32,7 @@
 
 - проверить с доп инфой
   kubectl get pods -o wide
+
+При существующем поде, создать для него файл манифеста  
+kubectl get po pod_name -o yaml > pod_name.yaml
 -------------------------------------------------------------------------------------------------

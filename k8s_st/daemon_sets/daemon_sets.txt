@@ -1,0 +1,56 @@
+    Daemon Sets - похож на Replica Sets, но отличие в том, что реплики располагаются по одной на каждом узле кластера.
+Если удаляется узел - удаляется и реплика.
+
+Примеры использования:
+
+- Логгер на каждом узле
+
+- kube-proxy на каждом узле
+
+- сетевые решения, требующие развертывания на каждом узле, такие как weave-net
+
+======================================================================================================================
+
+- kubectl create -f daemonset.yaml             - создание DaemonSet
+- kubectl get daemonsets                       - просмотр существующих DaemonSet
+- kubectl get daemonsets --all-namespaces      - просмотр существующих DaemonSet во всех namespaces
+- kubectl describe daemonset daemonset_name    - подробный просмотр DaemonSet
+
+======================================================================================================================
+
+Разверни FluentD в DaemonSet для сбора логов:
+
+Используй данную спецификацию:
+
+- Name: elasticsearch
+- Namespace: kube-system
+- Image: registry.k8s.io/fluentd-elasticsearch:1.20
+
+Простой способ создать DaemonSet — сначала сгенерировать файл YAML для развертывания с помощью команды 
+kubectl create deployment elasticsearch --image=registry.k8s.io/fluentd-elasticsearch:1.20 -n kube-system --dry-run=client -o yaml > fluentd.yaml. 
+После, убери поля replicas и strategy из YAML-файла в текстовом редакторе. 
+Также измени kind с Deployment на DaemonSet и убери поле status.
+
+Наконец, создай Daemonset при помощи kubectl create -f fluentd.yaml
+
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: elasticsearch
+  name: elasticsearch
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+      - image: registry.k8s.io/fluentd-elasticsearch:1.20
+        name: fluentd-elasticsearch

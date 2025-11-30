@@ -1,0 +1,51 @@
+По умолчанию на под:
+
+CPU - 0.5 цп
+MEM - 256 Mi (млб) (M - мб, G - гб)
+DSK - 
+
+Изменяются в файле-манифесте в блоке - resources
+
+================================================================================================================
+
+pod-definition.yaml
+
+apVersion: v1                      
+kind: pod                       
+metadata:                       
+    name: myapp-pod              
+    labels:                     
+      app: myapp                  
+      type: front-end
+spec:                            
+    containers:                  
+      - name: nginx-container    
+        image: nginx
+
+        resources:
+            requests:
+                memory: "1Gi"
+                cpu: 1         - одно ядро
+
+            limits:            - ограничения (не более)
+                memory: "2Gi"
+                cpu: 2         
+
+================================================================================================================
+
+Изменение ограничений по-умолчанию
+
+memory-defaults.yaml                 - будет действовать для определённого namespace
+
+apVersion: v1                      
+kind: LimitRange                      
+metadata:                       
+    name: mem-limit-range           
+
+spec:                            
+    limits:
+       - default:
+             memory: 512Mi
+         defaultRequest:
+             memory: 256Mi
+         type: Container

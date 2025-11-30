@@ -14,7 +14,7 @@
 ========================================================================================================================================
 
 - kubectl taint nodes node_name key=value:taint-effect
-  kubectl taint nodes node_name app=green:NoSchedule  ( чтобы под был назначен на эту ноду, у него должна быть tolerantion - app=green )
+  kubectl taint nodes node_name app=green:NoSchedule  ( чтобы под был разрешён для этой ноды, у него должна быть tolerantion - app=green )
 
 - kubectl describe node controlplane | grep Taint                                       - посмотреть taint на мастер ноде 
                                                                                           (controlplane - имя мастер ноды)

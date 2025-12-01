@@ -1,12 +1,12 @@
                                         kubectl
 
-- kubectl get nodes                                - сколько нод в кластере
-                    -o wide                        - дополнительная информация о нодах
 - kubectl get pods                                 - сколько под в кластере
                     -o wide                        - дополнительная информация о подах
                     --selector app=webapp          - выбрать поды с меткой - app, значение которых - webapp
                     --no-headers | wc -l           - узнать количество подов
                     --show-labels                  - узнать метки
+- kubectl get pods --all-namespaces -o wide        - найти под с именем current_pod_name
+  | grep current_pod_name
 - kubectl describe pod pod_name                    - подробное описание пода
 - kubectl run pod_name --image=image_name          - создание пода
                        --labels="app=th,tier=db"     - добавление меток
@@ -23,6 +23,8 @@
   * новый pod с названием redis
   * из образа redis123
   kubectl run redis --image=redis --dry-run=client -o yaml > redis-definition.yaml
+  kubectl run redis --image=redis --restart=Never --dry-run=client -o yaml --command -- sleep 1000 > redis-definition.yaml
+                                  (конфигурация контейнера)                (команда для контейнера)
 
 - создать ресурс из файла-манифеста
   kubectl create -f redis-definition.yaml  

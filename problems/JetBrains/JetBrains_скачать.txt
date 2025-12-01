@@ -1,0 +1,16 @@
+JetBrains выкатили персональные санкции на российские IP, и теперь с их сайта не скачать дистрибутивы.
+
+
+Но это не беда, есть простое решение:
+
+
+Когда вы попадаете на 451 ошибку по url типа https://download.jetbrains.com/webide/PhpStorm.exe
+
+
+Просто к download добавляйте -cdn.
+
+
+Вот так: https://download-cdn.jetbrains.com/webide/PhpStorm.exe
+
+
+И export control regulations не появится.

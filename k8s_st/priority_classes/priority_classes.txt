@@ -1,0 +1,33 @@
+                                                Приоритет
+
+System        - от 1 000 000 000 до 2 000 000 000
+
+Others        - от -2 147 483 648 до 1 000 000 000
+
+    Если в кластере не осталось ресурсов и нужно развернуть под с более высоким приоритетом -
+то под с более низким будет удалён, а новый будет развёрнут. 
+Это настройка по умолчанию.
+
+Её можно изменить в файле манифесте:
+
+preemptionPolicy: PreempLowerPriority    - по умолчанию
+                  Never                  - старые поды не будут удалены
+
+=======================================================================================================
+
+- kubectl get priorityclass          - получение списка приоритетов
+- kubectl apply -f file_name.yaml    - применение файла-манифеста
+
+- kubectl get pods -o custom-columns="NAME:.metadata.name,PRIORITY:.spec.priorityClassName"    - сравнение приоритета подов
+
+=======================================================================================================
+
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: some_name
+value: 100000   
+globalDefault: false
+description: "Some description"
+preemptionPolicy: PreemptLowerPriority
+

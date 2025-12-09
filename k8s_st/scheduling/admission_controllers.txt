@@ -1,0 +1,45 @@
+                                    Admission controllers - контроллеры допуска
+
+    Встроенные контроллеры допуска:
+
+* AlwaysPullImages        - каждый раз, когда создаётся под, будет скачиваться образ
+* DefaultStorageClass     - автоматически добавляет класс хранения по умолчанию при создании Persistent Volume Claime (PVC)
+* EventRateLimit          - установка ограничений на запросы на сервер API 
+
+* PodSecurityPolicy       - для работы pod security agent
+* PodSecurity             - -- -- -- -- -- -- -- -- -- --
+
+* NamespaceAutoProvision  - автоматически создаёт пространство имён при попытке создать ресурс в не существующем пространстве (п/у выключен)
+* NamespaceExists         - служит для запроса к несуществующим пространствам имён
+* NamespaceLifecycle      - новый контроллер, объединяющий NamespaceAutoProvision и NamespaceExists
+
+============================================================================================================================================
+
+- kube-apiserver -h | grep enable-admission-plugins  - список контроллеров доступа включенных п/у
+
+============================================================================================================================================
+
+    Включение/отключение контроллеров доступа:
+
+При обновлении службы(сервиса):
+
+kube-apiserver.service
+[Service]
+    --
+    --
+    --enable-admission-plugins=PodSecurity,AlwaysPullImages,NamespaceAutoProvision \\
+    --disable-admission-plugins=NamespaceExists
+
+---------------------------------------------------------------------------------------
+
+Когда сервер api работает в поде:
+
+/etc/kubernetes/manifests/kube-apiserver.yaml
+...
+spec:
+  containers:
+  - command:
+    - kube-apiserver
+    - --
+    - --
+    - --enable-admission-plugins=PodSecurity,AlwaysPullImages,NamespaceAutoProvision    

@@ -88,6 +88,9 @@ SELECT ship_city, ship_region          - выбрать столбцы ship_city
 FROM orders                              из таблицы orders
 WHERE ship_region IS NULL                где стобец ship_region == NULL
 
+                           NULL и ORDER BY
+
+ORDER BY nulls last    -- все NULL будет последними
 ---------------------------------------------------------------------------------------
 
                                USING

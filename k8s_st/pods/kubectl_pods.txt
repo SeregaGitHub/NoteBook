@@ -38,5 +38,5 @@
   kubectl get pods -o wide
 
 При существующем поде, создать для него файл манифеста  
-kubectl get po pod_name -o yaml > pod_name.yaml
+kubectl get pod pod_name -o yaml > pod_name.yaml
 -------------------------------------------------------------------------------------------------

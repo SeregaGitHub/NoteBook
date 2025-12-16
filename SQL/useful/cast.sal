@@ -7,6 +7,10 @@
 
 =================================================================
 
+min(sales.sale_date) >= to_date('2019-01-01','yyyy-mm-dd')    -- сравнение даты из таблицы с произвольной
+
+=================================================================
+
 CREATE OR REPLACE FUNCTION type_testing(money_val float8) RETURNS void AS
 $$
 BEGIN

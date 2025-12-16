@@ -8,6 +8,7 @@
 - kubectl set image deployment/deployment_name nginx=nginx:1.7.1  - обновление образа nginx в деплойменте     
 - kubectl scale deployment deployment_name --replicas=2           - обновление количества реплик в деплойменте                                                           
 - kubectl get all                                                 - просмотр всех подов, реплика сетов, деплойментов
+- kubectl get deployments                                         - просмотр всех деплойментов
 - kubectl get deployments -o wide                                 - образ использованый для создания pods в Deployment
 - kubectl describe deployment deployment_name                     - описание деплоймента
 - kubectl rollout status deployment/deployment_name               - получить состояние выкатки

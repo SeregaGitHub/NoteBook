@@ -1,1 +1,4 @@
-kubectl get pods --namespace kube-system    - посмотреть статус pod с планировщиком
+- kubectl get pods --namespace kube-system    - посмотреть статус pod с планировщиком
+
+- kubectl cordon node_name                    - запрещает планирование на ноду любых подов
+- kubectl uncordon node_name                  - отмена запрета планирования

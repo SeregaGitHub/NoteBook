@@ -1,0 +1,11 @@
+        Если кластер был развёрнут с помощью - kubeadm
+
+- kubeadm certs check-expiration                 - просмотр всех сертификатов
+- kubectl -n kube-system logs etcd-controlplane  - просмотр всех логов
+
+---------------------------------------------------------------------------------------------
+
+            Можно просмотреть логи docker контейнера (например etcd)
+
+- docker ps | grep etcd            - список контейнеров etcd
+- docker logs some_container_id    - логи контейнера по его ID

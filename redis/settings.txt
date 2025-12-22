@@ -1,0 +1,45 @@
+                        POM.xml
+<!-- Для подключения Redis -->
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+</dependency>
+
+-------------------------------------------------------------------------------
+
+<!-- Для подключения Spring аннотаций кэширования -->
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-cache</artifactId>
+</dependency>
+
+<!-- В файле application.yaml необходиимо указать spring: cache: type:redis -->
+<!-- В файле @Configuration class RedisConfiguration сделать бин CacheManager !!! -->
+
+=================================================================
+
+                    docker-compose.yaml
+
+redis:
+    image: redis:8.2.1
+    restart: on-failure
+    container_name: redis-container
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data: data
+
+volumes:
+    redis_data:
+
+=================================================================
+
+                    application.yaml
+
+spring:
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}

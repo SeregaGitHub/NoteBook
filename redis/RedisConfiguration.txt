@@ -1,0 +1,57 @@
+package ru.kraser.demo.configuration;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.JacksonJsonRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import ru.kraser.demo.model.User;
+import tools.jackson.databind.ObjectMapper;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
+
+@EnableCaching  // При использовании аннотаций Spring
+@Configuration
+public class RedisConfiguration {
+
+    @Bean
+    public RedisTemplate<String, User> redisUserTemplate(
+            RedisConnectionFactory redisConnectionFactory,
+            ObjectMapper objectMapper
+    ) {
+        RedisTemplate<String, User> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+
+        var serializer = new JacksonJsonRedisSerializer<>(objectMapper, User.class);
+        redisTemplate.setValueSerializer(serializer);
+
+        redisTemplate.afterPropertiesSet();
+
+        return redisTemplate;
+    }
+
+
+    // Для работы с аннотациями Spring
+    @Bean
+    public CacheManager cacheManager(
+            RedisConnectionFactory connectionFactory,
+            ObjectMapper objectMapper
+    ) {
+
+        var serializer = new JacksonJsonRedisSerializer<>(objectMapper, User.class);
+
+        RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(1))                                                        // TTL - time live of cache in Redis
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));
+
+        return RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(configuration)
+                .transactionAware()
+                .build();
+    }
+
+}

@@ -1,0 +1,27 @@
+* @Cacheable   - если нет в кэше берёт из БД и отправляет на фронт, если нет берёт из кэша, не выполняя метод для БД
+
+* @CacheEvict  - для удаления из кэша
+
+* @CachePut    - всегда выполняет метод для БД, и отправляет в кэш
+
+=============================================================================================
+
+@Cacheable(
+    value = "product",
+    key = "#id"
+)
+//@Transactional  -  если есть эта аннотация, можно у Redis настроить работу с транзакциями 
+public Product getById(String id) {
+    some_logic...
+}
+
+
+
+@CacheEvict(
+    value = "product",
+    key = "#id"
+)
+//@Transactional  -  если есть эта аннотация, можно у Redis настроить работу с транзакциями 
+public void deleteById(String id) {
+    some_logic...
+}

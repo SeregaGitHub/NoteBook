@@ -1,0 +1,125 @@
+@Service
+@RequiredArgsConstructor
+public class DepartmentServiceImpl implements DepartmentService {
+    private final DepartmentRepository departmentRepository;
+    private final ObjectMapper objectMapper;
+    private final StringRedisTemplate stringRedisTemplate;               // Взаимодействие с Redis вручную
+    private final RedisTemplate<String, DepartmentDto> redisTemplate;    // Взаимодействие с Redis через бин из RedisConfiguration
+
+    // stringRedisTemplate.opsForValue()   // Основной метод взаимодействие с Redis ( работает только со строками )
+
+    private static final long CACHE_TTL_MINUTES = 60;
+
+    @Override
+    //@Transactional
+    public ApiResponse createDepartment(CreateDepartmentDto createDepartmentDto, String currentUserId) {
+
+        // При создании, обычно данные в Redis не вносят
+
+        try {
+            departmentRepository.saveAndFlush(DepartmentMapper.toDepartment(createDepartmentDto, currentUserId));
+        } catch (Exception e) {
+            ThrowMainServerException.departmentHandler(e.getMessage(), createDepartmentDto.name());
+        }
+        return ApiResponse.builder()
+                .message("Отдел: " + createDepartmentDto.name() + ", - был успешно создан.")
+                .status(201)
+                .httpStatus(HttpStatus.CREATED)
+                .timestamp(LocalDateTime.now().withNano(0))
+                .build();
+    }
+
+    @Override
+    //@Transactional
+    public ApiResponse updateDepartment(String departmentId, CreateDepartmentDto departmentDto, String currentUserId) {
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        int response;
+        try {
+            response = departmentRepository.updateDepartment(
+                    departmentId, departmentDto.name(), currentUserId, now);
+            ThrowMainServerException.isExist(response, "отдел");
+        } catch (Exception e) {
+            ThrowMainServerException.departmentHandler(e.getMessage(), departmentDto.name());
+        }
+
+        // При обновлении необходимо удалить данные из Redis
+        redisTemplate.delete("departmentDto:" + departmentId);
+
+        return ApiResponse.builder()
+                .message("Отдел: " + departmentDto.name() + " - был успешно изменен.")
+                .status(200)
+                .httpStatus(HttpStatus.OK)
+                .timestamp(now)
+                .build();
+    }
+
+    @Override
+    //@Transactional(readOnly = true)
+    public List<DepartmentDto> getAllDepartments() {
+        return departmentRepository.getAllDepartments();
+    }
+
+    @Override
+    //@Transactional(readOnly = true)
+    public DepartmentDto getDepartment(String headerName, String id) {
+
+        // Работа с Redis вручную 
+
+        String objFromCache = stringRedisTemplate.opsForValue().get("departmentDto:" + id);
+
+        if (objFromCache != null) {
+            return objectMapper.readValue(objFromCache, DepartmentDto.class);
+        }
+
+        DepartmentDto departmentDto = departmentRepository.getDepartmentById(id).orElseThrow(
+            () -> new NotFoundException(DEPARTMENT_NOT_EXIST)
+        );
+
+        stringRedisTemplate.opsForValue()
+            .set("departmentDto:" + id, objectMapper.writeValueAsString(departmentDto));
+
+        // Работа с Redis вручную
+        /////////////////////////////////////////////////////////////////////////////////////
+        // Работа с Redis через бин из RedisConfiguration
+
+        DepartmentDto departmentDto = redisTemplate.opsForValue().get("departmentDto:" + id);
+
+        if (departmentDto != null) {
+            return departmentDto
+        }
+
+        DepartmentDto departmentDto = departmentRepository.getDepartmentById(id).orElseThrow(
+            () -> new NotFoundException(DEPARTMENT_NOT_EXIST)
+        );
+
+        redisTemplate.opsForValue()
+            .set("departmentDto:" + id, departmentDto, CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+
+        // Работа с Redis через бин из RedisConfiguration 
+
+        return departmentDto;
+    }   
+
+    @Override
+    //@Transactional
+    public ApiResponse deleteDepartment(String departmentId, String currentUserId) {
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        int response;
+        response = departmentRepository.deleteDepartment(departmentId, currentUserId, now);
+
+        if (response != 1) {
+            throw new NotFoundException(DEPARTMENT_NOT_EXIST);
+        }
+
+        redisTemplate.delete("departmentDto:" + id);
+
+
+        return ApiResponse.builder()
+                .message("Отдел - был успешно удалён.")
+                .status(200)
+                .httpStatus(HttpStatus.OK)
+                .timestamp(LocalDateTime.now().withNano(0))
+                .build();
+    }
+
+}

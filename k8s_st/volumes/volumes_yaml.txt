@@ -1,0 +1,33 @@
+pod-definition.yaml
+
+apiVersion: v1                     
+kind: Pod                      
+metadata:                        
+    name: myapp-pod              
+    labels:                     
+      app: myapp                  
+      type: front-end
+spec:                            
+    containers:                  
+      - name: nginx-container    
+        image: nginx
+      - command:                 
+        - --secure-port=6443
+        
+        volumeMounts:           - подключение к тому
+          -  mountPath: /opt    - связь папки в контейнере (/opt) с папкой в томе (/data)
+             name: data-volume  - имя тома
+
+    volumes:                    - ранее сохранённые тома  { такой подход не рекомендуется - из за репликаций данные будут храниться на разных нодах }
+      -  name: data-volume      - имя тома
+         hostPath: 
+           path: /data          - путь к тому
+           type: Directory 
+
+
+    volumes:                             - ранее сохранённые тома  { подход для хранения данных в облаке }
+      -  name: data-volume               - имя тома
+         awsElasticBlockStore:           - облако AWS
+           volumeID: my-ebs-volume-id    - id тома
+           fsType: ext4 
+

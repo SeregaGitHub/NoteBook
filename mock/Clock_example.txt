@@ -36,6 +36,7 @@ public class SomeClassImpl implements SomeInterface {
 ---------------------------------------------------------------------------------------------------------
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)        // Возможно придётся понизить уровень строгости из-за константы - NOW_ZD
 class SomeClassImplTest {
 
     @Mock

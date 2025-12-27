@@ -1,0 +1,20 @@
+pvc-definition.yaml
+
+apiVersion: v1                        
+kind: PersistentVolumeClaim                        
+metadata:                        
+    name: some_name
+
+spec:
+    accessModes:             
+      - ReadWriteOnce         - чтобы привязать PersistentVolumeClaim к PersistentVolume их accessModes должны совпадать
+    resources:
+        requests:
+            storage: 500Mi    - чтобы привязать PersistentVolumeClaim к PersistentVolume у первого объём должен быть меньше
+
+===========================================================================================================================
+
+- kubectl create -f per_vol_claim_file_name.yaml            - создать постоянный привязанный том
+- kubectl get persistentvolumeclaim                         - получить список постоянных привязанных томов
+- kubectl delete persistentvolumeclaim claim_volume_name    - удалить постоянный привязанный том
+                                                              (что при этом произойдёт с привязанным томом - зависит от его политики)

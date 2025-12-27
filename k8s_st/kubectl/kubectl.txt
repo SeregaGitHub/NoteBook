@@ -10,12 +10,14 @@
 - kubectl scale deployment nginx --replicas=5            - изменения для масштабирования
 - kubectl set image deployment nginx nginx=nginx:1.18    - обновление образа в деплойменте удаление сервиса
 
-- kubectl delete svc service_name                        - 
-
 - kubectl create -f nginx.yaml                           - создание ресурса из yaml файла        
 - kubectl replace -f nginx.yaml                          - изменение ресурса из yaml файла
 - kubectl replace --force -f nginx.yaml                  - изменение ресурса из yaml файла (путём удаления и создания ресурса заново)
 - kubectl delete -f nginx.yaml                           - удаление ресурса из yaml файла
+
+
+- kubectl delete svc service_name                        - удаление сервиса
+- kubectl exec pod_name -- cat /log/app.log              - просмотр файла app.log внутри контейнера
 
 ---------------------------------------------------------------------------------------------------------
 

@@ -93,3 +93,10 @@ SELECT e.last_name AS employee_last_name, m.last_name AS manager_last_name
 FROM staff m
 LEFT JOIN staff e ON e.employee_id = m.reports_to
 -------------------------------------------------------------------------------------
+-- Можно делать JOIN на себя без внешних ключей по первичному ключу
+
+SELECT s.machine_id, ROUND(AVG(e.timestamp - s.timestamp), 3) AS processing_time
+FROM Activity s
+JOIN Activity e ON e.machine_id = s.machine_id AND s.process_id = e.process_id
+AND e.activity_type = 'end' AND s.activity_type = 'start'
+GROUP BY s.machine_id

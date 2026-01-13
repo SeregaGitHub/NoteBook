@@ -1,0 +1,42 @@
+stages:                                 # стадии CI/CD  
+  - build
+  - test
+  - deploy
+
+variables:                              # переменные окружения
+  DEFAULT_SERVER_URL: https://defaultserver.com/api
+
+# - джобы внутри одной стадии могут выполняться одновременно, 
+# если у GitLab Runner'а в /etc/gitlab-runner/config.toml настроен параметр concurrent. 
+# По умолчанию он имеет значение 1, то есть будет выполняться только одна джоба.
+
+pre-job:                                # .pre выполняется перед всеми стадиями - автоматически добавляется в каждый пайплайн.
+  variables:
+    DEFAULT_SERVER_URL: https://cicdcourse.example.com/api  # Переопределяет глобальную переменную
+  stage: .pre
+  script:
+    - echo $DEFAULT_SERVER_URL                              # В выводе получим: https://cicdcourse.example.com/api
+    - echo "Эта джоба в .pre стадии."
+
+build_job:                              # джоба
+  stage: build                          # стадия джобы
+  script:                               # какой-либо скрипт
+    - echo "Эта джоба в стадии build."  # вывод в консоль
+    - docker build -t app:latest .      # сборка образа "app"
+    - docker push app:latest            # пуш образа "app" в dockerhub
+
+ubuntu_job:                             # использует Docker-образ ubuntu:22.04 и выводит в лог «Hello from ubuntu_job!».
+  stage: build
+  image: ubuntu:22.04
+  when: manual                          # when - когда запускается джоба, manual - запуск джобы вручную
+  script:
+    - apt-get update -y                 # обновление пакетов ubuntu:22.04
+    - apt-get install some_prog -y      # установка приложения some_prog
+    - echo "Hello from ubuntu_job!"
+
+
+    
+post-job:                               # .post выполняется после всех стадий - автоматически добавляется в каждый пайплайн.
+  stage: .post
+  script:
+    - echo "Эта джоба в .post стадии."

@@ -1,0 +1,64 @@
+                                
+                                #  before_script and after_script
+
+job:
+  before_script:
+    - echo "Здесь мы можем настроить окружение, например, скачать какую-нибудь утилиту."
+  script:
+    - echo "Основной скрипт."
+  after_script:
+    - echo "Здесь можем очистить временные файлы, или выполнить какие-либо завершающие действия."
+   
+   # Если в Основном скрипте будет ошибка - то "after_script" всё равно будет выполнен !!!
+
+#########################################################################################################
+
+      # "allow_failure" - позволяет джобе завершиться с ошибкой, не влияя на общий статус пайплайна
+
+test_job:
+  stage: fail
+  script:
+    - exit 1
+  allow_failure: true    # джоба job_1 - будет в состоянии "warning", но последующие джобы будут выполнены !!!
+
+#########################################################################################################
+
+      # Ключевое слово default задает общие настройки для всех джоб, если они не переопределены
+
+default:
+  image: alpine:3.22
+  before_script:
+    - echo "Устанавливаем утилиты и обновляем сертификаты."
+    - apk add --no-cache curl yq jq git ca-certificates
+    - update-ca-certificates
+
+job_1:
+  before_script:
+    - apk add --no-cache yq # Переопределяем
+
+job_2:
+  before_script: [] # Полностью отказываемся от default
+
+# Ключевое слово inherit позволяет управлять наследованием от default
+job_3:
+  inherit:          # Полностью отказываемся от default
+    default: false  
+
+job_4:
+  inherit:          # выбрать конкретные настройки default, например, только before_script
+    default:
+      - before_script
+
+# inherit особенно полезен с variables. Глобальные переменные можно наследовать выборочно:
+variables:
+  PROJECT_NAME: app
+  API_URL: https://api.example.com
+  TIMEOUT: 60
+
+job_5:
+  inherit:
+    variables:
+      - PROJECT_NAME
+  script:
+    - echo $PROJECT_NAME
+# Или отключить наследование переменных с variables: false.

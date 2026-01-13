@@ -1,0 +1,33 @@
+stages:
+  - test
+  - deploy
+
+pre-job:                                
+  stage: test
+  script:
+    - mkdir files                                           # Создаём папку files в корне 
+    - touch files/artifact_file.txt                         # В папке files создаём файл артифакта artifact_file.txt
+    - touch files/artifact-$CI_COMMIT_SHORT_SHA.txt         # Поддерживается использование предопределённых переменных
+  artifacts:
+    name: some_artifact_name                                # Если не присвоить имя - оно присвоится автоматически (artifacts.zip)
+    paths:                                                  # Прописываем путь до файла артифакта (пути всегда должны быть от корня)
+      - files/
+    expire_in: '1000'                                       # Можно указать время жизни артефакта (
+                                                              #                                     - 60 seconds
+                                                              #                                     - 3 hrs 30 min
+                                                              #                                     - 2 mos 1 day
+                                                              #                                     - 37 yrs 6 mos and 4d
+                                                              #                                     - 2 weeks and 2 days
+                                                              #                                     - never )
+    exclude:
+      - files/file_[6-9].txt                                # Можно исключить файлы из артифактов (файлы в диапазоне file_6.txt - file_9.txt)
+
+test:report:                                                # Без dependencies по умолчанию джоба загружает все артефакты других из предыдущих стадий,
+  stage: test                                                 # что может замедлить пайплайн или привести к загрузке ненужных файлов.
+  dependencies: []                                          # Здесь джоба не загружает никаких артефактов, что полезно для тех, которым они не нужны.
+
+deploy:report:
+  stage: deploy
+  dependencies:
+    - test:report                                           # Другие джобы могут использовать артифакты для своих целей.
+                                                              # ( Артифакты должны находиться на более ранних стадиях !!! )

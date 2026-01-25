@@ -1,0 +1,2 @@
+- bash -c 'cd some_path_to_folder && some_command'  - выполнить команду во вложенной директории
+  bash -c 'cd frontend/project && ng build'

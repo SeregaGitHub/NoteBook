@@ -1,0 +1,16 @@
+                                    github_import_to_gitlab
+
+* GitLab -> new_project -> import -> from github
+
+                                Чтобы выполнять команду - push
+
+- git remote -v                                                           - видим только github
+- git remote add gitlab git@gitlab.com:SeregaGitHub/technical-helper.git  - соединяем локальный проект и gitlab
+                                                                            (gitlab               - имя удаленного репозитория)
+                                                                            (SeregaGitHub         - логин на gitlab)
+                                                                            (technical-helper.git - имя проекта)
+
+- git remote -v                                                           - видим github и gitlab
+- git push --all gitlab                                                   - пушим все ветки на gitlab
+- git push gitlab                                                         - последующие пуши делаем указывая имя удаленного репозитория - gitlab
+                                                                            (для github - git push origin)

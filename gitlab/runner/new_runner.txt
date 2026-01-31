@@ -1,0 +1,98 @@
+                                    On Ubuntu Cloud
+
+* sudo apt-get update
+
+* sudo apt install git
+
+* on docker.com -    Install Docker Engine on Ubuntu
+
+    search...    install using apt repository
+
+    -------------------------------------------------------------------------------------------
+
+    # uninstall all conflicting packages
+sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc | cut -f1)
+
+    # Add Docker's official GPG key:
+sudo apt update
+sudo apt install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+sudo apt update
+
+    -------------------------------------------------------------------------------------------
+
+    sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+-------------------------------------------------------------------------------------------
+
+    sudo apt-get install docker-compose-plugin
+
+===============================================================================================
+                                    
+                                    Create New Runner
+
+* Project folder -> Settings -> CI/CD -> Runners -> Instance                                              
+                                                    Turn on instance runners for this project - "turn off"
+
+* Press button - "Create project runner" -> 
+                                             "Run untagged jobs" - enter  (Use the runner for jobs without tags in addition to tagged jobs)
+
+                                                                          Press button - "Create runner"
+
+-------------------------------------------------------------------------------------------
+
+* To run Runner like docker in docker, on virtual machine:
+
+docker run -d --name gitlab-runner --restart always \
+ -v /srv/gitlab-runner/config:/etc/gitlab-runner \
+ -v /var/run/docker.sock:/var/run/docker.sock \
+ gitlab/gitlab-runner:alpine
+
+-------------------------------------------------------------------------------------------
+
+* To registration Runner, on virtual machine:
+
+docker exec -it gitlab-runner gitlab-runner register
+
+                    OR
+
+docker run --rm -it \
+ -v /srv/gitlab-runner/config:/etc/gitlab-runner \
+ gitlab/gitlab-runner:alpine register
+
+-------------------------------------------------------------------------------------------
+
+in process:
+* Enter the Gitlab instance URL:
+https://gitlab.com/
+* Enter the registration token
+token from Step 1 - Press button - "Create runner" on gitlab
+* Enter an executor 
+docker
+* Enter the default Docker image:  (dind - docker in docker)
+docker:dind
+
+-------------------------------------------------------------------------------------------
+
+    You need to change one setting in config file on virtual machine:
+
+* nano /srv/gitlab-runner/config/config.toml
+
+- find str volumes = ["/cache"]  and  change on:
+* volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache"]
+
+- add str:                - ???
+  shm_size = 0
+* network_mode = "host"

@@ -7,6 +7,9 @@
 # when	Определяет момент выполнения.	                                 when: manual
 # needs	Задает зависимости от других задач	                           needs: 
                                                                        # - build_job
+# only                     только                                      only:
+#                 когда был push в ветку main                            - main
+#                 при открытии merge_requests                            - merge_requests
                                                                        
 #################################################################################################################################
 
@@ -41,6 +44,13 @@ build-job:
     - changes:
         - src/*
         - src/**/*
+
+deploy-job:
+  stage: deploy
+  script:
+    - docker compose up -d
+  only:
+    - main                                #  Джоба запустится, только если была изменена ветка - main
 
 config:
   rules:

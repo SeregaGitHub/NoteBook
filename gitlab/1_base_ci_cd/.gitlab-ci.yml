@@ -18,25 +18,31 @@ pre-job:                                # .pre выполняется перед
     - echo $DEFAULT_SERVER_URL                              # В выводе получим: https://cicdcourse.example.com/api
     - echo "Эта джоба в .pre стадии."
 
-build_job:                              # джоба
-  stage: build                          # стадия джобы
-  script:                               # какой-либо скрипт
-    - echo "Эта джоба в стадии build."  # вывод в консоль
-    - docker build -t app:latest .      # сборка образа "app"
-    - docker push app:latest            # пуш образа "app" в dockerhub
+test-job:
+  stage: test
+  image: maven:3.9-amazoncorretto-21-alpine  # добавить maven - для запуска java тестов 
+  script:
+    - mvn test                               # запуск java тестов
 
-ubuntu_job:                             # использует Docker-образ ubuntu:22.04 и выводит в лог «Hello from ubuntu_job!».
+build_job:                                   # джоба
+  stage: build                               # стадия джобы
+  script:                                    # какой-либо скрипт
+    - echo "Эта джоба в стадии build."       # вывод в консоль
+    - docker build -t app:latest .           # сборка образа "app"
+    - docker push app:latest                 # пуш образа "app" в dockerhub
+
+ubuntu_job:                                  # использует Docker-образ ubuntu:22.04 и выводит в лог «Hello from ubuntu_job!».
   stage: build
   image: ubuntu:22.04
-  when: manual                          # when - когда запускается джоба, manual - запуск джобы вручную
+  when: manual                               # when - когда запускается джоба, manual - запуск джобы вручную
   script:
-    - apt-get update -y                 # обновление пакетов ubuntu:22.04
-    - apt-get install some_prog -y      # установка приложения some_prog
+    - apt-get update -y                      # обновление пакетов ubuntu:22.04
+    - apt-get install some_prog -y           # установка приложения some_prog
     - echo "Hello from ubuntu_job!"
 
 
     
-post-job:                               # .post выполняется после всех стадий - автоматически добавляется в каждый пайплайн.
+post-job:                                    # .post выполняется после всех стадий - автоматически добавляется в каждый пайплайн.
   stage: .post
   script:
     - echo "Эта джоба в .post стадии."

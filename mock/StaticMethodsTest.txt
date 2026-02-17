@@ -1,17 +1,27 @@
 import org.mockito.MockedStatic;
 
-class FileProcessorTest {
+class SomeClassWithStaticMethod {
 
     @Test
-    void testDeleteFileThrowsException() {
-        // Используем try-with-resources для автоматического закрытия мока после теста
-        try (MockedStatic<FileProcessor> mockedStatic = mockStatic(FileProcessor.class)) {
-            // Задаём поведение: при вызове deleteFile с любым аргументом бросаем исключение
-            mockedStatic.when(() -> FileProcessor.deleteFile(Mockito.anyString()))
-                        .thenThrow(new IOException("Файл не найден"));
+    void whenDoSomeStaticMethodThenThrowNotFoundException() {
 
-            // Вызываем метод и проверяем, что исключение было выброшено
-            assertThrows(IOException.class, () -> FileProcessor.deleteFile("test.txt"));
+        String responseMessage = "some_response";
+
+        // Используем try-with-resources для автоматического закрытия мока после теста
+        try (MockedStatic<SomeClassWithStaticMethod> mockedStatic = mockStatic(SomeClassWithStaticMethod.class)) {
+
+            // Задаём поведение: при вызове some_static_method с любым аргументом бросаем исключение
+            mockedStatic.when(() -> SomeClassWithStaticMethod.some_static_method(some_arg))
+                    .thenThrow(new NotFoundException(responseMessage));
         }
+
+        // Вызываем метод и проверяем, что исключение было выброшено
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> SomeClassWithStaticMethod.some_static_method(some_arg)
+        );
+
+        // Сравниваем сообщения исключения
+        assertEquals(responseMessage, exception.getMessage());
     }
 }

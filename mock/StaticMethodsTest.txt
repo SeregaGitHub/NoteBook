@@ -1,0 +1,17 @@
+import org.mockito.MockedStatic;
+
+class FileProcessorTest {
+
+    @Test
+    void testDeleteFileThrowsException() {
+        // Используем try-with-resources для автоматического закрытия мока после теста
+        try (MockedStatic<FileProcessor> mockedStatic = mockStatic(FileProcessor.class)) {
+            // Задаём поведение: при вызове deleteFile с любым аргументом бросаем исключение
+            mockedStatic.when(() -> FileProcessor.deleteFile(Mockito.anyString()))
+                        .thenThrow(new IOException("Файл не найден"));
+
+            // Вызываем метод и проверяем, что исключение было выброшено
+            assertThrows(IOException.class, () -> FileProcessor.deleteFile("test.txt"));
+        }
+    }
+}

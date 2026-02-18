@@ -1,0 +1,60 @@
+                                            Почему возникают предупреждения?
+
+    Mockito динамически загружает Java-агент (Byte Buddy), чтобы расширить возможности мокинга. 
+Начиная с некоторых версий JDK, динамическая загрузка агентов считается потенциально небезопасной, 
+и JDK предупреждает, что в будущих релизах она может быть запрещена по умолчанию.
+
+                                            Как правильно настроить проект
+
+    Чтобы избежать предупреждений и подготовиться к будущим версиям JDK, 
+нужно явно указать Mockito как Java-агент в настройках тестовой сборки.
+
+--------------------------------------------------------------------------------------------------------------------
+
+* Для Maven (в pom.xml)
+
+Добавьте в секцию <build><plugins> плагин maven-surefire-plugin с аргументом -javaagent:
+
+
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <configuration>
+        <argLine>
+            -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar
+            -Xshare:off
+        </argLine>
+    </configuration>
+</plugin>
+
+
+--------------------------------------------------------------------------------------------------------------------
+
+* Для Gradle
+
+В build.gradle для задачи test:
+
+groovy
+test {
+    jvmArgs "-javaagent:${configurations.testRuntimeClasspath.find { it.name.contains('byte-buddy-agent') }.absolutePath}"
+}
+Или, если используете Kotlin DSL:
+
+kotlin
+test {
+    jvmArgs("-javaagent:${configurations.testRuntimeClasspath.get().find { it.name.contains("byte-buddy-agent") }?.absolutePath}")
+}
+
+--------------------------------------------------------------------------------------------------------------------
+
+* Альтернативный подход
+
+    Если вы не используете функции, требующие inline-mock-maker (например, mockStatic или мокинг final классов), 
+можно отключить inline-mock-maker и вернуться к стандартному. 
+Для этого создайте файл src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker с содержимым:
+
+mock-maker-default
+
+
+Но это ограничит возможности мокинга.
+

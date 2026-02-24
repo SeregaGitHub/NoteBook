@@ -45,6 +45,16 @@ class SomeRepositoryTest {
     @SneakyThrows
     static void beforeAll() {
         postgreSQLContainer.start();
+
+        //  if we need some sql script:
+            // test/resources/data.sql
+
+            // or
+
+            // Connection connection = postgreSQLContainer.createConnection("");
+            // Statement statement = connection.createStatement();
+            // statement.executeUpdate("some_sql_script");
+            // statement.close(); 
     }
 
     @AfterAll

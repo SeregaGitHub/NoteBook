@@ -86,12 +86,13 @@ master               -             -         - ----branchName_2
   git merge branch --ff         -  флаг --ff   -  наоборот, принудительное слияние перемоткой 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-- git branch -d branchName  -  удалит ветку branchName,
-                               если она объединена с master.
-- git branch -D branchName_2  -  ПОЛНОСТЬЮ удалит ветку branchName,
-                                 инф. будет более недоступна !!!
-- git branch branchName_2 2c11  -  вернёт ветку branchName_2,
-                                   если удаление было недавно
+- git branch -d branchName              -  удалит ветку branchName,
+                                           если она объединена с master.
+- git branch -D branchName_2            -  ПОЛНОСТЬЮ удалит ветку branchName,
+                                           инф. будет более недоступна !!!
+- git branch branchName_2 2c11          -  вернёт ветку branchName_2,
+                                           если удаление было недавно
+- git push origin --delete branch_name  -  отправит изменения на github
 
 cat ./git/logs           -  рефлоги гита
 cat ./git/logs HEAD      -  рефлоги HEAD

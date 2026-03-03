@@ -1,6 +1,9 @@
 str1 = 'some_string'
 str2 = "some_string"
 
+x = 11
+str(x)  # now it is String
+
 print(str2.split('_')) # ['some', 'string']
 
 str3 = '''some big

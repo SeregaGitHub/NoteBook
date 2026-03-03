@@ -1,0 +1,280 @@
+                                Открытие портов на ВМ Ubuntu 22.04 в Yandex Cloud
+
+1. Настройка групп безопасности в Yandex Cloud
+
+    Через веб-консоль:
+
+    Перейдите в раздел Virtual Private Cloud → Группы безопасности
+
+    Выберите группу безопасности, привязанную к вашей ВМ, или создайте новую:
+
+        - Нажмите "Создать группу безопасности"
+
+        - Укажите имя (например, gitlab-runner-sg)
+
+        - Выберите сеть, где находится ВМ
+
+    Добавьте правила:
+
+------------------------------------------------------------------------------
+Для SSH (порт 22):    Направление: Входящий
+
+Описание: SSH access
+Порт: 22
+Протокол: TCP
+Источник: CIDR
+CIDR блоки: 0.0.0.0/0 (или ваш IP для безопасности)
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+Для Docker API (порты 2375-2376):    Направление: Входящий
+
+Описание: Docker API access
+Диапазон портов: 2375-2376
+Протокол: TCP
+Источник: CIDR
+CIDR блоки: 0.0.0.0/0 (ограничьте IP для продакшена!)
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+Для исходящего трафика:    Направление: Исходящий
+
+Описание: output            -
+Диапазон портов: 0-65535    -
+Протокол: Любой             +
+Источник: CIDR              -
+CIDR блоки: 0.0.0.0/0       -
+------------------------------------------------------------------------------
+
+    Примените группу безопасности к ВМ:
+
+        - Перейдите в раздел Compute Cloud → Виртуальные машины
+
+        - Выберите вашу ВМ
+
+        - Нажмите "Остановить"
+
+        - В разделе "Сетевые интерфейсы" выберите группу безопасности
+
+        - Запустите ВМ
+===== ----- ===== ----- ===== ----- ===== ----- ===== ----- ===== ----- =====
+Через CLI (yc):
+bash
+# Создать группу безопасности
+yc vpc security-group create \
+  --name gitlab-runner-sg \
+  --description "Security group for GitLab Runner with Docker" \
+  --network-id <network_id> \
+  --rule direction=ingress,port=22,protocol=tcp,cidr=0.0.0.0/0 \
+  --rule direction=ingress,port=2375-2376,protocol=tcp,cidr=0.0.0.0/0 \
+  --rule direction=egress,protocol=any
+
+# Привязать к ВМ
+yc compute instance add-security-group \
+  <instance_name> \
+  --security-group-name gitlab-runner-sg
+
+===== ----- ===== ----- ===== ----- ===== ----- ===== ----- ===== ----- =====
+
+=============================================================================
+
+2. Настройка firewall на Ubuntu
+
+    Подключитесь к ВМ по SSH и выполните:
+
+bash
+# Обновление системы
+sudo apt update && sudo apt upgrade -y
+
+# Настройка UFW (если используется): ( sudo ufw status - покажет краткий статус (включён/выключен) и список активных правил )
+sudo ufw allow 22/tcp
+sudo ufw allow 2375/tcp
+sudo ufw allow 2376/tcp
+sudo ufw enable
+
+# Или используйте iptables напрямую
+sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 2375 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 2376 -j ACCEPT
+
+=============================================================================
+
+3. Настройка Docker для работы с портами 2375-2376
+
+    Безопасная настройка (с TLS - рекомендуется):
+bash
+# Создание директории для сертификатов ( возможно понадобится изменить права пользователя на папку docker на - 775 )
+sudo mkdir -p /etc/docker/certs
+cd /etc/docker/certs
+
+# Генерация CA
+sudo openssl genrsa -aes256 -out ca-key.pem 4096
+- ввести и повторить новый пароль файла ключа (п + Aa!)
+sudo openssl req -new -x509 -days 365 -key ca-key.pem -sha256 -out ca.pem
+
+# Генерация сертификата сервера
+sudo openssl genrsa -out server-key.pem 4096
+sudo openssl req -subj "/CN=$(hostname)" -sha256 -new -key server-key.pem -out server.csr
+----------
+# echo subjectAltName = DNS:$(hostname),IP:$(hostname -I | awk '{print $1}') > extfile.cnf (или команду шиже)
+sudo sh -c 'echo "subjectAltName = DNS:$(hostname),IP:$(hostname -I | awk '\''{print \$1}'\'')" > extfile.cnf'
+[
+    (subjectAltName = DNS:kraser-ubuntu-24,IP:10.130.0.30,IP:127.0.0.1)
+    (subjectAltName = DNS:имя_виртуальной_машины,IP:внутренний адрес_виртуальной_машины,IP:127.0.0.1{или публичный, если нужно})
+]
+----------
+sudo openssl x509 -req -days 365 -sha256 -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem -extfile extfile.cnf
+
+------------------------------------------------------------------------------
+
+# Настройка Docker демона
+sudo nano /etc/docker/daemon.json
+Добавьте в daemon.json:
+
+sudo tee /etc/docker/daemon.json <<'EOF'
+{
+  "hosts": ["fd://", "unix:///var/run/docker.sock", "tcp://0.0.0.0:2376"],
+  "tlsverify": true,
+  "tlscacert": "/etc/docker/certs/ca.pem",
+  "tlscert": "/etc/docker/certs/server-cert.pem",
+  "tlskey": "/etc/docker/certs/server-key.pem"
+}
+EOF
+
+# ИЛИ
+
+# json
+{
+  "hosts": ["unix:///var/run/docker.sock", "tcp://0.0.0.0:2376"],
+  "tlsverify": true,
+  "tlscacert": "/etc/docker/certs/ca.pem",
+  "tlscert": "/etc/docker/certs/server-cert.pem",
+  "tlskey": "/etc/docker/certs/server-key.pem"
+}
+
+(возможно так: sudo sh -c 'echo "{ json_file_text }" > daemon.json')
+
+(возможно так: "hosts": ["fd://", "unix:///var/run/docker.sock", "tcp://0.0.0.0:2376"], )
+
+
+===== ----- ===== ----- ===== ----- ===== ----- ===== ----- ===== ----- =====
+
+Небезопасная настройка (только для тестовых сред):
+
+bash
+# Настройка Docker для прослушивания портов
+sudo nano /etc/docker/daemon.json
+Добавьте:
+
+json
+{
+  "hosts": ["unix:///var/run/docker.sock", "tcp://0.0.0.0:2375"]
+}
+
+# ИЛИ
+
+sudo tee /etc/docker/daemon.json <<'EOF'
+{
+  "hosts": ["fd://", "unix:///var/run/docker.sock", "tcp://0.0.0.0:2375"],
+  "tlsverify": false
+}
+EOF
+------------------------------------------------------------------------------
+Для systemd:
+bash
+# Создаем или редактируем службу Docker
+sudo systemctl edit docker.service
+
+# Добавляем:
+[Service]
+ExecStart=
+ExecStart=/usr/bin/dockerd --containerd=/run/containerd/containerd.sock
+
+------------------------------------------------------------------------------
+
+# Перезапускаем Docker
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+
+=============================================================================
+
+4. Проверка открытых портов
+bash
+# Проверка локально
+sudo netstat -tulpn | grep -E ':(22|2375|2376)'
+
+# Проверка снаружи (с другой машины)
+telnet <ваш_публичный_IP> 22
+telnet <ваш_публичный_IP> 2375
+
+# Проверка Docker API
+curl http://<ваш_IP>:2375/version
+
+=============================================================================
+
+5. Настройка GitLab Runner с dind
+Пример конфигурации .gitlab-ci.yml:
+
+yaml
+image: docker:20.10
+
+services:
+  - docker:20.10-dind
+
+variables:
+  DOCKER_HOST: tcp://docker:2376
+  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_TLS_VERIFY: "1"
+
+before_script:
+  - docker info
+
+build:
+  script:
+    - docker build -t myapp .
+    - docker run myapp
+
+=============================================================================
+
+6. Важные предупреждения безопасности
+
+Порт 2375 без TLS небезопасен - используйте только в закрытых сетях
+
+Для продакшена всегда используйте TLS (порт 2376)
+
+Ограничьте доступ по IP в группах безопасности
+
+Рассмотрите использование VPN или облачного VPN вместо открытых портов
+
+Регулярно обновляйте сертификаты
+
+=============================================================================
+
+7. Альтернативный подход - SSH туннель
+
+Более безопасный вариант - использование SSH туннеля вместо открытых портов:
+
+bash
+# С локальной машины
+ssh -L 2375:localhost:2375 -L 2376:localhost:2376 user@<vm_ip>
+
+# Затем использовать локально
+export DOCKER_HOST=tcp://localhost:2376
+8. Удаление настроек (если нужно)
+bash
+# Удалить правила firewall
+sudo ufw delete allow 2375/tcp
+sudo ufw delete allow 2376/tcp
+
+# Вернуть стандартные настройки Docker
+sudo rm /etc/docker/daemon.json
+sudo systemctl restart docker
+
+# Удалить группу безопасности в Yandex Cloud
+yc vpc security-group delete gitlab-runner-sg
+Эти настройки позволят безопасно работать с Docker API и GitLab Runner на вашей виртуальной машине в Yandex Cloud.
+
+
+
+
+

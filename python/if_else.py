@@ -10,3 +10,12 @@ elif 8 < x <= 11:
     print('Осень')
 else:
     print('No such season')
+
+##########################################################
+
+temperature = 25 
+
+weather = "Жарко" if temperature > 30 else "Прохладно"
+#          true          condition           false 
+
+print(weather)

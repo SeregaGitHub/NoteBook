@@ -22,6 +22,32 @@ pre-job:
     exclude:
       - files/file_[6-9].txt                                # Можно исключить файлы из артифактов (файлы в диапазоне file_6.txt - file_9.txt)
 
+############################################################
+build-job:                                                    #            Spring boot application example
+  stage: build
+  image: maven:3.9-amazoncorretto-21-alpine
+  artifacts:
+    name: "app_compile-files_$CI_COMMIT_TITLE"                # имя артифакта - "app_compile-files_титл-коммита"
+    paths:
+      - target/                                               # копируем в артифакты файлы сборки проекта
+    expire_in: 20 minutes                                     # храним артифакты 20 минут
+  script:
+    - mvn clean compile
+
+test-job:
+  stage: test
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  image: maven:3.9-amazoncorretto-21-alpine
+  services:
+    - docker:27-dind
+  script:
+    - mvn test -Dmaven.main.skip=true                         # в стадии maven пропускает сборку и берёт файлы из артифактов
+  dependencies:
+    - build-job                                               # указываем из какой джобы брать артифакты
+############################################################
+
 test:report:                                                # Без dependencies по умолчанию джоба загружает все артефакты других из предыдущих стадий,
   stage: test                                                 # что может замедлить пайплайн или привести к загрузке ненужных файлов.
   dependencies: []                                          # Здесь джоба не загружает никаких артефактов, что полезно для тех, которым они не нужны.

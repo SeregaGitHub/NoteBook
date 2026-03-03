@@ -1,0 +1,374 @@
+1. Добавьте необходимые зависимости в pom.xml
+В модуле main-server (или в родительском pom.xml) добавьте Testcontainers BOM (чтобы не указывать версии для каждого модуля) и конкретные зависимости:
+
+xml
+<properties>
+    <!-- актуальная версия на сегодня ~1.20.4 -->
+    <testcontainers.version>1.20.4</testcontainers.version>
+</properties>
+
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-bom</artifactId>
+            <version>${testcontainers.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+
+<dependencies>
+    <!-- … остальные зависимости … -->
+
+    <!-- Testcontainers -->
+    <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>postgresql</artifactId>
+        <scope>test</scope>
+    </dependency>
+
+    <!-- Если используете Spring Boot 3.1+, можно добавить для удобства @ServiceConnection -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-testcontainers</artifactId>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+testcontainers-bom гарантирует совместимость версий всех модулей Testcontainers .
+
+junit-jupiter — интеграция с JUnit 5 .
+
+postgresql — модуль для PostgreSQL .
+
+spring-boot-testcontainers — опционально, добавляет удобную аннотацию @ServiceConnection (доступна с Spring Boot 3.1) .
+
+2. Напишите тест с использованием Testcontainers
+Теперь переделаем ваш MainServerTests, чтобы он поднимал PostgreSQL в контейнере. 
+Есть два основных способа: классический (через @DynamicPropertySource) и современный (через @ServiceConnection). 
+Покажу оба — выбирайте тот, который больше нравится.
+
+Вариант А: классический подход (работает во всех версиях Spring Boot)
+java
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+@SpringBootTest
+@Testcontainers  // включает управление контейнерами через JUnit
+class MainServerTests {
+
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("testdb")
+            .withUsername("test")
+            .withPassword("test");
+
+    @DynamicPropertySource
+    static void properties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
+
+    @Test
+    void contextLoads() {
+        // просто проверяем, что контекст загружается
+    }
+}
+@Testcontainers и @Container — JUnit сам запустит контейнер перед тестами и остановит после .
+
+@DynamicPropertySource подставляет динамические параметры подключения (URL, логин, пароль) в Spring Environment до создания контекста .
+
+Вариант Б: современный подход с @ServiceConnection (Spring Boot 3.1+)
+Этот способ ещё лаконичнее — не нужно вручную прописывать @DynamicPropertySource. 
+Аннотация @ServiceConnection автоматически связывает контейнер с соответствующими свойствами spring.datasource .
+
+java
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+@SpringBootTest
+@Testcontainers
+class MainServerTests {
+
+    @Container
+    @ServiceConnection
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+
+    @Test
+    void contextLoads() {
+    }
+}
+    Обратите внимание: мы не указываем имя БД, пользователя и пароль — контейнер сам сгенерирует случайные, 
+а @ServiceConnection автоматически подхватит их и выставит в properties . 
+Очень удобно и чисто.
+
+3. Адаптация для GitLab CI
+В GitLab CI вам потребуется раннер, который умеет запускать Docker-контейнеры. 
+Обычно для этого используют docker-in-docker (dind) или монтируют сокет docker хоста. 
+Приведу пример конфигурации .gitlab-ci.yml с dind:
+
+yaml
+variables:
+  # Отключаем стандартный запуск MongoDB и других сервисов, если не нужны
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
+image: maven:3.9-openjdk-21
+
+services:
+  - docker:27-dind   # сервис Docker-in-Docker
+
+stages:
+  - test
+
+test:
+  stage: test
+  script:
+    - mvn clean test
+  variables:
+    # Указываем, как Testcontainers должен подключаться к Docker
+    DOCKER_HOST: "tcp://docker:2375"
+    DOCKER_TLS_CERTDIR: ""
+    # Остальные переменные, если нужны
+  cache:
+    paths:
+      - .m2/repository
+Ключевые моменты:
+
+Сервис docker:dind запускает внутри пайплайна демон Docker.
+
+Переменная DOCKER_HOST указывает Testcontainers, где искать Docker (адрес сервиса docker).
+
+DOCKER_TLS_CERTDIR="" отключает TLS для упрощения (в защищённых окружениях лучше настроить сертификаты, но для тестов часто хватает этого).
+
+Если ваш GitLab раннер использует привилегированный режим (privileged) для dind — это стандартная практика, 
+так как внутри dind требуется запускать контейнеры.
+
+Альтернативно, можно использовать сокет хоста (более производительно), но тогда раннер должен быть настроен на проброс /var/run/docker.sock. 
+Это даёт возможность контейнерам тестов обращаться к Docker хоста напрямую. Пример:
+
+yaml
+test:
+  stage: test
+  script:
+    - mvn clean test
+  variables:
+    DOCKER_HOST: "unix:///var/run/docker.sock"
+  cache: ...
+Какой способ выбрать — зависит от настроек вашего GitLab инфраструктуры. Обычно dind проще в настройке, но немного медленнее.
+
+=============================================================================================================================================
+
+                                                      WORK EXAMPLE
+
+stages:
+  - build
+  - test
+  - package
+  - deploy
+
+# This is for cache - .m2/repository/ (maven will save files in project directory, not in home folder)
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
+cache:
+  paths:
+    - .m2/repository/
+
+build-job:
+  stage: build
+  image: maven:3.9-amazoncorretto-21-alpine
+  artifacts:
+    name: "TH_compile-files_$CI_COMMIT_TITLE"
+    paths:
+      - main-server/target/
+      - breakage-server/target/
+      - gateway/target/
+      - common-module/target/
+    expire_in: 20 minutes
+  before_script:
+    - echo "==================== start build-job ===================="
+  after_script:
+    - echo "==================== finish build-job ===================="
+  script:
+    - mvn clean compile
+
+test-job:
+  stage: test
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  image: maven:3.9-amazoncorretto-21-alpine
+  services:
+    - docker:27-dind
+  before_script:
+    - echo "==================== start test-job ===================="
+  after_script:
+    - echo "==================== finish test-job ===================="
+  script:
+    - mvn test -Dmaven.main.skip=true
+  dependencies:
+    - build-job
+
+package-job:
+  stage: package
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  image: maven:3.9-amazoncorretto-21-alpine
+  services:
+    - docker:27-dind
+  artifacts:
+    name: "TH_jar-files_$CI_COMMIT_TITLE"
+    paths:
+      - main-server/target/*.jar
+      - main-server/target/*.jar.original
+      - breakage-server/target/*.jar
+      - breakage-server/target/*.jar.original
+      - gateway/target/*.jar
+      - gateway/target/*.jar.original
+      - common-module/target/*.jar
+    expire_in: 20 minutes
+  before_script:
+    - echo "==================== start package-job ===================="
+  after_script:
+    - echo "==================== finish package-job ===================="
+  script:
+    - mvn package -Dmaven.test.skip=true
+  dependencies:
+    - build-job
+  only:
+    - main
+
+deploy-job:
+  stage: deploy
+  variables:
+    DOCKER_HOST: unix:///var/run/docker.sock
+    DOCKER_CLIENT_TIMEOUT: 120
+    COMPOSE_HTTP_TIMEOUT: 120
+  image: docker:27-cli
+  before_script:
+    - echo "==================== start deploy-job ===================="
+  after_script:
+    - echo "==================== finish deploy-job ===================="
+  script:
+    - docker compose build
+    - docker compose up -d
+  dependencies:
+    - package-job
+  only:
+    - main
+
+===================================================================================================================
+
+                                            EXAMPLE
+
+stages:
+  - build
+  - test
+  - package
+  - deploy
+
+# This is for cache - .m2/repository/ (maven will save files in project directory, not in home folder)
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
+cache:
+  paths:
+    - .m2/repository/
+    - main-server/target/
+    - breakage-server/target/
+    - gateway/target/
+    - common-module/target/
+
+build-job:
+  stage: build
+  image: maven:3.9-amazoncorretto-21-alpine
+  before_script:
+    - echo "========== start build-job =========="
+  after_script:
+    - echo "========== finish build-job =========="
+  script:
+    - mvn clean compile
+
+test-job:
+  stage: test
+  variables:                                    # можно использовать сокет хоста (более производительно)
+#   DOCKER_HOST: "unix:///var/run/docker.sock"  # тогда gitlab-runner должен быть настроен на проброс /var/run/docker.sock
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  image: maven:3.9-amazoncorretto-21-alpine
+  services:
+    - docker:27-dind                            # сервис Docker-in-Docker
+  before_script:
+    - echo "========== start test-job =========="
+  after_script:
+    - echo "========== finish test-job =========="
+  script:
+    - mvn clean test
+  only:
+    - main                                       #  Джоба запустится, только если была изменена ветка - main
+
+
+package-job:
+  stage: package
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  image: maven:3.9-amazoncorretto-21-alpine
+  services:
+    - docker:27-dind
+  before_script:
+    - echo "==================== start package-job ===================="
+  after_script:
+    - echo "==================== finish package-job ===================="
+  script:
+    - mvn package
+
+deploy-job:
+  stage: deploy
+  variables:
+    DOCKER_HOST: unix:///var/run/docker.sock
+    DOCKER_CLIENT_TIMEOUT: 120
+    COMPOSE_HTTP_TIMEOUT: 120
+#    DOCKER_HOST: tcp://docker:2375   # без TLS
+#    DOCKER_TLS_CERTDIR: "/certs"          # включает TLS и указывает корень для сертификатов
+#    DOCKER_HOST: tcp://docker:2376         # TLS-порт демона
+#    DOCKER_TLS_VERIFY: 1                    # включить проверку TLS
+#    DOCKER_CERT_PATH: "/certs/client"       # где клиент ищет сертификаты
+  image: docker:27-cli
+#  services:
+#    - name: docker:27-dind
+#      alias: docker                         # гарантирует, что имя хоста — docker
+#      command: ["dockerd", "-H", "tcp://0.0.0.0:2375"]
+  before_script:
+    - echo "==================== start deploy-job ===================="
+    - cat /proc/self/status | grep CapEff
+    - echo "==================== start check the connection with the docker demon ===================="
+    - ls -la /certs/client || true
+    - docker info || true
+    - docker version || true
+    - echo "==================== finish check the connection with the docker demon ===================="
+  after_script:
+    - echo "==================== finish deploy-job ===================="
+  script:
+    - docker compose build
+    - docker compose up -d
+
+
+

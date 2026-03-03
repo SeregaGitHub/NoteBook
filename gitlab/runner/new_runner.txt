@@ -105,5 +105,8 @@ docker:dind
   shm_size = 0
 * network_mode = "host"
 
-- maby you will need to restart your runner:
+* image = "docker:dind"                - ???
+  privileged = true                    
+
 * docker restart gitlab-runner
+

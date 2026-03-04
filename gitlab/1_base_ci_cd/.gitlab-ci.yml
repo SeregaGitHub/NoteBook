@@ -24,6 +24,20 @@ test-job:
   script:
     - mvn test                               # запуск java тестов
 
+############################################
+test:unit:                                   # test:unit: и test:integration: - группировка джобов
+  stage: test
+  image: maven:3.9-amazoncorretto-21-alpine  
+  script:
+    - mvn test                               
+
+test:integration:                            # джобы test-job:unit и test-job:integration будут отображаться под общим заголовком test-job,
+  stage: test                                # а внутри — как два связанных задания
+  image: maven:3.9-amazoncorretto-21-alpine  # Это особенно удобно, когда у вас много параллельных тестов (например, для разных окружений)
+  script:
+    - mvn test 
+############################################
+
 build_job:                                   # джоба
   stage: build                               # стадия джобы
   script:                                    # какой-либо скрипт

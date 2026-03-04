@@ -1,0 +1,43 @@
+stages:
+  - build
+  - deploy
+
+#                              Локальный импорт позволяет включать YAML-файлы, находящиеся в том же репозитории.
+include: 
+  - local: ci/include/deploy/test.yml
+  - local: ci/include/deploy/dev.yml
+    rules:
+      - if: $CI_COMMIT_BRANCH == 'main'                    # можно комбинировать include с rules
+  - template: 'Docker.gitlab-ci.yml'                       # шаблон из библиотеки GitLab (шаблоны могут требовать доработки под конкретный проект)
+  - remote: https://example.com/include/backend/build.yml  # удаленный импорт позволяет подключать YAML-файлы, размещенные в интернете
+  - project: ilyalushkevich/cicd-templates                 # импортируется файл test.yml из ветки main проекта ilyalushkevich/cicd-templates
+    ref: main
+    file: backend/deploy/test.yml
+# Файл ci/include/deploy/test.yml может содержать:
+
+# deploy:test:
+#   image: alpine:3.22
+#   stage: test
+#   script:
+#     - echo "Деплой в тест окружение."
+
+
+# В этом случае GitLab добавит джобу deploy:test в основной пайплайн.
+
+build-job:
+  stage: build
+  image: maven:3.9-amazoncorretto-21-alpine
+
+deploy-job:
+  stage: deploy
+
+##########################################################################################
+# Для каждого типа импорта вы можете увидеть итоговую конфигурацию в «Pipeline Editor» !!!
+##########################################################################################
+
+
+
+                  
+
+
+                  

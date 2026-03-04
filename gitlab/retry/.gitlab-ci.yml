@@ -1,0 +1,24 @@
+stages:
+  - build
+  - deploy
+
+build-job:
+  stage: build
+  image: maven:3.9-amazoncorretto-21-alpine
+  retry:                                       # автоматически перезапускает джобу, если она завершается с ошибкой
+    max: 2                                     # максимальное количество перезапусков
+    exit_codes:                                # при каких кодах выхода перезапускать джобу
+      - 1
+    when:                                      # при каких ошибках перезапускать джобу
+      - api_failure
+#   when:
+#       always                   - повторять при любом сбое (используется по умолчанию, если when не указан).
+#       unknown_failure          - неизвестная причина сбоя.
+#       script_failure           - сбой из-за ошибки в скрипте (например, ненулевой код выхода).
+#       api_failure              - сбой из-за ошибки API GitLab.
+#       stuck_or_timeout_failure - задача зависла или превысила таймаут.
+#       runner_system_failure    - проблема с GitLab Runner (например, сбой или неожиданное завершение)
+
+
+deploy-job:
+  stage: deploy

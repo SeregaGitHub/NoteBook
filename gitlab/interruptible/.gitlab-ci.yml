@@ -1,0 +1,24 @@
+stages:
+  - build
+  - deploy
+
+workflow:                                        #  interruptible (прерываемая джоба) работает в связке с workflow:auto_cancel
+  auto_cancel:
+    on_new_commit: conservative                  # или `interruptible`, `none`   определяет, в каких случаях отменять пайплайн
+    on_job_failure: none                         # или `all                      определяет, отменять ли пайплайн при неудаче джобы
+
+# conservative  - отменить пайплайн, но только в том случае, если ещё не запущена ни одна джоба с параметром interruptible: false
+# interruptible - отменяйте только джобы с interruptible: true
+# none          - не выполнять автоматическую отмену каких-либо джоб
+
+# none          - пайплайн не будет автоматически отменен при сбое (failure) одного из его джобов
+# all           - отменить весь пайплайн, если любой из его джобов завершится неудачей
+
+build-job:
+  stage: build
+  image: maven:3.9-amazoncorretto-21-alpine
+  interruptible: true                            # джоба будет остановлена, если будет запущен более новый пайплайн.
+                                                 # interruptible работает в связке с workflow:auto_cancel
+
+deploy-job:
+  stage: deploy

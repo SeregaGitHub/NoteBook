@@ -1,0 +1,85 @@
+stages:
+  - build
+  - test
+  - package
+  - deploy
+
+default:               # общие для всех джобов
+  before_script:
+    - echo "==================== start $CI_JOB_NAME ===================="
+  after_script:
+    - echo "==================== finish $CI_JOB_NAME ===================="
+
+.maven_docker_2375:    # можно переиспользовать этот блок кода через (extends: .maven_docker_2375) в джобах 
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  image: maven:3.9-amazoncorretto-21-alpine
+  services:
+    - docker:27-dind
+
+# This is for cache - .m2/repository/ (maven will save files in project directory, not in home folder)
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
+cache:                 #  для переиспользования скаченных зависимостей
+  paths:
+    - .m2/repository/
+
+build-job:
+  stage: build
+  image: maven:3.9-amazoncorretto-21-alpine
+  artifacts:                                   #  для переиспользования скомпилированных файлов
+    name: "TH_compile-files_$CI_COMMIT_TITLE"
+    paths:
+      - main-server/target/
+      - breakage-server/target/
+      - gateway/target/
+      - common-module/target/
+    expire_in: 20 minutes
+  script:
+    - mvn clean compile
+
+test-job:
+  stage: test
+  extends: .maven_docker_2375    #  переиспользовние блока кода - .maven_docker_2375
+  script:                        #  команда mvn test - пропустит этап компиляции
+    - mvn test -Dmaven.main.skip=true
+  dependencies:                  #  переиспользование артифактов из джобы - build-job
+    - build-job
+
+package-job:
+  stage: package
+  extends: .maven_docker_2375
+  artifacts:
+    name: "TH_jar-files_$CI_COMMIT_TITLE"
+    paths:
+      - main-server/target/*.jar
+      - main-server/target/*.jar.original
+      - breakage-server/target/*.jar
+      - breakage-server/target/*.jar.original
+      - gateway/target/*.jar
+      - gateway/target/*.jar.original
+      - common-module/target/*.jar
+    expire_in: 20 minutes
+  script:                                #  команда mvn package - пропустит тесты
+    - mvn package -Dmaven.test.skip=true
+  dependencies:               #  переиспользование артифактов из джобы - build-job
+    - build-job
+  only:
+    - main
+
+deploy-job:
+  stage: deploy
+  variables:
+    DOCKER_HOST: unix:///var/run/docker.sock
+    DOCKER_CLIENT_TIMEOUT: 120
+    COMPOSE_HTTP_TIMEOUT: 120
+  image: docker:27-cli
+  script:
+    - docker compose build
+    - docker compose up -d
+  dependencies:
+    - package-job
+  only:
+    - main

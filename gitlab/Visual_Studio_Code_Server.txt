@@ -1,0 +1,39 @@
+                                    Visual Studio Code Server
+
+* Для установки Visual Studio Code Server выполните команду в консоли рабочего места — ранее созданной виртуальной машины:
+
+curl -fOL https://github.com/coder/code-server/releases/download/v4.23.1/code-server_4.23.1_amd64.deb
+sudo dpkg -i code-server_4.23.1_amd64.deb
+sudo systemctl enable --now code-server@$USER 
+
+* После этого измените конфигурацию Visual Studio Code Server в файле ~/.config/code-server/config.yaml:
+
+cat .config/code-server/config.yaml
+
+bind-addr: 127.0.0.1:8080
+auth: password
+password: <ПАРОЛЬ ПО УМОЛЧАНИЮ>
+cert: false 
+
+* Для доступа к Visual Studio Code Server из интернета замените значения параметра bind-addr c 127.0.0.1:8080 на 0.0.0.0:9090
+* Дополнительно установите криптостойкий пароль в качестве значения параметра password.
+* После этого файл ~/.config/code-server/config.yaml должен выглядеть следующим образом:
+
+cat .config/code-server/config.yaml
+
+bind-addr: 0.0.0.0:9090
+auth: password
+password: <КРИПТОСТОЙКИЙ ПАРОЛЬ>
+cert: false  
+
+* Для применения настроек перезапустите code-server командой:
+
+sudo systemctl restart code-server@$USER 
+
+* После завершения конфигурации вы можете подключиться к Visual Studio Code Server по адресу: 
+
+http://<YOUR_VIRTUAL_MACHINE_IP>:9090
+
+* Обратите внимание, что в рамках тестового стенда курса используется незащищённое соединение http. 
+Это небезопасно. Для production-сред рекомендуется настраивать защищённое соединение https, 
+например с помощью nginx и Let’s Encrypt.

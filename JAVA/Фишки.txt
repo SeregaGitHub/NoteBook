@@ -26,6 +26,16 @@ System.out.println(object.getClass() == Integer.class);    // true
 - if (vegetable instanceof Potato) {...};
 ------------------------------------------------------------------------
 
+// Добавление 5 процентов к 100 (отбрасывая дробную часть)
+  int money = 100;
+  int p = 5;
+
+  double pr = p / 100.0 + 1.0;
+  double newSum = pr * money;
+  System.out.println((int) newSum);
+
+------------------------------------------------------------------------
+
 -     char x = '.';      - узнать номер
       int u = (int) x;     символа в таблице
 

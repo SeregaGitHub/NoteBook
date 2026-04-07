@@ -1,0 +1,108 @@
+services:
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: th-frontend:1.1.0
+    restart: on-failure
+    container_name: th-frontend
+    ports:
+      - "12345:80"
+    depends_on:
+      - gateway
+    networks:
+      - network
+
+  th-nginx:
+    build: ./frontend
+    image: nginx:stable-alpine
+    restart: on-failure
+    container_name: th-nginx
+    command: ["nginx", "-g", "daemon off;"]
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    image: th-gateway:1.1.0
+    restart: on-failure
+    container_name: th-gateway
+    ports:
+      - "12344:12344"
+    depends_on:
+      - main-server
+      - breakage-server
+    environment:
+      HOST_SERVER_IP: 158.160.225.74
+      TZ: Europe/Moscow
+    networks:
+      - network
+
+  breakage-server:
+    build:
+      context: ./breakage-server
+      dockerfile: Dockerfile
+    image: th-breakage-server:1.1.0
+    restart: on-failure
+    container_name: th-breakage-server
+    depends_on:
+      - main-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-postgres:5432/technical_helper
+      TZ: Europe/Moscow
+    networks:
+      - network
+
+  main-server:
+    build:
+      context: ./main-server
+      dockerfile: Dockerfile
+    image: th-main-server:1.1.0
+    restart: on-failure
+    container_name: th-main-server
+    depends_on:
+      - db-postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-postgres:5432/technical_helper
+      TZ: Europe/Moscow
+    networks:
+      - network
+
+  db-postgres:
+    image: postgres:17-alpine
+    restart: on-failure
+    container_name: postgresql
+    volumes:
+      - data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: technical_helper
+      POSTGRES_USER: sa
+      POSTGRES_PASSWORD: sapassword
+    networks:
+      - network
+
+  pgadmin4:
+    image: dpage/pgadmin4
+    container_name: pgadmin4
+    restart: on-failure
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin@mail.com
+      PGADMIN_DEFAULT_PASSWORD: pgpassword
+      PGADMIN_LISTEN_PORT: 12221
+    ports:
+      - "12221:12221"
+    depends_on:
+      - db-postgres
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    networks:
+      - network
+
+volumes:
+  data:
+  pgadmin:
+
+networks:
+  network:
+    driver: bridge

@@ -1,3 +1,8 @@
+Yandex - бесплатные курсы
+https://yandex.cloud/ru/training
+https://yandex.cloud/ru/training/for-devops#introduction
+======================================================================
+
 Индексирование полнотекстовых данных в PostgreSQL
 https://habr.com/ru/companies/otus/articles/770674/
 ======================================================================

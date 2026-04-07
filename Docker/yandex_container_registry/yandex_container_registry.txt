@@ -1,0 +1,225 @@
+                                Практика: загрузите образ в Yandex Container Registry
+
+                                    Создание реестра в Yandex Container Registry
+
+Первым шагом создайте реестр в Yandex Container Registry. Для этого:
+
+- Откройте дашборд каталога, найдите сервис Container Registry и откройте его:
+- На открывшейся странице сервиса нажмите Создать реестр:
+- Введите имя реестра containerization-ycr и нажмите Создать реестр:
+- В результате будет создан реестр Yandex Container Registry:
+
+Для работы с Yandex Container Registry с виртуальной машины yc-toolbox используйте сервисный аккаунт с соответствующими ролями. 
+Достаточно назначить сервисному аккаунту роль container-registry.images.pusher. 
+Это позволит загружать Docker-образы в реестр и просматривать информацию о ресурсах сервиса.
+
+Далее авторизуйтесь через сервисный аккаунт и создайте ключи аутентификации для него. 
+Это поможет понять, как пользоваться командой docker login для аутентификации в Yandex Container Registry с любой машины, 
+вне зависимости от того, находится она в Yandex Cloud или нет.
+
+                                        Создание сервисного аккаунта
+
+Если вы ещё не создали сервисный аккаунт и ключи авторизации, следуйте шагам ниже.
+
+- Откройте дашборд каталога, выберите вкладку Сервисные аккаунты и нажмите Создать сервисный аккаунт.
+- В открывшемся всплывающем окне:
+Введите Имя: toolbox-sa.
+Назначьте роль: container-registry.images.pusher.
+Нажмите Сохранить.
+
+                                        Создание ключей авторизации
+
+----------------------------------------------------------------------------------------------------------------------------
+                    Если CLI еще не установлен, скачайте и установите его. 
+https://yandex.cloud/ru/docs/cli/quickstart
+                    
+Затем выполните инициализацию:
+
+yc init
+
+----------------------------------------------------------------------------------------------------------------------------
+
+Теперь для сервисного аккаунта нужны ключи авторизации, чтобы использовать на виртуальной машине yc-toolbox . 
+Удобнее всего воспользоваться утилитой yc, чтобы сохранить ключи сразу на виртуальной машине. 
+Для этого на виртуальной машине yc-toolbox создайте ключи авторизации и сохраните их в файл ~/toolbox-sa-key.json:
+
+yc iam key create --service-account-name toolbox-sa -o ~/toolbox-sa-key.json 
+
+Результат (у вас все значения кроме key_algorithm: RSA_2048 будут отличаться):
+
+id: ajehl02bstts9rjttpqa
+service_account_id: ajep3roa3pua19kt3tf3
+created_at: "2024-05-12T12:21:24.641698166Z"
+key_algorithm: RSA_2048 
+
+Ключи авторизации созданы и сохранены — переходите к аутентификации в Yandex Container Registry.
+
+                                        Аутентификация в Registry
+
+Выполните команду, чтобы аутентифицироваться в Yandex Container Registry на виртуальной машине yc-toolbox :
+
+cat ~/toolbox-sa-key.json | docker login \
+  --username json_key \
+  --password-stdin \
+  cr.yandex 
+Пример вывода:
+
+WARNING! Your password will be stored unencrypted in /home/kazhem/.docker/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+
+Login Succeeded 
+
+Разберите подробнее:
+Командой cat ~/toolbox-sa-key.json | docker login вы передали содержимое файла с ключами авторизации на стандартный ввод (stdin) команде docker login.
+В качестве имени пользователя (--username) вы указали ключи авторизации — тип ключа json_key.
+В качестве пароля аргументом --password-stdin указали считать пароль со стандартного ввода (stdin), переданного команде docker login.
+указали FQDN Yandex Container Registry cr.yandex.
+В результате в файл ~/.docker/config.json  добавятся закодированные в base64 ключи авторизации из файла ~/toolbox-sa-key.json для Registry cr.yandex .
+
+                                Аутентификация с помощью Docker Credential helper
+
+В ~/.docker/config.json сохраняются ключи авторизации сервисного аккаунта, закодированные в base64. 
+Текст в base64 легко раскодировать, для этого достаточно воспользоваться командой:
+
+cat ~/.docker/config.json | jq -r '.auths."cr.yandex".auth' | base64 -d 
+
+  Поэтому после выполнения docker login вы увидели предупреждение и рекомендацию 
+использовать более безопасный способ с задействованием Docker Credential helper.
+
+Вы можете самостоятельно настроить для Docker этот способ аутентификации, обратившись к документации.
+
+Реестр в Yandex Container Registry создан, аутентификация выполнена, но сам реестр пуст. 
+Пора загрузить в него ранее собранный образ с тестовым приложением.
+
+                                                    Тегирование образа
+
+Необходимо загрузить ранее собранный образ приложения simple_python_app:v6 в созданный реестр. 
+Перед этим образ нужно назвать — присвоить тег. Для этого воспользуйтесь командой docker tag .
+
+* Понадобится идентификатор созданного реестра, чтобы присвоить тег образу. Для его получения выполните:
+
+yc container registry get --name containerization-ycr 
+
+Результат (ваши значения будут отличаться):
+
+id: crpsj8nj7din5nmbmb3v
+folder_id: b1g43hrudsr6k1618lrh
+name: containerization-ycr
+status: ACTIVE
+created_at: "2024-05-06T19:24:06.698Z" 
+
+Интересует значение поля id — это и есть идентификатор реестра. Запомните или запишите его.
+
+* Сформируйте имя образа для загрузки в реестр. Оно должно иметь следующий формат:
+
+cr.yandex/<идентификатор реестра>/<имя docker-образа>:<тег> 
+
+Команда для задания нового имени образа будет выглядеть так:
+
+docker tag simple_python_app:v6 cr.yandex/crpsj8nj7din5nmbmb3v/simple_python_app:v6 
+
+💡 Замените crpsj8nj7din5nmbmb3v на свой идентификатор реестра.
+Где:
+simple_python_app:v6 — имя локального образа, который вы будете загружать в реестр;
+cr.yandex/crpsj8nj7din5nmbmb3v/simple_python_app:v6 — новое имя образа для загрузки в реестр.
+
+* Выполните получившуюся команду. В результате у вас на хосте yc-toolbox появится образ с указанным вами именем:
+
+docker image ls | grep simple_python_app | grep v6 
+
+Результат (у вас идентификаторы реестра и образов будут отличаться):
+
+cr.yandex/crpsj8nj7din5nmbmb3v/simple_python_app   v6             5fde20c509be   10 days ago     171MB
+simple_python_app                                  v6             5fde20c509be   10 days ago     171MB 
+Следующим шагом загрузите переименованный образ в реестр.
+
+                                            Загрузка образа в реестр
+
+* Воспользуйтесь командой docker push , чтобы загрузить образ в реестр:
+
+docker push cr.yandex/crpsj8nj7din5nmbmb3v/simple_python_app:v6 
+
+После успешной загрузки всех слоёв результат будет выглядеть так:
+
+The push refers to repository [cr.yandex/crpsj8nj7din5nmbmb3v/simple_python_app]
+5f70bf18a086: Pushed 
+b21b48807564: Pushed 
+340408d6144a: Pushed 
+d90668b30dec: Pushed 
+b11b4ea4ab48: Pushed 
+45e297fb6b87: Pushed 
+6fdc32920d25: Pushed 
+41aaeb647441: Pushed 
+95ac61d1a52e: Pushed 
+da5d55102092: Pushed 
+fb1bd2fc5282: Pushed 
+v6: digest: sha256:01f76e38638ec388228dbeb8b5d68c993f252f515ccadfa922a3bd7e90095697 size: 2623 
+
+  Вы увидите список коротких идентификаторов всех загруженных слоёв, а в конце будет следующая строка: 
+v6: digest: sha256:01f76e38638ec388228dbeb8b5d68c993f252f515ccadfa922a3bd7e90095697 size: 2623 . 
+
+  В ней отображены:
+v6 — тег образа;
+digest: sha256:<цифровая подпись> — цифровая подпись образа;
+size: 2623 — размер манифеста в байтах.
+
+* Теперь вы можете посмотреть список образов в реестре командой:
+
+yc container image list 
+
+Результат:
+
++----------------------+---------------------+----------------------------------------+------+-----------------+
+|          ID          |       CREATED       |                  NAME                  | TAGS | COMPRESSED SIZE |
++----------------------+---------------------+----------------------------------------+------+-----------------+
+| crprfi798qj7h6aa652f | 2024-05-12 13:30:50 | crpsj8nj7din5nmbmb3v/simple_python_app | v6   | 58.7 MB         |
++----------------------+---------------------+----------------------------------------+------+-----------------+ 
+
+В последней колонке COMPRESSED SIZE можете увидеть, какой объём занимает ваш образ в реестре Yandex Container Registry.
+
+                                                Скачивание образа из реестра
+
+Скачайте загруженный образ на локальную машину. Ранее вы уже установили Docker Desktop. Запустите его, если он не запущен.
+
+Если на локальном компьютере вы используете Linux в качестве операционной системы, 
+то вы уже установили Docker Engine во второй теме курса. Тогда вы можете обойтись без Docker Desktop.
+
+Следующим шагом будет аутентифицировать Docker на вашем локальном хосте в Yandex Container Registry. 
+На нём вы будете только скачивать образ из Registry. 
+Поэтому создайте сервисный аккаунт с возможностью только скачивать образы, но не загружать их.
+
+- Создайте сервисный аккаунт с именем mylocal-sa и назначьте ему роль container-registry.images.puller.
+- Сгенерируйте ключи авторизации и сохраните их в файл ~/mylocal-sa-key.json.
+- Скопируйте содержимое файла и сохраните у себя на локальной машине.
+- Выполните команду (в случае Linux или macOS, а также в Windows при использовании WSL2):
+
+cat <путь на локальной машине к файлу с ключами>.json | docker login \
+  --username json_key \
+  --password-stdin \
+  cr.yandex 
+
+- После успешной аутентификации в YCR загрузите образ из реестра на локальную машину:
+
+docker pull cr.yandex/crpsj8nj7din5nmbmb3v/simple_python_app:v6 
+
+Результат:
+
+v6: Pulling from crpsj8nj7din5nmbmb3v/simple_python_app
+c57ee5000d61: Already exists
+be0f2e005f57: Already exists
+ca08baf71086: Already exists
+7c22843bbe69: Already exists
+022edbc22fa9: Already exists
+06261baa4b04: Pull complete
+65c5af8c0afa: Pull complete
+d69f49226ba7: Pull complete
+fec50f2c69e2: Pull complete
+6660fa6b8c35: Pull complete
+4f4fb700ef54: Pull complete
+Digest: sha256:01f76e38638ec388228dbeb8b5d68c993f252f515ccadfa922a3bd7e90095697
+Status: Downloaded newer image for cr.yandex/crpsj8nj7din5nmbmb3v/simple_python_app:v6
+cr.yandex/crpsj8nj7din5nmbmb3v/simple_python_app:v6 
+
+Образ загружен. Вы можете самостоятельно запустить докеризированное приложение, используя команду docker run.
+

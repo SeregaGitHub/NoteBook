@@ -1,0 +1,21 @@
+
+
+    Манифест Docker Compose позволяет подставлять в параметры значения переменных окружения. 
+Для того чтобы увидеть итоговый (отрендеренный) манифест, существует команда:
+- docker compose config.
+
+    Обратите внимание, что в описании сервиса simple_python_app в параметре image указано следующее значение -
+simple_python_app:${APP_VERSION:-latest}.
+
+services:
+    simple_python_app:
+    image: simple_python_app:${APP_VERSION:-latest}
+
+
+Это означает, что в качестве тега будет использовано значение переменной окружения APP_VERSION или latest, если переменная не задана.
+
+Нужно создать в директории вашего проекта файл .env со следующим содержимым:
+
+APP_VERSION=v6-compose
+
+Тогда в image: simple_python_app:${APP_VERSION:-latest} - будет подставлено:  v6-compose

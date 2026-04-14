@@ -1,0 +1,14 @@
+                                    Создайте виртуальную машину с помощью команды CLI
+
+    Выполните команду из папки с файлом nginx-install.yaml:
+
+yc compute instance create \
+  --name nginx \
+  --zone ru-central1-a \
+  --public-ip \
+  --preemptible \
+  --memory 2 \
+  --cores 2 \
+  --create-boot-disk image-id=fd84uoseqemi8gihbs05,size=10 \
+  --metadata enable-oslogin=true \
+--metadata-from-file user-data=nginx-install.yaml

@@ -13,3 +13,49 @@ spec:
          name: webapp-config-map
     image: rotorocloud/simple-webapp-rockets
     name: webapp-rockets
+
+==================================================================================================
+
+                                  Использование ConfigMap для переменных окружения
+
+    Для передачи всех переменных окружения из ConfigMap:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wordpress-pod
+spec:
+  containers:
+  - name: wordpress
+    image: wordpress
+    envFrom:
+    - configMapRef:
+        name: wordpress-config 
+
+В этом примере все ключи из ConfigMap wordpress-config будут переданы как переменные окружения в контейнер wordpress.
+
+
+  Для передачи определённых переменных окружения из ConfigMap:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wordpress-pod
+spec:
+  containers:
+  - name: wordpress
+    image: wordpress
+    env:
+    - name: WORDPRESS_DB_HOST
+      valueFrom:
+        configMapKeyRef:
+          name: wordpress-config
+          key: WORDPRESS_DB_HOST
+    - name: WORDPRESS_DB_NAME
+      valueFrom:
+        configMapKeyRef:
+          name: wordpress-config
+          key: WORDPRESS_DB_NAME 
+
+  В этом примере конкретные ключи из ConfigMap wordpress-config используются как переменные окружения в контейнере wordpress. 
+Этот способ полезен, если в ConfigMap содержатся не только переменные окружения для передачи в контейнер, но и другие данные.

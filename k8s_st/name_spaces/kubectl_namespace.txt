@@ -44,6 +44,7 @@ mysql.connect("db-service.dev.svc.cluster.local")
 - kubectl create namespace namespace_name                  - создать пространтсво имён
 
 - kubectl config set-context $(kubectl config current-context) --namespace=dev  - переключиться в пространство имён - dev
+- kubectl config set-context --current --namespace=dev     - задать Namespace "dev" по умолчанию
 
 ---------------------------------------------------------------------------------------------------------
 

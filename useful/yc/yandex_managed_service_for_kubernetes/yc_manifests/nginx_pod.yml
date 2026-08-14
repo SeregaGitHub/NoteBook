@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+    name: nginx-pod
+spec:
+    containers:
+      - name: nginx
+        image: nginx
+        env:
+        - name: NGINX_ENTRYPOINT_QUIET_LOGS
+          value: "1" 

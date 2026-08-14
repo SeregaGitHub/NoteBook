@@ -1,0 +1,44 @@
+
+
+class IntegrationTest {
+
+    @PersistenceContext
+    private EntityManager entityManager;              // For cleaning cash, to see updated field !!!
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;  // TRUNCATE TABLE after all tests
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)   // @BeforeAll, @AfterAll - not static !!!
+    class SomeNestedClass {
+
+        @BeforeAll
+        void insertData() {
+
+        }
+
+        @AfterAll
+        void cleanupData() {
+
+            transactionTemplate.execute(status -> {
+                    entityManager.createNativeQuery("TRUNCATE TABLE table_name CASCADE")
+                            .executeUpdate();
+                    return null;
+                });
+        }
+
+        @Test
+        @SneakyThrows
+        void whenUpdateEntityThenReturnOk() {
+
+            Entity entity = repository.findById(currentEntity.getId()).get();
+
+            entity.set(some_field_value);
+
+            repository.save(entity);
+
+            entityManager.clear();           // Clean cash, to see updated field !!!
+            Entity updatedEntity = repository.findById(currentEntity.getId()).get();
+        }
+    }
+}

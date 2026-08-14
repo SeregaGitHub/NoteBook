@@ -91,3 +91,10 @@ d, drop   =  не копировать коммит
 
             96482e7   4
             e9fd6bd   3
+
+
+                                SIMPLE DELETE LAST COMMIT
+
+- git reset --hard HEAD~1        - удаление последнего коммита на текущей ветке
+- git push --force               - если коммит уже отправлен в удалённый репозиторий (push)
+- git push --force-with-lease    - или безопаснее для совместной работы

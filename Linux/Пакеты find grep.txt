@@ -55,6 +55,7 @@ bunzip2 -c файл.bz2 > файл
 
                                     FIND
 
+sudo find / -name "file_name"          - поиск файлов
 find . -type f -name "test*"           - поиск файлов (-type f  -  файл)
                -iname                  - поиск файлов без учёта регистра
                      "test?.txt"       - поиск файлов txt, начинающихся с test + 1 символ

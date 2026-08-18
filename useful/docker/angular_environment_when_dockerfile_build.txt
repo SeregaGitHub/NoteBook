@@ -32,3 +32,58 @@ EXPOSE 80
 
 -----------------------------------------------------------------------------------
 !!!  Project_name: env_test  !!!
+
+===========================================================================================
+
+Измените Dockerfile — объявите переменную ARG и используйте её в команде сборки:
+
+dockerfile
+FROM node:22.14.0-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+RUN npx ngcc --properties es2023 browser module main --first-only --create-ivy-entry-points
+COPY . .
+
+# Объявляем аргумент сборки
+ARG GATEWAY_URL
+
+# Используем его в define
+RUN npm run build -- --define GATEWAY_URL=\"${GATEWAY_URL}\"
+
+FROM nginx:stable-alpine
+COPY --from=build /app/dist/frontend/browser/ /usr/share/nginx/html
+EXPOSE 80
+В docker-compose.yml укажите значение аргумента в секции build:
+
+yaml
+services:
+  frontend:
+    build:
+      context: .
+      args:
+        GATEWAY_URL: "http://158.160.161.99:12344"
+    ports:
+      - "80:80"
+Теперь при сборке через docker compose build значение IP-адреса будет подставлено в команду npm run build.
+
+Дополнительные замечания
+Экранирование кавычек: в Dockerfile \" необходимо, чтобы кавычки попали в саму команду define (Angular ожидает строку с кавычками).
+
+Гибкость: можно передавать значение через переменную окружения хоста, используя .env файл:
+
+yaml
+# docker-compose.yml
+args:
+  GATEWAY_URL: ${GATEWAY_URL}
+  
+и в .env:
+
+text
+GATEWAY_URL=http://158.160.161.99:12344
+
+    Важно: значение задаётся во время сборки образа. 
+Если IP-адрес может меняться без пересборки, рассмотрите альтернативные подходы 
+(например, подгрузку конфигурации через envsubst при старте контейнера или 
+использование runtime переменных с отдельным конфигурационным файлом). 
+Но для статического IP на этапе сборки описанный способ полностью рабочий.

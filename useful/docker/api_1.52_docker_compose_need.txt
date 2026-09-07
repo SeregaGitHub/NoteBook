@@ -1,0 +1,42 @@
+Понял: у вас установлен Docker Engine версии 24.0.5, который поддерживает API до 1.43, а клиент (docker compose v2) требует API 1.52. 
+Чтобы демон поддерживал API 1.52, нужно обновить Docker Engine до более новой версии (например, 27.x или 28.x). 
+Ваш текущий репозиторий, судя по всему, не содержит более новых версий, либо вы используете пакеты из репозитория Ubuntu, 
+где Docker заморожен на 24.0.5.
+
+Решение: обновить Docker Engine через официальный репозиторий Docker
+Добавим официальный репозиторий Docker для Ubuntu 22.04 и установим последнюю версию Docker CE.
+
+Шаг 1. Удалите старые пакеты Docker (если были установлены из других источников)
+Это безопасно, но контейнеры и образы не удалятся (они в /var/lib/docker). Выполните:
+
+bash
+sudo apt-get remove docker docker-engine docker.io containerd runc
+Шаг 2. Настройте официальный репозиторий Docker
+bash
+# Установите необходимые пакеты
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg
+
+# Добавьте ключ Docker
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Добавьте репозиторий
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Обновите индексы пакетов
+sudo apt-get update
+Шаг 3. Установите Docker Engine, CLI, containerd и плагины
+bash
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+Шаг 4. Проверьте версию и API
+bash
+sudo systemctl restart docker
+docker version
+Теперь в выводе docker version в секции Server: API version должно быть значение 1.52 или выше (зависит от установленной версии Docker, например, Docker 28.0 имеет API 1.47, но Docker 29.0 уже 1.52; в любом случае клиент будет совместим, так как последние версии Docker поддерживают API 1.52+).
+
+После этого docker compose up должен работать без ошибок.

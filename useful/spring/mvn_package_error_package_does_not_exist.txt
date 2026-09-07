@@ -1,0 +1,62 @@
+    
+    
+  При выполнении команды mvn package (или mvn install) - error, such package does not exist, 
+хотя он существует в другом модуле, который прописан в зависимостях этого. 
+
+(в модуле breakage-server есть зависимость - другой модуль - main-server)
+
+=====================================================================================================================================
+
+  Ошибка компиляции тестов в модуле breakage-server возникает из-за того, 
+что main-server собран как исполняемый Spring Boot fat jar (bootJar). 
+Такой jar содержит классы внутри каталога BOOT-INF/classes, 
+и при использовании его как зависимости Maven компилятор не находит классы в корне jar.
+
+🔧 Решение
+Добавьте классификатор для исполняемого jar в конфигурацию spring-boot-maven-plugin в main-server/pom.xml. 
+Это заставит плагин создавать отдельный fat jar с классификатором, 
+а обычный тонкий jar останется основным артефактом, который будет корректно использоваться как зависимость.
+
+                                            Шаги
+
+* Откройте main-server/pom.xml.
+
+* Найдите блок <plugin> для spring-boot-maven-plugin.
+
+* Добавьте параметр <classifier>boot</classifier> внутрь <configuration>.
+  (или любое другое имя, вместо boot - можно указать что угодно, например main-server) 
+
+Пример:
+
+xml
+<plugin>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-maven-plugin</artifactId>
+    <configuration>
+        <classifier>boot</classifier>
+        <excludes>
+            <exclude>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+            </exclude>
+        </excludes>
+    </configuration>
+</plugin>
+
+* Сохраните файл.
+
+* В Dockerfile main-server вместо 
+
+COPY target/*.jar app.jar 
+
+прописать
+
+ARG JAR_FILE=target/*-main-server.jar
+COPY ${JAR_FILE} app.jar
+
+чтобы в контейнер попали файлы из нужного jar-файла
+
+* Пересоберите проект:
+
+bash
+mvn clean install

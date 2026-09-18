@@ -36,6 +36,57 @@ System.out.println(object.getClass() == Integer.class);    // true
 
 ------------------------------------------------------------------------
 
+        Если 50.5 => sout(50.5)    Если 50.0 => sout(50)
+
+double doubleResult = 50.0;
+
+BigDecimal.valueOf(doubleResult)
+          .stripTrailingZeros()
+          .toPlainString()
+
+------------------------------------------------------------------------
+
+                          Скопировать часть массива в другой
+
+int[] a1 = {1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0};
+int[] a2 = {-10, -20, 10, 20, 30};
+
+int n = 3; // сколько последних элементов взять
+
+System.arraycopy(
+    a2,                          // откуда
+    a2.length - n,               // с какой позиции в a2 (последние 3)
+    a1,                          // куда
+    a1.length - n,               // с какой позиции в a1 (в конец)
+    n                            // сколько
+);
+
+------------------------------------------------------------------------
+
+    Разбиение массива на 2 партиции (для быстрой сортировки)
+
+private static int partition(int[] data, int leftIndex, int rightIndex) {
+        // int pivot = data[(leftIndex + rightIndex) / 2];
+        int middle = data[(leftIndex + rightIndex) / 2];
+        int pivot = Math.max(Math.min(data[leftIndex], middle), Math.min(Math.max(data[leftIndex], middle), data[rightIndex]));
+        while (leftIndex <= rightIndex) {
+            while (data[leftIndex] < pivot) {
+                leftIndex++;
+            }
+            while (data[rightIndex] > pivot) {
+                rightIndex--;
+            }
+            if (leftIndex <= rightIndex) {
+                swap(data, leftIndex, rightIndex);
+                leftIndex++;
+                rightIndex--;
+            }
+        }
+        return leftIndex;
+    }
+
+------------------------------------------------------------------------
+
 -     char x = '.';      - узнать номер
       int u = (int) x;     символа в таблице
 

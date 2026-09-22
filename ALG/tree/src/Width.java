@@ -1,7 +1,7 @@
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class Breadth {
+public class Width {
 
     public static int breadthSumItr(Tree root) {
         Queue<Tree> queue = new LinkedList<>();

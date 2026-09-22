@@ -1,4 +1,6 @@
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 
 public class Main {
     public static void main(String[] args) {
@@ -28,7 +30,7 @@ public class Main {
 
         System.out.println(Depth.depthSumRec(tree20, 0));
         System.out.println(Depth.depthSumItr(tree20));
-        System.out.println(Breadth.breadthSumItr(tree20));
+        System.out.println(Width.breadthSumItr(tree20));
         PrintSortTree.printSortTree(tree20);
         System.out.println();
         PrintSortTree.listSortTree(tree20, new ArrayList<>()).forEach(

@@ -87,6 +87,17 @@ private static int partition(int[] data, int leftIndex, int rightIndex) {
 
 ------------------------------------------------------------------------
 
+                    numbersString.charAt(i) - '0'
+
+String numbersString = "12345";
+int sum = 0;
+for (int i = 0; i < numbersString.length(); i++) {
+    sum += numbersString.charAt(i) - '0';
+}
+System.out.println(sum);  // 15
+
+------------------------------------------------------------------------
+
 -     char x = '.';      - узнать номер
       int u = (int) x;     символа в таблице
 

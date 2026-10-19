@@ -150,6 +150,19 @@ System.out.println(sum);  // 15
     System.out.println("Weekday")
   }
 
+  // Инструкция "when" - позволяет выполнять проверки -> case String s when s.startsWith("push")
+  String command = reader.readLine();
+
+  switch (command) {
+      case "size" -> myQueueSized.size();
+      case "peek" -> myQueueSized.peek();
+      case "pop" -> myQueueSized.pop();
+      case String s when s.startsWith("push") ->
+              myQueueSized.push(Integer.parseInt(command.substring(5)));
+      default -> throw new IllegalStateException("Unexpected value: " + command);
+  }
+
+
 * цикл for each:
   int[] mas = {1, 6, 4, 3, 9, 4, 5, 2, 1};
   (Любая коллекция)

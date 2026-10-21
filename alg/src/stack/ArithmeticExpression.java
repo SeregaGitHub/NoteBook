@@ -3,8 +3,6 @@ package stack;
 // -6 + 2 * ((21 - 1) * 2 - 20) / 4   // 4
 //List<String> postfix = List.of("-6", "2", "21", "1", "-", "2", "*", "20", "-", "*", "4", "/", "+");
 
-
-
 import java.io.*;
 import java.util.*;
 
@@ -166,8 +164,12 @@ public class ArithmeticExpression {
                         stack.push(currentInt);
                     }
                     case "/" -> {
-                        currentInt = firstInt / secondInt;
-                        stack.push(currentInt);
+                        if (secondInt != 0) {
+                            currentInt = firstInt / secondInt;
+                            stack.push(currentInt);
+                        } else {
+                            return false;
+                        }
                     }
                     default -> {
                         return false;

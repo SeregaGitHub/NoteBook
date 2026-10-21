@@ -45,6 +45,7 @@ public class PostfixNotation {
                         stack.push(currentInt);
                     }
                     default -> {
+                        // It is guaranteed that there is no division by zero (10 / 0)
                         currentInt = firstInt / secondInt;
                         stack.push(currentInt);
                     }
@@ -71,6 +72,7 @@ public class PostfixNotation {
                         stack.push(currentInt);
                     }
                     default -> {
+                        // It is guaranteed that there is no division by zero (10 / 0)
                         currentInt = firstInt / secondInt;
                         stack.push(currentInt);
                     }

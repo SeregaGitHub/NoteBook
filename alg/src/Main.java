@@ -1,9 +1,5 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.util.Arrays;
+import java.io.*;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -11,28 +7,29 @@ public class Main {
         // InsertionSort, bor, prefixFunction, Разбиение дерева, KnutMorrisPrut, Levinshtein
         // GraphMultiMST, FourSum, QuickSort -> InsertionSort, ArithmeticExpression
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        /*BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
 
-        int[] data = readNumbers(reader);
-
-        int middleNumber = findMiddleNumber(data);
-        writer.write(String.valueOf(middleNumber));
 
         reader.close();
-        writer.close();
+        writer.close();*/
+
+        int x = 2 + 2 * -2;  // -2
+        // 2 2 0 2 - * +
+
+        //
+        // *
+        // +
+        System.out.println(x);
+
+        int y = 2 * -(4 + 8);  // -24
+        // 2 0 4 8 + - *
+
+        //
+        //
+        // *
+        System.out.println(y);
     }
 
-    private static int findMiddleNumber(int[] numbers) {
-        return Math.max(
-                Math.min(numbers[0], numbers[1]),
-                Math.min(Math.max(numbers[0], numbers[1]), numbers[2])
-        );
-    }
 
-    private static int[] readNumbers(BufferedReader reader) throws IOException {
-        return Arrays.stream(reader.readLine().split(" "))
-                .mapToInt(Integer::parseInt)
-                .toArray();
-    }
 }

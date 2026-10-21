@@ -2,7 +2,7 @@ package tree;
 
 import java.util.ArrayList;
 
-public class Main {
+public class MainTree {
     public static void main(String[] args) {
 
         Node tree52 = new Node(52, null, null);

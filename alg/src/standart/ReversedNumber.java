@@ -9,9 +9,23 @@ public class ReversedNumber {
 
             String str = reader.readLine();
 
-            int result = reversNumberByMath(str);
+            int result = reversNumber(str);
             writer.write(String.valueOf(result));
         }
+    }
+
+    private static Integer reversNumber(String str) {
+
+        if (str == null || str.isBlank()) return null;
+
+        int number = Integer.parseInt(str);
+        int reversed = 0;
+
+        while (number != 0) {
+            reversed = (reversed * 10) + (number % 10);
+            number = number / 10;
+        }
+        return reversed;
     }
 
     private static Integer reversNumberByMath(String str) {

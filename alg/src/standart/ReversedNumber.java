@@ -19,13 +19,13 @@ public class ReversedNumber {
         if (str == null || str.isBlank()) return null;
 
         int number = Integer.parseInt(str);
-        int reversed = 0;
+        int result = 0;
 
         while (number != 0) {
-            reversed = (reversed * 10) + (number % 10);
+            result = (result * 10) + (number % 10);
             number = number / 10;
         }
-        return reversed;
+        return result;
     }
 
     private static Integer reversNumberByMath(String str) {

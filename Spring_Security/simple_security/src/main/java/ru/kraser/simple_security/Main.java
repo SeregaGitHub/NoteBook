@@ -30,14 +30,25 @@ public class Main implements CommandLineRunner {
         List<String> users = List.of("admin", "technician", "employee");
 
         for (String username : users) {
+            Role role = getRole(username);
             User user = User.builder()
                     .id(username)
                     .username(username)
                     .enabled(true)
                     .password(passwordEncoder.encode("1234"))
-                    .role(Role.ADMIN)
+                    .role(role)
                     .build();
             userService.createDefaultUsers(user);
         }
+    }
+
+    private static Role getRole(String username) {
+        Role role;
+        switch (username) {
+            case "admin" -> role = Role.ADMIN;
+            case "technician" -> role = Role.TECHNICIAN;
+            default -> role = Role.EMPLOYEE;
+        }
+        return role;
     }
 }

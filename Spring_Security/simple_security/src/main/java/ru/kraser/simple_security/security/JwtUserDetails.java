@@ -24,7 +24,6 @@ public class JwtUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> list = new ArrayList<>();
         list.add(new SimpleGrantedAuthority(user.getRole().name())); // if User have field Role
-        //list.add(new SimpleGrantedAuthority(user.getRole().name())); // if User have field List<Role>
         return list;
     }
 

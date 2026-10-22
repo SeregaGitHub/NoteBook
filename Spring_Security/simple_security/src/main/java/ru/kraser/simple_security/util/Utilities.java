@@ -7,6 +7,7 @@ public class Utilities {
 
     public static final String BASE_URL = "/api/v1";
     public static final String AUTH_URL = "/auth";
+    public static final String OPEN_URL = "/open";
     public static final String DEFAULT_URL = "/default";
 
     public static final String ADMIN_URL = "/admin";

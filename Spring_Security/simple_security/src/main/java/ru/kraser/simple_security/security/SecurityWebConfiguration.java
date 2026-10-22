@@ -41,7 +41,7 @@ public class SecurityWebConfiguration {
                 .authorizeHttpRequests((request) -> request
                         .requestMatchers(BASE_URL + AUTH_URL)
                         .permitAll()
-                        .requestMatchers(BASE_URL + DEFAULT_URL)
+                        .requestMatchers(BASE_URL + OPEN_URL)
                         .permitAll()
                         .requestMatchers(BASE_URL + ADMIN_URL + "/**").hasAnyAuthority(
                                 Role.ADMIN.name())
@@ -49,16 +49,6 @@ public class SecurityWebConfiguration {
                                 Role.ADMIN.name(), Role.TECHNICIAN.name())
                         .requestMatchers(BASE_URL + EMPLOYEE_URL + "/**").hasAnyAuthority(
                                 Role.ADMIN.name(), Role.TECHNICIAN.name(), Role.EMPLOYEE.name())
-
-//                        .requestMatchers(BASE_URL + BREAKAGE_URL + EMPLOYEE_URL + "/**").hasAnyAuthority(
-//                                Role.EMPLOYEE.name(), Role.TECHNICIAN.name(), Role.ADMIN.name())
-//
-//                        .requestMatchers(BASE_URL + BREAKAGE_URL + TECHNICIAN_URL + "/**").hasAnyAuthority(
-//                                Role.TECHNICIAN.name(), Role.ADMIN.name())
-//
-//                        .requestMatchers(BASE_URL + BREAKAGE_URL + ADMIN_URL + "/**").hasAnyAuthority(
-//                                Role.ADMIN.name())
-
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider).addFilterAfter(

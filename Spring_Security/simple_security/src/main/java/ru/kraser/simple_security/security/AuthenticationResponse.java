@@ -5,7 +5,7 @@ import ru.kraser.simple_security.model.Role;
 
 @Builder
 public record AuthenticationResponse(
-        String thJwt,
+        String jwt,
         String username,
         Role role
 ) {

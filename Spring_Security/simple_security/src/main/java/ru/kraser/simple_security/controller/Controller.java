@@ -73,4 +73,42 @@ public class Controller {
 
         return apiResponse;
     }
+
+    @GetMapping(path = DEFAULT_URL)
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse getDefault() {
+        LocalDateTime now = LocalDateTime.now();
+
+        log.info("Getting response from DEFAULT_URL...");
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .message("Response from Default url")
+                .status(200)
+                .httpStatus(HttpStatus.OK)
+                .timestamp(now)
+                .build();
+
+        log.info("Response from DEFAULT_URL received successfully.");
+
+        return apiResponse;
+    }
+
+    @GetMapping(path = OPEN_URL)
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse getOpen() {
+        LocalDateTime now = LocalDateTime.now();
+
+        log.info("Getting response from OPEN_URL...");
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .message("Response from Open url")
+                .status(200)
+                .httpStatus(HttpStatus.OK)
+                .timestamp(now)
+                .build();
+
+        log.info("Response from OPEN_URL received successfully.");
+
+        return apiResponse;
+    }
 }

@@ -4,3 +4,679 @@
 можно обойтись обычной сессией с таймаутом 24 часа 
 или встроенным механизмом Remember-Me — 
 это проще и безопаснее, чем один долгоживущий JWT.
+
+private static final String SECRET_KEY = "11SECRET2KEYSECRET2KEYSECRET2KEYSECRET2KEYSECRET2KEYSECRET2KEY11";
+
+
+
+
+Java. Maven. Spring boot. Spring Security. Проект: @UtilityClass
+public class Utilities {
+
+    public static final String BASE_URL = "/api/v1";
+    public static final String AUTH_URL = "/auth";
+    public static final String OPEN_URL = "/open";
+    public static final String DEFAULT_URL = "/default";
+
+    public static final String ADMIN_URL = "/admin";
+    public static final String TECHNICIAN_URL = "/technician";
+    public static final String EMPLOYEE_URL = "/employee";
+
+    public static final String AUTH_HEADER = "Authorization";
+}    import org.springframework.stereotype.Service;
+import ru.kraser.simple_security.model.User;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Service
+public class UserService {
+
+    private final static Map<String, User> map = new HashMap<>();
+
+    public void createDefaultUsers(User user) {
+        map.put(user.getUsername(), user);
+    }
+
+    public User getUserByName(String username) {
+        return map.get(username);
+    }
+}
+     import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import ru.kraser.simple_security.model.ApiResponse;
+
+import java.time.LocalDateTime;
+
+import static ru.kraser.simple_security.util.Utilities.*;
+
+@RestController
+@Slf4j
+@RequestMapping(path = BASE_URL)
+public class Controller {
+
+    @GetMapping(path = ADMIN_URL)
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse getAdmin() {
+        LocalDateTime now = LocalDateTime.now();
+
+        log.info("Getting response from ADMIN_URL...");
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .message("Response from Admin url")
+                .status(200)
+                .httpStatus(HttpStatus.OK)
+                .timestamp(now)
+                .build();
+
+        log.info("Response from ADMIN_URL received successfully.");
+
+        return apiResponse;
+    }
+
+    @GetMapping(path = TECHNICIAN_URL)
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse getTechnician() {
+        LocalDateTime now = LocalDateTime.now();
+
+        log.info("Getting response from TECHNICIAN_URL...");
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .message("Response from Technician url")
+                .status(200)
+                .httpStatus(HttpStatus.OK)
+                .timestamp(now)
+                .build();
+
+        log.info("Response from TECHNICIAN_URL received successfully.");
+
+        return apiResponse;
+    }
+
+    @GetMapping(path = EMPLOYEE_URL)
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse getEmployee() {
+        LocalDateTime now = LocalDateTime.now();
+
+        log.info("Getting response from EMPLOYEE_URL...");
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .message("Response from Employee url")
+                .status(200)
+                .httpStatus(HttpStatus.OK)
+                .timestamp(now)
+                .build();
+
+        log.info("Response from EMPLOYEE_URL received successfully.");
+
+        return apiResponse;
+    }
+
+    @GetMapping(path = DEFAULT_URL)
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse getDefault() {
+        LocalDateTime now = LocalDateTime.now();
+
+        log.info("Getting response from DEFAULT_URL...");
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .message("Response from Default url")
+                .status(200)
+                .httpStatus(HttpStatus.OK)
+                .timestamp(now)
+                .build();
+
+        log.info("Response from DEFAULT_URL received successfully.");
+
+        return apiResponse;
+    }
+
+    @GetMapping(path = OPEN_URL)
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse getOpen() {
+        LocalDateTime now = LocalDateTime.now();
+
+        log.info("Getting response from OPEN_URL...");
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .message("Response from Open url")
+                .status(200)
+                .httpStatus(HttpStatus.OK)
+                .timestamp(now)
+                .build();
+
+        log.info("Response from OPEN_URL received successfully.");
+
+        return apiResponse;
+    }
+}
+    import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Builder;
+import org.springframework.http.HttpStatus;
+
+import java.time.LocalDateTime;
+
+@Builder
+public record ApiResponse (
+        String message,
+        int status,
+        HttpStatus httpStatus,
+        @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+        LocalDateTime timestamp
+){
+
+}
+    public enum Role {
+    ADMIN,
+    TECHNICIAN,
+    EMPLOYEE
+}
+    import java.util.Objects;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+// @Entity
+// @Table(name = "users")
+public class User {
+
+//    @Id
+//    @GeneratedValue
+//    @UuidGenerator(style = UuidGenerator.Style.TIME)
+//    @Column(name = "id", length = 36, nullable = false)
+    private String id;
+//    @Column(name = "username", length = 64, nullable = false, unique = true)
+    private String username;
+//    @Column(name = "password", length = 128, nullable = false)
+    private String password;
+//    @JsonProperty(value = "isEnabled")
+//    @Column(name = "enabled", nullable = false)
+    private boolean enabled;
+//    @Enumerated(EnumType.STRING)
+//    @JdbcType(PostgreSQLEnumJdbcType.class)
+    private Role role;
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return enabled == user.enabled &&
+                Objects.equals(id, user.id) &&
+                Objects.equals(username, user.username) &&
+                Objects.equals(password, user.password) &&
+                role == user.role;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, username, password, enabled, role);
+    }
+}
+    import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import static ru.kraser.simple_security.util.Utilities.AUTH_URL;
+import static ru.kraser.simple_security.util.Utilities.BASE_URL;
+
+@RestController
+@RequestMapping(value = BASE_URL)
+@RequiredArgsConstructor
+@Slf4j
+public class AuthController {
+
+    private final AuthenticationService authenticationService;
+
+    @PostMapping(value = AUTH_URL)
+    public ResponseEntity<AuthenticationResponse> authenticate(
+            @Validated() @RequestBody AuthenticationRequest request) {
+        log.info("Authenticating User with name - {}", request.username());
+        ResponseEntity<AuthenticationResponse> response =
+                ResponseEntity.ok(authenticationService.authenticate(request));
+        log.info("User with name - {}, successfully authenticated", request.username());
+        return response;
+    }
+}    import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Builder;
+
+@Builder
+public record AuthenticationRequest(
+        @NotBlank(message = "Пользователь должен иметь логин.")
+        @Size(min = 4, max = 64, message = "Логин пользователя должен быть от 4 до 64 символов.")
+        String username,
+        @NotBlank(message = "У пользователя должен быть пароль от его логина.")
+        @Size(min = 4, max = 64, message = "Длина пароля должна быть от 4 до 64 символов.")
+        String password
+) {
+}
+    import lombok.Builder;
+import ru.kraser.simple_security.model.Role;
+
+@Builder
+public record AuthenticationResponse(
+        String jwt,
+        String username,
+        Role role
+) {
+}
+     import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.stereotype.Service;
+import ru.kraser.simple_security.model.User;
+import ru.kraser.simple_security.service.UserService;
+
+@Service
+@RequiredArgsConstructor
+public class AuthenticationService {
+
+    private final UserService userService;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+
+    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.username(),
+                            request.password()
+                    )
+            );
+        } catch (AuthenticationException e) {
+            //throw new AuthException("Неверное имя пользователя или пароль !!!");
+            throw new RuntimeException("Неверное имя пользователя или пароль !!!");
+        }
+
+        // User user = authenticationClient.authenticate(request);
+        User user = userService.getUserByName(request.username());
+
+        var jwtToken = jwtService.generateToken(new JwtUserDetails(user));
+
+        return AuthenticationResponse.builder()
+                .jwt(jwtToken)
+                .username(user.getUsername())
+                .role(user.getRole())
+                .build();
+    }
+}
+     import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.lang.NonNull;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+import static ru.kraser.simple_security.util.Utilities.AUTH_HEADER;
+
+@Component
+@RequiredArgsConstructor
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
+
+
+    @Override
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
+    ) throws ServletException, IOException {
+
+        final String authHeader = request.getHeader(AUTH_HEADER);
+        final String jwt;
+        final String username;
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        jwt = authHeader.substring(7);
+        username = jwtService.extractUsername(jwt);
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+            if (jwtService.isTokenValid(jwt, userDetails)) {
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities()
+                );
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        }
+        filterChain.doFilter(request, response);
+    }
+}
+     import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+
+import java.security.Key;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
+@Service
+public class JwtService {
+
+    private static final String SECRET_KEY = "11SECRET2KEYSECRET2KEYSECRET2KEYSECRET2KEYSECRET2KEYSECRET2KEY11";
+
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    public String generateToken(UserDetails userDetails) {
+        return generateToken(new HashMap<>(), userDetails);
+    }
+
+    public String generateToken(
+            Map<String, Object> extraClaims,
+            UserDetails userDetails
+    ) {
+        return Jwts
+                .builder()
+                .setClaims(extraClaims)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 hours
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts
+                .parserBuilder()
+                .setSigningKey(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    private Key getSignInKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+}
+    import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import ru.kraser.simple_security.model.User;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+public class JwtUserDetails implements UserDetails {
+    private User user;
+
+    public JwtUserDetails(User user) {
+        this.user = user;
+    }
+
+    public String getUserId() {
+        return user.getId();
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        List<SimpleGrantedAuthority> list = new ArrayList<>();
+        list.add(new SimpleGrantedAuthority(user.getRole().name())); // if User have field Role
+        return list;
+    }
+
+    @Override
+    public String getPassword() {
+        return user.getPassword();
+    }
+
+    @Override
+    public String getUsername() {
+        return user.getUsername();
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return user.isEnabled();
+    }
+}
+     import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import ru.kraser.simple_security.model.User;
+import ru.kraser.simple_security.service.UserService;
+
+@Configuration
+@RequiredArgsConstructor
+public class SecurityAppConfiguration {
+
+    private final UserService userService;
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return new UserDetailsService() {
+            @Override
+            public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+                User user = userService.getUserByName(username);
+                return new JwtUserDetails(user);
+            }
+        };
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService());
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+     import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import ru.kraser.simple_security.model.Role;
+
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import java.util.Collections;
+import java.util.List;
+
+import static ru.kraser.simple_security.util.Utilities.*;
+
+@Configuration
+@EnableWebSecurity
+@RequiredArgsConstructor
+public class SecurityWebConfiguration {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AuthenticationProvider authenticationProvider;
+
+    @Value("${allowed.frontend.url}")
+    private String allowedFrontendUrl;
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(c -> c.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests((request) -> request
+                        .requestMatchers(BASE_URL + AUTH_URL)
+                        .permitAll()
+                        .requestMatchers(BASE_URL + OPEN_URL)
+                        .permitAll()
+                        .requestMatchers(BASE_URL + ADMIN_URL + "/**").hasRole(
+                                Role.ADMIN.name())
+//                        .requestMatchers(BASE_URL + ADMIN_URL + "/**").hasAnyAuthority(
+//                                Role.ADMIN.name())
+                        .requestMatchers(BASE_URL + TECHNICIAN_URL + "/**").hasAnyRole(
+                                Role.ADMIN.name(), Role.TECHNICIAN.name())
+//                        .requestMatchers(BASE_URL + TECHNICIAN_URL + "/**").hasAnyAuthority(
+//                                Role.ADMIN.name(), Role.TECHNICIAN.name())
+                        .requestMatchers(BASE_URL + EMPLOYEE_URL + "/**").hasAnyAuthority(
+                                Role.ADMIN.name(), Role.TECHNICIAN.name(), Role.EMPLOYEE.name())
+                        .anyRequest().authenticated())
+                .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider).addFilterAfter(
+                        jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class
+                );
+        return http.build();
+    }
+
+    private CorsConfigurationSource corsConfigurationSource() {
+        return new CorsConfigurationSource() {
+            @Override
+            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
+                CorsConfiguration cfg = new CorsConfiguration();
+                cfg.setAllowedOrigins(List.of(allowedFrontendUrl));
+                cfg.setAllowedMethods(Collections.singletonList("*"));
+                cfg.setAllowedHeaders(Collections.singletonList("*"));
+                cfg.setExposedHeaders(Collections.singletonList("*"));
+                cfg.setMaxAge(3600L);
+                return cfg;
+            }
+        };
+    }
+}
+     import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import ru.kraser.simple_security.model.Role;
+import ru.kraser.simple_security.model.User;
+import ru.kraser.simple_security.service.UserService;
+
+import java.util.List;
+
+@SpringBootApplication
+public class Main implements CommandLineRunner {
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    public static void main(String[] args) {
+        SpringApplication.run(Main.class, args);
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+
+        List<String> users = List.of("admin", "technician", "employee");
+
+        for (String username : users) {
+            Role role = getRole(username);
+            User user = User.builder()
+                    .id(username)
+                    .username(username)
+                    .enabled(true)
+                    .password(passwordEncoder.encode("1234"))
+                    .role(role)
+                    .build();
+            userService.createDefaultUsers(user);
+        }
+    }
+
+    private static Role getRole(String username) {
+        Role role;
+        switch (username) {
+            case "admin" -> role = Role.ADMIN;
+            case "technician" -> role = Role.TECHNICIAN;
+            default -> role = Role.EMPLOYEE;
+        }
+        return role;
+    }
+}

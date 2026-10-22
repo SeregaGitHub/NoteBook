@@ -28,7 +28,8 @@ import static ru.kraser.simple_security.util.Utilities.*;
 public class SecurityWebConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final AuthenticationProvider authenticationProvider;
+    // Нужно если в SecurityAppConfiguration есть бин AuthenticationProvider
+    //private final AuthenticationProvider authenticationProvider;
 
     @Value("${allowed.frontend.url}")
     private String allowedFrontendUrl;
@@ -43,15 +44,27 @@ public class SecurityWebConfiguration {
                         .permitAll()
                         .requestMatchers(BASE_URL + OPEN_URL)
                         .permitAll()
-                        .requestMatchers(BASE_URL + ADMIN_URL + "/**").hasAnyAuthority(
+                        .requestMatchers(BASE_URL + ADMIN_URL + "/**").hasRole(
                                 Role.ADMIN.name())
-                        .requestMatchers(BASE_URL + TECHNICIAN_URL + "/**").hasAnyAuthority(
+// PostgreSQL: CREATE TYPE user_role AS ENUM ('ADMIN', 'TECHNICIAN', 'EMPLOYEE');
+// Class User: @Enumerated(EnumType.STRING) private Role role; public enum Role {ADMIN, TECHNICIAN, EMPLOYEE}
+
+// JwtUserDetails -> getAuthorities() -> list.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+                        .requestMatchers(BASE_URL + TECHNICIAN_URL + "/**").hasAnyRole(
                                 Role.ADMIN.name(), Role.TECHNICIAN.name())
-                        .requestMatchers(BASE_URL + EMPLOYEE_URL + "/**").hasAnyAuthority(
+// JwtUserDetails -> getAuthorities() -> list.add(new SimpleGrantedAuthority(user.getRole().name()));
+//                        .requestMatchers(BASE_URL + TECHNICIAN_URL + "/**").hasAnyAuthority(
+//                                Role.ADMIN.name(), Role.TECHNICIAN.name())
+                        .requestMatchers(BASE_URL + EMPLOYEE_URL + "/**").hasAnyRole(
                                 Role.ADMIN.name(), Role.TECHNICIAN.name(), Role.EMPLOYEE.name())
                         .anyRequest().authenticated())
-                .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider).addFilterAfter(
+                .sessionManagement(
+                        manager -> manager.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS)
+                )
+                // Нужно если в SecurityAppConfiguration есть бин AuthenticationProvider
+                //.authenticationProvider(authenticationProvider)
+                .addFilterAfter(
                         jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class
                 );
         return http.build();

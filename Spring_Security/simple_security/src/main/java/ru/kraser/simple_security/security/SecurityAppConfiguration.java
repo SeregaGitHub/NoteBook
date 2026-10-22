@@ -27,18 +27,25 @@ public class SecurityAppConfiguration {
             @Override
             public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
                 User user = userService.getUserByName(username);
+                if (user == null) throw new UsernameNotFoundException("Неверное имя пользователя или пароль !!!");
                 return new JwtUserDetails(user);
             }
         };
     }
 
-    @Bean
+//    Если бина AuthenticationProvider нет, но есть бин UserDetailsService,
+//    Spring автоматически создаёт и настраивает DaoAuthenticationProvider на его основе
+
+//    Если по какой-то причине нужно оставить бин AuthenticationProvider (например, для более сложной настройки)
+//    Необходимо убрать @Bean с этого метода - public UserDetailsService userDetailsService()
+
+/*    @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
-    }
+    }*/
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {

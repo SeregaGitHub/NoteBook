@@ -10,17 +10,12 @@ import ru.kraser.simple_security.model.ApiResponse;
 
 import java.time.LocalDateTime;
 
-import static ru.kraser.simple_security.controller.Controller.BASE_URL;
+import static ru.kraser.simple_security.util.Utilities.*;
 
 @RestController
 @Slf4j
 @RequestMapping(path = BASE_URL)
 public class Controller {
-
-    final static String BASE_URL = "/api/v1";
-    private final static String ADMIN_URL = "/admin";
-    private final static String TECHNICIAN_URL = "/technician";
-    private final static String EMPLOYEE_URL = "/employee";
 
     @GetMapping(path = ADMIN_URL)
     @ResponseStatus(HttpStatus.OK)

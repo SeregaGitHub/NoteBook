@@ -1,6 +1,7 @@
 package ru.kraser.two_token_security.security;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.kraser.two_token_security.exception.AuthException;
 import ru.kraser.two_token_security.model.RefreshToken;
@@ -14,6 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RefreshTokenService {
 
     //private final RefreshTokenRepository repository;
@@ -38,18 +40,20 @@ public class RefreshTokenService {
     }
 
     public RefreshToken verify(String stringToken) {
-        /*// Without check for hacked
-        RefreshToken refreshToken = repository.findByTokenHashAndRevokedFalse(sha256(stringToken))
-                //.orElseThrow(() -> new AuthException("Your token not found or revoked"));*/
 
         RefreshToken refreshToken = repository.findByTokenHash(sha256(stringToken))
                 .orElseThrow(() -> new AuthException("Your token not found"));
 
         if (refreshToken.isRevoked()) {
             // REUSE DETECTED — токен уже был обменян, но пришёл снова
-            repository.deleteAllTokensByUsername(refreshToken.getUsername());
-            // this.revokeAllForUser(refreshToken.getUsername()); // or this
-            throw new AuthException("Your token reuse detected. Please log in again.");
+            log.warn("REFRESH TOKEN REUSE DETECTED for user '{}', tokenHash='{}. " +
+                            "All active tokens for this user will be revoke.",
+                    refreshToken.getUsername(), refreshToken.getTokenHash());
+// Для production стоит добавить в log IP/User-Agent есть в HttpServletRequest нужна передача из контроллера или RequestContextHolder
+            repository.revokeAllTokensByUsername(refreshToken.getUsername());
+            //throw new AuthException("Your token reuse detected. Please log in again.");
+            // И пользователь и хак получат одно и то же сообщение при попытке использования
+            throw new AuthException("Session invalidated. Please log in again.");
         }
 
         if (refreshToken.getExpiresAt().isBefore(Instant.now())) {
@@ -61,10 +65,6 @@ public class RefreshTokenService {
     void revoke(RefreshToken refreshToken) {
         refreshToken.setRevoked(true);
         repository.save(refreshToken);
-    }
-
-    public void revokeAllForUser(String username) {
-        repository.deleteAllTokensByUsername(username);
     }
 
     public void deleteByStringToken(String stringRefreshToken) {

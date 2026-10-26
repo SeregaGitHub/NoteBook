@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class JwtUserDetails implements UserDetails {
-    private User user;
+    private final User user;
 
     public JwtUserDetails(User user) {
         this.user = user;

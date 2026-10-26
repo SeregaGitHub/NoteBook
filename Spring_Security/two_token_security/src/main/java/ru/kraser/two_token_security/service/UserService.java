@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class UserService {
 
-    private final static Map<String, User> map = new ConcurrentHashMap<>();
+    private static final Map<String, User> map = new ConcurrentHashMap<>();
 
     public void createDefaultUsers(User user) {
         map.put(user.getUsername(), user);

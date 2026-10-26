@@ -78,6 +78,9 @@ public class Main implements CommandLineRunner { ... }
 @SpringBootApplication
 public class Main implements CommandLineRunner {
 
+    // RefreshTokenService    repository.revokeAllTokensByUsername(refreshToken.getUsername());
+    //   InMemoryRefreshTokenStorage           revokeAllTokensByUsername
+
     // AT LAST:
     //
     //

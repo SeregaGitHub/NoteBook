@@ -23,19 +23,16 @@ public class InMemoryRefreshTokenStorage {
                 .stream()
                 .filter(v -> Objects.equals(v.getTokenHash(), tokenHash))
                 .findFirst();
-    };
-
-    /*public Optional<RefreshToken> findByTokenHashAndRevokedFalse(String tokenHash) {
-
-        return tokens.values()
-                .stream()
-                .filter(v -> Objects.equals(v.getTokenHash(), tokenHash) && !v.isRevoked())
-                .findFirst();
-    };*/
+    }
 
     // logout from all devices
-    public void deleteAllTokensByUsername(String username) {
-        tokens.values().removeIf(token -> username.equals(token.getUsername()));
+    public void revokeAllTokensByUsername(String username) {
+
+        tokens.values().forEach(token -> {
+            if (token.getUsername().equals(username)) {
+                token.setRevoked(true);
+            }
+        });
     }
 
     public void deleteByTokenHash(String tokenHash) {

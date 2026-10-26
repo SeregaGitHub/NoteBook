@@ -1,4 +1,4 @@
-package ru.kraser.two_token_security.security;
+package ru.kraser.two_token_security.security.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

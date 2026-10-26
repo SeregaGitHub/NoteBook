@@ -17,7 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-import static ru.kraser.two_token_security.util.Utilities.AUTH_HEADER;
+import static ru.kraser.two_token_security.util.Utilities.*;
 
 @Component
 @RequiredArgsConstructor
@@ -26,6 +26,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getServletPath().equals(BASE_URL + AUTH_URL + REFRESH_URL) ||
+                request.getServletPath().equals(BASE_URL + AUTH_URL + LOGOUT_URL);
+    }
 
     @Override
     protected void doFilterInternal(
@@ -47,6 +52,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             username = jwtService.extractUsername(jwt);
         } catch (JwtException | IllegalArgumentException e) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (!jwtService.isAccessToken(jwt)) {
             filterChain.doFilter(request, response);
             return;
         }

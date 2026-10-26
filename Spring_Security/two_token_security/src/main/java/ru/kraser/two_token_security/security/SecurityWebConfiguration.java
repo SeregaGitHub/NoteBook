@@ -42,6 +42,10 @@ public class SecurityWebConfiguration {
                 .authorizeHttpRequests((request) -> request
                         .requestMatchers(BASE_URL + AUTH_URL)
                         .permitAll()
+                        .requestMatchers(BASE_URL + AUTH_URL + REFRESH_URL)
+                        .permitAll()
+                        .requestMatchers(BASE_URL + AUTH_URL + LOGOUT_URL)
+                        .permitAll()
                         .requestMatchers(BASE_URL + OPEN_URL)
                         .permitAll()
                         .requestMatchers(BASE_URL + ADMIN_URL + "/**").hasRole(

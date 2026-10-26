@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
+import static ru.kraser.two_token_security.util.Utilities.CLAIM_TYPE;
+
 @Service
 public class JwtService {
 
@@ -49,7 +51,7 @@ public class JwtService {
                 .setId(UUID.randomUUID().toString())
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
-                .claim("type", type)
+                .claim(CLAIM_TYPE, type)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
@@ -63,10 +65,10 @@ public class JwtService {
     private boolean isCorrectTokenType(String token, String expectedType) {
         String currentType;
         try {
-            currentType = extractClaim(token, c -> c.get("type", String.class));
+            currentType = extractClaim(token, c -> c.get(CLAIM_TYPE, String.class));
         } catch (ExpiredJwtException e) {
             // if expired token
-            currentType = e.getClaims().get("type", String.class);
+            currentType = e.getClaims().get(CLAIM_TYPE, String.class);
         } catch (JwtException | IllegalArgumentException e) {
             // wrong token
             return false;

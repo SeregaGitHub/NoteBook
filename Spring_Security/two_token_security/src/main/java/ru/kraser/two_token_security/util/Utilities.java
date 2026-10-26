@@ -17,4 +17,6 @@ public class Utilities {
     public static final String EMPLOYEE_URL = "/employee";
 
     public static final String AUTH_HEADER = "Authorization";
+
+    public static final String CLAIM_TYPE = "type";
 }

@@ -53,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             Claims claims = jwtService.extractAllClaims(jwt);
 
-            if (!"access".equals(claims.get("type", String.class))) {
+            if (!"access".equals(claims.get(CLAIM_TYPE, String.class))) {
                 filterChain.doFilter(request, response);
                 return;
             }

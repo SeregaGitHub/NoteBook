@@ -11,10 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class InMemoryRefreshTokenStorage {
 
-    private final Map<Long, RefreshToken> tokens = new ConcurrentHashMap<>();
+    private final Map<String, RefreshToken> tokens = new ConcurrentHashMap<>();
 
     public void save(RefreshToken refreshToken) {
-        tokens.put(refreshToken.getId(), refreshToken);
+        tokens.put(refreshToken.getTokenHash(), refreshToken);
     }
 
     public Optional<RefreshToken> findByTokenHash(String tokenHash) {

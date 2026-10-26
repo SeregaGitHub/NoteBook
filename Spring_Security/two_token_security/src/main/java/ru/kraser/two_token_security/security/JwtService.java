@@ -17,7 +17,6 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    //private static final String SECRET_KEY = "5A7134743777397A24432646294A404E635266556A586E3272357538782F4125";
     @Value("${app.secret.key}")
     private String appSecretKey;
     @Value("${access.token.expiration}")
@@ -33,24 +32,6 @@ public class JwtService {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
-
-    /*public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
-    }
-
-    public String generateToken(
-            Map<String, Object> extraClaims,
-            UserDetails userDetails
-    ) {
-        return Jwts
-                .builder()
-                .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 hours
-                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }*/
 
     public String generateAccessToken(UserDetails userDetails) {
         return createToken(new HashMap<>(), userDetails, accessTokenExpiration, "access");
@@ -75,14 +56,8 @@ public class JwtService {
                 .compact();
     }
 
-    /*public boolean isAccessToken(String token) {
-        return isCorrectTokenType(token, "access");
-        //return "access".equals(extractClaim(token, c -> c.get("type", String.class)));
-    }*/
-
     public boolean isRefreshToken(String token) {
         return isCorrectTokenType(token, "refresh");
-        //return "refresh".equals(extractClaim(token, c -> c.get("type", String.class)));
     }
 
     private boolean isCorrectTokenType(String token, String expectedType) {

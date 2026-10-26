@@ -79,8 +79,6 @@ public class Main implements CommandLineRunner { ... }
 public class Main implements CommandLineRunner {
 
     // AT LAST:
-    //
-    //           Token id                  - hash
     //           Token type                - to Enum
 
     @Autowired

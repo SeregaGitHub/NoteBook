@@ -11,7 +11,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @RequiredArgsConstructor
@@ -22,15 +21,14 @@ public class RefreshTokenService {
     private final InMemoryRefreshTokenStorage repository;
     private final JwtService jwtService;
 
-    // Only for example
-    private final AtomicLong idGenerator = new AtomicLong(1);
-
     public void saveRefreshToken(String username, String stringToken) {
+
+        String tokenHash = sha256(stringToken);
 
         RefreshToken refreshToken = RefreshToken.builder()
                 // Only for example
-                .id(idGenerator.incrementAndGet())
-                .tokenHash(sha256(stringToken))
+                .id(tokenHash)
+                .tokenHash(tokenHash)
                 .username(username)
                 .expiresAt(jwtService.extractExpiration(stringToken).toInstant())
                 .revoked(false)

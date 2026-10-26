@@ -75,10 +75,10 @@ public class JwtService {
                 .compact();
     }
 
-    public boolean isAccessToken(String token) {
+    /*public boolean isAccessToken(String token) {
         return isCorrectTokenType(token, "access");
         //return "access".equals(extractClaim(token, c -> c.get("type", String.class)));
-    }
+    }*/
 
     public boolean isRefreshToken(String token) {
         return isCorrectTokenType(token, "refresh");
@@ -112,7 +112,7 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    private Claims extractAllClaims(String token) {
+    Claims extractAllClaims(String token) {
         return Jwts
                 .parserBuilder()
                 .setSigningKey(getSignInKey())

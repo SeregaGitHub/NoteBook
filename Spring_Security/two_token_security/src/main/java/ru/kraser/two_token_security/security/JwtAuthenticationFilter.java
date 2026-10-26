@@ -1,5 +1,6 @@
 package ru.kraser.two_token_security.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -50,16 +51,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
         try {
-            username = jwtService.extractUsername(jwt);
+            Claims claims = jwtService.extractAllClaims(jwt);
+
+            if (!"access".equals(claims.get("type", String.class))) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            username = claims.getSubject();
+            //username = jwtService.extractUsername(jwt);
         } catch (JwtException | IllegalArgumentException e) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        if (!jwtService.isAccessToken(jwt)) {
+        /*if (!jwtService.isAccessToken(jwt)) {
             filterChain.doFilter(request, response);
             return;
-        }
+        }*/
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);

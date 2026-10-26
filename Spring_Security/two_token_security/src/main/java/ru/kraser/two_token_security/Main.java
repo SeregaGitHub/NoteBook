@@ -78,12 +78,9 @@ public class Main implements CommandLineRunner { ... }
 @SpringBootApplication
 public class Main implements CommandLineRunner {
 
-    // RefreshTokenService    repository.revokeAllTokensByUsername(refreshToken.getUsername());
-    //   InMemoryRefreshTokenStorage           revokeAllTokensByUsername
-
     // AT LAST:
     //
-    //
+    //           Token id                  - hash
     //           Token type                - to Enum
 
     @Autowired
@@ -102,7 +99,7 @@ public class Main implements CommandLineRunner {
         List<String> users = List.of("admin", "technician", "employee");
 
         for (String username : users) {
-            Role role = getRole(username);
+            Role role = setRole(username);
             User user = User.builder()
                     .id(username)
                     .username(username)
@@ -114,7 +111,7 @@ public class Main implements CommandLineRunner {
         }
     }
 
-    private static Role getRole(String username) {
+    private static Role setRole(String username) {
         Role role;
         switch (username) {
             case "admin" -> role = Role.ADMIN;

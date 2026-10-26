@@ -58,7 +58,7 @@ public class AuthenticationService {
         }
 
         RefreshToken oldRefreshToken = refreshTokenService.verify(stringToken);
-        refreshTokenService.revoke(oldRefreshToken);
+        // refreshTokenService.revoke(oldRefreshToken);
 
         String username = oldRefreshToken.getUsername();
         User user = userService.getUserByName(username);

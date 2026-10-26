@@ -39,6 +39,18 @@ public class RefreshTokenService {
         repository.save(refreshToken);
     }
 
+    /*
+    Чтобы при использовании метода revoke() в verify() не возникло - race condition
+
+    В PROD когда будет JpaRepository - метод findByTokenHash() аннотируется @Lock(LockModeType.PESSIMISTIC_WRITE)
+    при запросах JPA и @Query (с помощью JPQL)
+    Если nativeQuery = true то в конец тела запроса надо добавить - FOR UPDATE
+    Тогда до завершения транзакции выбранная стока будет заблокирована
+
+    В сервисе метод verify() аннотируется @Transactional
+
+    (Или делать Атомарный UPDATE-запрос)
+     */
     public RefreshToken verify(String stringToken) {
 
         RefreshToken refreshToken = repository.findByTokenHash(sha256(stringToken))
@@ -59,10 +71,11 @@ public class RefreshTokenService {
         if (refreshToken.getExpiresAt().isBefore(Instant.now())) {
             throw new AuthException("Your token is expired");
         }
+        revoke(refreshToken);
         return refreshToken;
     }
 
-    void revoke(RefreshToken refreshToken) {
+    private void revoke(RefreshToken refreshToken) {
         refreshToken.setRevoked(true);
         repository.save(refreshToken);
     }

@@ -18,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import ru.kraser.two_token_security.model.TokenType;
 
 import java.io.IOException;
+import java.util.Date;
 
 import static ru.kraser.two_token_security.util.Utilities.*;
 
@@ -44,6 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader(AUTH_HEADER);
         final String jwt;
         final String username;
+        final Date tokenExpiration;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -59,14 +61,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
             username = claims.getSubject();
+            tokenExpiration = claims.getExpiration();
         } catch (JwtException | IllegalArgumentException e) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (username != null && tokenExpiration != null &&
+                SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-            if (jwtService.isTokenValid(jwt, userDetails)) {
+            //if (jwtService.isTokenValid(jwt, userDetails)) {
+            if (jwtService.isTokenValid(username, tokenExpiration, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,

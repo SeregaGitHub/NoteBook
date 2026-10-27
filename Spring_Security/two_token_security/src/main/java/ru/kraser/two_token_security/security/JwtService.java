@@ -27,9 +27,9 @@ public class JwtService {
     @Value("${refresh.token.expiration}")
     private long refreshTokenExpiration;
 
-    public String extractUsername(String token) {
+    /*public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
-    }
+    }*/
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
@@ -44,16 +44,18 @@ public class JwtService {
         return createToken(new HashMap<>(), userDetails, refreshTokenExpiration, TokenType.REFRESH.name());
     }
 
-    private String createToken(Map<String, Object> extraClaims,
+    // Map<String, Object> claims - на случай если понадобится добавление кастомных claims
+    private String createToken(Map<String, Object> claims,
                                UserDetails userDetails,
                                long expiration,
                                String type) {
 
-        extraClaims.put(Claims.ID, UUID.randomUUID().toString()); // или так
+        // Map<String, Object> extraClaims = new HashMap<>(claims);
+        // extraClaims.put(Claims.ID, UUID.randomUUID().toString());   // или так
 
         return Jwts.builder()
-                .setClaims(extraClaims)
-                //.setId(UUID.randomUUID().toString())            // или - .setId ОБЯЗАТЕЛЬНО после .setClaims
+                .setClaims(claims)
+                .setId(UUID.randomUUID().toString())                   // или - .setId ОБЯЗАТЕЛЬНО после .setClaims
                 .setSubject(userDetails.getUsername())
                 .claim(CLAIM_TYPE, type)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
@@ -80,14 +82,15 @@ public class JwtService {
         return expectedType.equals(currentType);
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    public boolean isTokenValid(String username, Date tokenExpiration,UserDetails userDetails) {
+        //final String username = extractUsername(token);
+        //return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        return (username.equals(userDetails.getUsername())) && !tokenExpiration.before(new Date());
     }
 
-    private boolean isTokenExpired(String token) {
+    /*private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
-    }
+    }*/
 
     Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);

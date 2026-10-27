@@ -13,8 +13,10 @@ import java.time.Instant;
 @Builder
 public class RefreshToken {
 
-    //@Id
-    //GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @Id
+//    @GeneratedValue
+//    @UuidGenerator(style = UuidGenerator.Style.TIME)
+//    @Column(name = "id", length = 36, nullable = false)
     private String id;
 
     //@Column(nullable = false, unique = true)

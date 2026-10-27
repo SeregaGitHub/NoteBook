@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service;
 import ru.kraser.two_token_security.model.User;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service

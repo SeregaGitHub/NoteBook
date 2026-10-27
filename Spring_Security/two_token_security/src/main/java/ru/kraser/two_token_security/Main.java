@@ -78,12 +78,6 @@ public class Main implements CommandLineRunner { ... }
 @SpringBootApplication
 public class Main implements CommandLineRunner {
 
-    /*
-    .sessionManagement(
-                        manager -> manager.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS)
-     */
-
     @Autowired
     private UserService userService;
 

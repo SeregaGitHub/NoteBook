@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import ru.kraser.two_token_security.model.TokenType;
 
 import java.io.IOException;
 
@@ -53,12 +54,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             Claims claims = jwtService.extractAllClaims(jwt);
 
-            if (!"access".equals(claims.get(CLAIM_TYPE, String.class))) {
+            if (!TokenType.ACCESS.name().equals(claims.get(CLAIM_TYPE, String.class))) {
                 filterChain.doFilter(request, response);
                 return;
             }
             username = claims.getSubject();
-            //username = jwtService.extractUsername(jwt);
         } catch (JwtException | IllegalArgumentException e) {
             filterChain.doFilter(request, response);
             return;

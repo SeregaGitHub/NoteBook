@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import ru.kraser.two_token_security.model.TokenType;
 
 import java.security.Key;
 import java.util.Date;
@@ -36,20 +37,23 @@ public class JwtService {
     }
 
     public String generateAccessToken(UserDetails userDetails) {
-        return createToken(new HashMap<>(), userDetails, accessTokenExpiration, "access");
+        return createToken(new HashMap<>(), userDetails, accessTokenExpiration, TokenType.ACCESS.name());
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
-        return createToken(new HashMap<>(), userDetails, refreshTokenExpiration, "refresh");
+        return createToken(new HashMap<>(), userDetails, refreshTokenExpiration, TokenType.REFRESH.name());
     }
 
     private String createToken(Map<String, Object> extraClaims,
                                UserDetails userDetails,
                                long expiration,
                                String type) {
+
+        extraClaims.put(Claims.ID, UUID.randomUUID().toString()); // или так
+
         return Jwts.builder()
-                .setId(UUID.randomUUID().toString())
                 .setClaims(extraClaims)
+                //.setId(UUID.randomUUID().toString())            // или - .setId ОБЯЗАТЕЛЬНО после .setClaims
                 .setSubject(userDetails.getUsername())
                 .claim(CLAIM_TYPE, type)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
@@ -59,7 +63,7 @@ public class JwtService {
     }
 
     public boolean isRefreshToken(String token) {
-        return isCorrectTokenType(token, "refresh");
+        return isCorrectTokenType(token, TokenType.REFRESH.name());
     }
 
     private boolean isCorrectTokenType(String token, String expectedType) {

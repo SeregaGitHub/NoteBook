@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service;
 import ru.kraser.two_token_security.model.RefreshToken;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,11 +17,7 @@ public class InMemoryRefreshTokenStorage {
     }
 
     public Optional<RefreshToken> findByTokenHash(String tokenHash) {
-
-        return tokens.values()
-                .stream()
-                .filter(v -> Objects.equals(v.getTokenHash(), tokenHash))
-                .findFirst();
+        return Optional.ofNullable(tokens.get(tokenHash));
     }
 
     // logout from all devices
@@ -36,6 +31,6 @@ public class InMemoryRefreshTokenStorage {
     }
 
     public void deleteByTokenHash(String tokenHash) {
-        tokens.values().removeIf(token -> tokenHash.equals(token.getTokenHash()));
+        tokens.remove(tokenHash);
     }
 }

@@ -1,4 +1,4 @@
-package standart;
+package dp;
 
 import java.io.*;
 import java.util.Arrays;

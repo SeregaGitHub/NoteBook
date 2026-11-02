@@ -6,8 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BackpackSimple {
-    public static void main(String[] args) throws IOException {
-/*
+    /*
 В первой строке задано целое число M — грузоподъёмность рюкзака
 Во второй строке дано количество куч с золотым песком
 В каждой из следующих n строк описаны кучи, куча задаётся двумя целыми числами:
@@ -23,6 +22,7 @@ c - стоимость одного килограмма, k - килограмм
 
 36
  */
+    public static void main(String[] args) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out))) {
             int maxWeight = Integer.parseInt(reader.readLine());
@@ -39,7 +39,6 @@ c - стоимость одного килограмма, k - килограмм
         long result = 0;
 
         for (int[] arr : data) {
-            if (maxWeight == 0) break;
 
             if (arr[1] <= maxWeight) {
                 result += (long) arr[1] * arr[0];

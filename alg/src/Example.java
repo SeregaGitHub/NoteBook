@@ -37,8 +37,9 @@ public class Example {
     }
 
     private static String[] readStringsToArray(BufferedReader reader) throws IOException {
-        return Arrays.stream(reader.readLine().split("\\s+"))
-                .toArray(String[]::new);
+        return reader.readLine().split(" ");
+        /*return Arrays.stream(reader.readLine().split("\\s+"))
+                .toArray(String[]::new);*/
     }
 
     private static char[] readCharsNoSpaces(BufferedReader reader) throws IOException {

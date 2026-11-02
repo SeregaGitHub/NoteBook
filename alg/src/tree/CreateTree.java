@@ -7,6 +7,7 @@ public class CreateTree {
     // 7 3 2 1 1 9 5 4 6 8 8 0
     // 7 - root    0 - end of tree (0 - not node)
     // Каждое уникальное число должно встречаться в дереве ровно один раз
+
     public static void main(String[] args) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out))) {

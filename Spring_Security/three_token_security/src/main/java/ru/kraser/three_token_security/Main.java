@@ -75,6 +75,29 @@ public class Main implements CommandLineRunner { ... }
 Выбор зависит от того, что важнее: производительность или мгновенный отзыв.
  */
 
+/*
+                        Что нужно сделать фронтенду:
+
+*   При логине: fetch(..., { credentials: 'include' }) — чтобы браузер сохранил cookie.
+*   Для всех запросов, изменяющих состояние (POST, PUT, DELETE), кроме логина:
+  прочитать XSRF-TOKEN из cookie (он не HttpOnly, поэтому доступен)
+  и положить его в заголовок X-XSRF-TOKEN.
+*   Для /auth/refresh и /auth/logout — credentials: 'include' + заголовок X-XSRF-TOKEN.
+
+Проверка CSRF:
+
+*   Если клиент не пришлёт X-XSRF-TOKEN или он не совпадёт с cookie —
+  Spring вернёт 403 Forbidden ещё до того, как запрос дойдёт до контроллера.
+*   Остальные эндпоинты (/admin, /technician и т.д.) защищены Bearer-токеном и не требуют CSRF-токена,
+  потому что браузер не добавляет заголовок Authorization автоматически.
+
+Безопасность:
+
+* HttpOnly + Secure + SameSite=Strict для refresh-cookie → защита от XSS и смягчение CSRF.
+* CSRF-токен (double-submit) для /refresh и /logout → полная защита от CSRF для эндпоинтов, использующих cookie.
+* Access-токен в теле ответа и заголовке Authorization → основные API не подвержены CSRF.
+ */
+
 @SpringBootApplication
 public class Main implements CommandLineRunner {
 

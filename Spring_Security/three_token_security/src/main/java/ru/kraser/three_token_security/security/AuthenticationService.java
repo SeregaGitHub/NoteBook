@@ -10,7 +10,6 @@ import ru.kraser.three_token_security.model.RefreshToken;
 import ru.kraser.three_token_security.model.User;
 import ru.kraser.three_token_security.security.dto.AuthenticationRequest;
 import ru.kraser.three_token_security.security.dto.AuthenticationResponse;
-import ru.kraser.three_token_security.security.dto.RefreshTokenRequest;
 import ru.kraser.three_token_security.service.UserService;
 
 @Service
@@ -22,7 +21,10 @@ public class AuthenticationService {
     private final RefreshTokenService refreshTokenService;
     private final AuthenticationManager authenticationManager;
 
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+    /** Внутренний результат: ответ для тела + refresh для cookie. */
+    public record AuthResult(AuthenticationResponse apiResponse, String refreshToken) {}
+
+    public AuthResult authenticate(AuthenticationRequest request) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -42,16 +44,17 @@ public class AuthenticationService {
         String refreshToken = jwtService.generateRefreshToken(userDetails);
         refreshTokenService.saveRefreshToken(user.getUsername(), refreshToken);
 
-        return AuthenticationResponse.builder()
+        AuthenticationResponse apiResponse = AuthenticationResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
                 .username(user.getUsername())
                 .role(user.getRole())
                 .build();
+
+        return new AuthResult(apiResponse, refreshToken);
     }
 
-    public AuthenticationResponse refreshToken(RefreshTokenRequest request) {
-        String stringToken = request.refreshToken();
+    public AuthResult refreshToken(String stringToken) {
+        //String stringToken = request.refreshToken();
 
         if (!jwtService.isRefreshToken(stringToken)) {
             throw new AuthException("Invalid token type");
@@ -68,12 +71,13 @@ public class AuthenticationService {
         String newRefreshToken = jwtService.generateRefreshToken(userDetails);
         refreshTokenService.saveRefreshToken(username, newRefreshToken);
 
-        return AuthenticationResponse.builder()
+        AuthenticationResponse response = AuthenticationResponse.builder()
                 .accessToken(newAccessToken)
-                .refreshToken(newRefreshToken)
                 .username(user.getUsername())
                 .role(user.getRole())
                 .build();
+
+        return new AuthResult(response, newRefreshToken);
     }
 
     public void logout(String stringRefreshToken) {

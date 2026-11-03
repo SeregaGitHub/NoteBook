@@ -19,4 +19,9 @@ public class Utilities {
     public static final String AUTH_HEADER = "Authorization";
 
     public static final String CLAIM_TYPE = "type";
+
+    // Cookie names
+    public static final String REFRESH_TOKEN_COOKIE = "refreshToken";
+    public static final String CSRF_COOKIE = "XSRF-TOKEN";
+    public static final String CSRF_HEADER = "X-XSRF-TOKEN";
 }

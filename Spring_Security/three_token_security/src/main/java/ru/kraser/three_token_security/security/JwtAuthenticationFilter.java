@@ -31,8 +31,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getServletPath().equals(BASE_URL + AUTH_URL + REFRESH_URL) ||
-                request.getServletPath().equals(BASE_URL + AUTH_URL + LOGOUT_URL);
+        return request.getServletPath().equals(BASE_URL + AUTH_URL) ||
+               request.getServletPath().equals(BASE_URL + AUTH_URL + REFRESH_URL) ||
+               request.getServletPath().equals(BASE_URL + AUTH_URL + LOGOUT_URL);
     }
 
     @Override
@@ -83,6 +84,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
+
         filterChain.doFilter(request, response);
     }
 }

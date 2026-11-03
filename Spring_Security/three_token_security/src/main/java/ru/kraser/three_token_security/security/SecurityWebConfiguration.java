@@ -5,16 +5,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import ru.kraser.three_token_security.model.Role;
-
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import ru.kraser.three_token_security.model.Role;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +38,43 @@ public class SecurityWebConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(c -> c.configurationSource(corsConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
+                // прописываем все url которым нужен CSRF токен
+                // login CSRF: OWASP рекомендует защищать все POST-эндпоинты, включая логин - тут отключена
+                /*
+                    нужно, чтобы жертва залогинилась под аккаунтом атакующего,
+                    что требует от жертвы ввода пароля атакующего — маловероятно
+                 */
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                        .requireCsrfProtectionMatcher(request -> {
+                            // CSRF проверяется ТОЛЬКО для refresh и logout
+                            String path = request.getServletPath();
+                            String method = request.getMethod();
+                            boolean isProtectedPath = path.equals(BASE_URL + AUTH_URL + REFRESH_URL)
+                                    || path.equals(BASE_URL + AUTH_URL + LOGOUT_URL);
+                            boolean isUnsafeMethod = !HttpMethod.GET.matches(method)
+                                    && !HttpMethod.HEAD.matches(method)
+                                    && !HttpMethod.OPTIONS.matches(method)
+                                    && !HttpMethod.TRACE.matches(method);
+                            return isProtectedPath && isUnsafeMethod;
+                        })
+                )
+                // другой вариант
+                // прописываем все url которым не нужен CSRF токен
+
+                /*.csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                        .ignoringRequestMatchers(
+                                BASE_URL + AUTH_URL,
+                                BASE_URL + OPEN_URL,
+                                BASE_URL + ADMIN_URL + "/**",
+                                BASE_URL + TECHNICIAN_URL + "/**",
+                                BASE_URL + EMPLOYEE_URL + "/**",
+                                BASE_URL + DEFAULT_URL + "/**"
+                        )
+                )*/
                 .authorizeHttpRequests((request) -> request
                         .requestMatchers(BASE_URL + AUTH_URL)
                         .permitAll()
@@ -49,15 +86,8 @@ public class SecurityWebConfiguration {
                         .permitAll()
                         .requestMatchers(BASE_URL + ADMIN_URL + "/**").hasRole(
                                 Role.ADMIN.name())
-// PostgreSQL: CREATE TYPE user_role AS ENUM ('ADMIN', 'TECHNICIAN', 'EMPLOYEE');
-// Class User: @Enumerated(EnumType.STRING) private Role role; public enum Role {ADMIN, TECHNICIAN, EMPLOYEE}
-
-// JwtUserDetails -> getAuthorities() -> list.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
                         .requestMatchers(BASE_URL + TECHNICIAN_URL + "/**").hasAnyRole(
                                 Role.ADMIN.name(), Role.TECHNICIAN.name())
-// JwtUserDetails -> getAuthorities() -> list.add(new SimpleGrantedAuthority(user.getRole().name()));
-//                        .requestMatchers(BASE_URL + TECHNICIAN_URL + "/**").hasAnyAuthority(
-//                                Role.ADMIN.name(), Role.TECHNICIAN.name())
                         .requestMatchers(BASE_URL + EMPLOYEE_URL + "/**").hasAnyRole(
                                 Role.ADMIN.name(), Role.TECHNICIAN.name(), Role.EMPLOYEE.name())
                         .anyRequest().authenticated())
@@ -69,6 +99,9 @@ public class SecurityWebConfiguration {
                 //.authenticationProvider(authenticationProvider)
                 .addFilterAfter(
                         jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class
+                )
+                .addFilterAfter(
+                        new CookieCsrfFilter(), UsernamePasswordAuthenticationFilter.class
                 );
         return http.build();
     }
@@ -81,7 +114,8 @@ public class SecurityWebConfiguration {
                 cfg.setAllowedOrigins(List.of(allowedFrontendUrl));
                 cfg.setAllowedMethods(Collections.singletonList("*"));
                 cfg.setAllowedHeaders(Collections.singletonList("*"));
-                cfg.setExposedHeaders(Collections.singletonList("*"));
+                cfg.setExposedHeaders(List.of(CSRF_COOKIE));   // чтобы клиент мог прочитать XSRF-TOKEN
+                cfg.setAllowCredentials(true);                 // обязательно для cookie
                 cfg.setMaxAge(3600L);
                 return cfg;
             }

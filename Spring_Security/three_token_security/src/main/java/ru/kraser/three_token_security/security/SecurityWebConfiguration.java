@@ -45,7 +45,7 @@ public class SecurityWebConfiguration {
                     что требует от жертвы ввода пароля атакующего — маловероятно
                  */
                 .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRepository(csrfRepository())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                         .requireCsrfProtectionMatcher(request -> {
                             // CSRF проверяется ТОЛЬКО для refresh и logout
@@ -120,5 +120,12 @@ public class SecurityWebConfiguration {
                 return cfg;
             }
         };
+    }
+
+    private static CookieCsrfTokenRepository csrfRepository() {
+        CookieCsrfTokenRepository repo = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        repo.setCookieName(CSRF_COOKIE);
+        repo.setHeaderName(CSRF_HEADER);
+        return repo;
     }
 }

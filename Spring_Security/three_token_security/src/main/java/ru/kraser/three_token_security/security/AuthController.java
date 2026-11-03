@@ -45,7 +45,7 @@ public class AuthController {
             @Validated() @RequestBody AuthenticationRequest request, HttpServletResponse response) {
         log.info("Authenticating User with name - {}...", request.username());
         AuthenticationService.AuthResult authResult = authenticationService.authenticate(request);
-        // refresh token → HttpOnly cookie
+        // refresh token -> HttpOnly cookie
         ResponseCookie refreshCookie = buildRefreshCookie(authResult.refreshToken());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
         log.info("User with name - {}, successfully authenticated", request.username());
@@ -65,7 +65,7 @@ public class AuthController {
         log.info("Updating refresh token...");
         AuthenticationService.AuthResult authResult = authenticationService.refreshToken(refreshToken);
 
-        // ротация: новый refresh → новая cookie
+        // ротация: новый refresh -> новая cookie
         response.addHeader(HttpHeaders.SET_COOKIE, buildRefreshCookie(authResult.refreshToken()).toString());
 
         log.info("Refresh token successfully updated");

@@ -162,6 +162,19 @@ System.out.println(sum);  // 15
       default -> throw new IllegalStateException("Unexpected value: " + command);
   }
 
+------------------------------------------------------------------------
+
+Метод isTrue(int[] data) вернёт true если все числа массива чётные или все числа нечётные
+
+data[0] & 1  - побитовое число первого элемента массива (для чётных чисел будет равно 0 для нечётных 1)
+
+private static boolean isTrue(int[] data) {
+
+        int check = data[0] & 1;
+        return Arrays.stream(data).allMatch(i -> (i & 1) == check);
+    }
+
+------------------------------------------------------------------------
 
 * цикл for each:
   int[] mas = {1, 6, 4, 3, 9, 4, 5, 2, 1};

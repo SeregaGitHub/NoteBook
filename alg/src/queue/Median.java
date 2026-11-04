@@ -1,4 +1,4 @@
-package standart;
+package queue;
 
 import java.io.*;
 import java.util.*;

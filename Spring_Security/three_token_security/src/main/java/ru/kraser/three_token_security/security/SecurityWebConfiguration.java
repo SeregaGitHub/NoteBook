@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
@@ -34,6 +35,14 @@ public class SecurityWebConfiguration {
     @Value("${allowed.frontend.url}")
     private String allowedFrontendUrl;
 
+    //  only if no nginx (and if cross-origin: frontend and backend on differed ports)  //
+    @Value("${app.cookie.csrf-same-site:Strict}")
+    private String csrfCookieSameSite;
+
+    @Value("${app.cookie.csrf-secure:false}")
+    private boolean csrfCookieSecure;
+    //  only if no nginx (and if cross-origin: frontend and backend on differed ports)  //
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -47,6 +56,7 @@ public class SecurityWebConfiguration {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfRepository())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                        .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy())
                         .requireCsrfProtectionMatcher(request -> {
                             // CSRF проверяется ТОЛЬКО для refresh и logout
                             String path = request.getServletPath();
@@ -92,8 +102,8 @@ public class SecurityWebConfiguration {
                                 Role.ADMIN.name(), Role.TECHNICIAN.name(), Role.EMPLOYEE.name())
                         .anyRequest().authenticated())
                 .sessionManagement(
-                        manager -> manager.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS)
+                        manager -> manager
+                            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 // Нужно если в SecurityAppConfiguration есть бин AuthenticationProvider
                 //.authenticationProvider(authenticationProvider)
@@ -122,10 +132,17 @@ public class SecurityWebConfiguration {
         };
     }
 
-    private static CookieCsrfTokenRepository csrfRepository() {
-        CookieCsrfTokenRepository repo = CookieCsrfTokenRepository.withHttpOnlyFalse();
-        repo.setCookieName(CSRF_COOKIE);
-        repo.setHeaderName(CSRF_HEADER);
-        return repo;
+    private CookieCsrfTokenRepository csrfRepository() {
+        CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        csrfTokenRepository.setCookieName(CSRF_COOKIE);
+        csrfTokenRepository.setHeaderName(CSRF_HEADER);
+
+        // only if no nginx (and if cross-origin: frontend and backend on differed ports) //
+        csrfTokenRepository.setCookieCustomizer(cookie -> cookie
+                .sameSite(csrfCookieSameSite)
+                .secure(csrfCookieSecure));
+        // only if no nginx (and if cross-origin: frontend and backend on differed ports) //
+
+        return csrfTokenRepository;
     }
 }

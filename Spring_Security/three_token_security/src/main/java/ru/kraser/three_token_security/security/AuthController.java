@@ -28,7 +28,7 @@ public class AuthController {
     @Value("${app.cookie.refresh-name:" + REFRESH_TOKEN_COOKIE + "}")
     private String refreshCookieName;
 
-    @Value("${app.cookie.refresh-path:" + BASE_URL + AUTH_URL + "}")
+    @Value("${app.cookie.refresh-path:" + BASE_URL + AUTH_URL + "/}")
     private String refreshCookiePath;
 
     @Value("${app.cookie.secure:false}")

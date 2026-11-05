@@ -2,6 +2,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Example {
@@ -79,6 +80,21 @@ public class Example {
         }
 
         return strings;
+    }
+
+    private static long readCountDistinctWordsFromSeveralLines(BufferedReader reader) {
+        return reader.lines()
+                .flatMap(line -> Arrays.stream(line.trim().split("\\s+")))
+                .filter(s -> !s.isEmpty())
+                .distinct()
+                .count();
+    }
+
+    private static Set<String> readSetDistinctWordsFromSeveralLines(BufferedReader reader) {
+        return reader.lines()
+                .flatMap(line -> Arrays.stream(line.trim().split("\\s+")))
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
     }
 
     private static List<Integer> readList(BufferedReader reader) throws IOException {

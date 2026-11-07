@@ -24,7 +24,7 @@ public class LongestIncreasingSubsequence {
             List<Integer> result = findLongestIncreasingSubsequence(data);
             //List<Integer> result = findMaxIncreasingSubsequence(data);
 
-            writer.write(String.valueOf(result.size()));    
+            writer.write(String.valueOf(result.size()));
             writer.write("\n");
 
             for (int i = result.size() - 1; i >= 0; i--) {
@@ -67,26 +67,24 @@ public class LongestIncreasingSubsequence {
 
     // O n*(log n)
     private static List<Integer> findMaxIncreasingSubsequence(int[] data) {
-        int n = data.length;
-        if (n == 0) return new ArrayList<>();
 
-        // tailsIndices[i] хранит ИНДЕКС элемента из data, который является
+        // tailsIndexes[i] хранит ИНДЕКС элемента из data, который является
         // наименьшим хвостом подпоследовательности длины i + 1
-        int[] tailsIndices = new int[n];
-        // prevIndices[i] хранит ИНДЕКС предшественника элемента data[i]
+        int[] tailsIndexes = new int[data.length];
+        // prevIndexes[i] хранит ИНДЕКС предшественника элемента data[i]
         // в самой длинной возрастающей подпоследовательности, заканчивающейся на i
-        int[] prevIndices = new int[n];
+        int[] prevIndexes = new int[data.length];
         int length = 0; // Текущая длина наибольшей подпоследовательности
 
         // 5 6 2 3 7 8 10 1 4 11 5 6
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < data.length; i++) {
             int left = 0;
             int right = length;
 
-            // Бинарный поиск (lower_bound): ищем первое число >= data[i]
+            // Бинарный поиск (lower bound): ищем первое число >= data[i]
             while (left < right) {
                 int mid = left + (right - left) / 2;
-                if (data[tailsIndices[mid]] < data[i]) {
+                if (data[tailsIndexes[mid]] < data[i]) {
                     left = mid + 1;
                 } else {
                     right = mid;
@@ -95,13 +93,13 @@ public class LongestIncreasingSubsequence {
 
             // Если элемент встает не на первое место, значит у него есть предшественник
             if (left > 0) {
-                prevIndices[i] = tailsIndices[left - 1];
+                prevIndexes[i] = tailsIndexes[left - 1];
             } else {
-                prevIndices[i] = -1; // Элемент начинает новую цепочку
+                prevIndexes[i] = -1; // Элемент начинает новую цепочку
             }
 
             // Обновляем хвост для найденной длины
-            tailsIndices[left] = i;
+            tailsIndexes[left] = i;
 
             // Если элемент добавился в конец, увеличиваем максимальную длину
             if (left == length) {
@@ -111,10 +109,10 @@ public class LongestIncreasingSubsequence {
 
         // Восстановление ответа с конца
         List<Integer> result = new ArrayList<>(length);
-        int currIndex = tailsIndices[length - 1]; // Индекс последнего элемента LIS
+        int currIndex = tailsIndexes[length - 1]; // Индекс последнего элемента LIS
         while (currIndex != -1) {
             result.add(data[currIndex]);
-            currIndex = prevIndices[currIndex]; // Переходим к предшественнику
+            currIndex = prevIndexes[currIndex]; // Переходим к предшественнику
         }
 
         return result;

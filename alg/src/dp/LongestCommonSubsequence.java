@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MaxCommonSubsequence {
+public class LongestCommonSubsequence {
 
 // Наибольшая общая подпоследовательность (НОП) с восстановлением ответа
 /*
@@ -28,8 +28,8 @@ public class MaxCommonSubsequence {
 
             int[][] dp = findMaxCommonSubsequenceDp(n, firstData, m, secondData);
 
-//            writer.write(String.valueOf(dp[n][m]));
-//            writer.write("\n");
+            writer.write(String.valueOf(dp[n][m]));
+            writer.write("\n");
 
             List<Integer> answer = getAnswer(dp, n, m, firstData, secondData);
             for (int i = answer.size() - 1; i >= 0; i--) {

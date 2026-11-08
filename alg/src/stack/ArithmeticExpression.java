@@ -1,8 +1,5 @@
 package stack;
 
-// -6 + 2 * ((21 - 1) * 2 - 20) / 4   // 4
-//List<String> postfix = List.of("-6", "2", "21", "1", "-", "2", "*", "20", "-", "*", "4", "/", "+");
-
 import java.io.*;
 import java.util.*;
 
@@ -13,13 +10,13 @@ public class ArithmeticExpression {
 
             String data = reader.readLine();
 
-            Deque<Integer> stack = new ArrayDeque<>();
             String postfix = postfixNotation(data);
 
             boolean isTrue;
             if (postfix.equals("WRONG")) {
                 writer.write(postfix);
             } else {
+                Deque<Integer> stack = new ArrayDeque<>();
                 isTrue = getResult(List.of(postfix.split(" ")), stack);
                 writer.write(isTrue && stack.size() == 1 ? String.valueOf(stack.pop()) : "WRONG");
             }
@@ -28,42 +25,26 @@ public class ArithmeticExpression {
 
     private static String postfixNotation(String data) {
 
+        if (data == null || data.isBlank()) return "WRONG";
+
         Set<Character> set = Set.of('+', '-', '*', '/', ' ', '(', ')');
         Deque<Character> stack = new ArrayDeque<>();
         StringBuilder builder = new StringBuilder();
 
         boolean isUnaryOperator = true;
+        boolean expectedOperator = false;
 
         for (int i = 0; i < data.length(); i++) {
             char checkChar = data.charAt(i);
             if (!Character.isDigit(checkChar) && !set.contains(checkChar)) return "WRONG";
 
-            // 2 * -2 + 3    //    2 0 2 - * 3 +    // -1
-
-            //
-            //
-            //
-            // 2 0 2 - * 3 +
-
-
-            // 2 * -(2 + 3)  //    2 0 2 3 + - *    // -10
-
-            //
-            // (
-            // ~
-            // *
-            // 2 0 2
-
-            // 2 * -(2 + 3) + 10  //    2 0 2 3 + - * 10 +   // 0
-
-            //
-            //
-            // ~
-            // *
-            // 2 0 2 3 +
-
             if (Character.isDigit(checkChar)) {
+
+                //if (!isUnaryOperator) return "WRONG";
+                //
+                if (expectedOperator) return "WRONG";
                 builder.append(checkChar);
+
                 if (i == data.length() - 1 || (i < data.length() - 1 && !Character.isDigit(data.charAt(i + 1)))) {
                     builder.append(' ');
                     isUnaryOperator = false;
@@ -71,12 +52,16 @@ public class ArithmeticExpression {
                         builder.append('-').append(' ');
                         stack.pop();
                     }
+                    //
+                    expectedOperator = true;
                 }
-
-
             } else if (checkChar == '(') {
+                //
+                if (expectedOperator) return "WRONG";
                 stack.push(checkChar);
                 isUnaryOperator = true;
+                //
+                //expectedOperator = false;
             } else if (checkChar == ')') {
                 if (stack.isEmpty()) return "WRONG";
                 while (true) {
@@ -93,15 +78,23 @@ public class ArithmeticExpression {
                     stack.pop();
                 }
                 isUnaryOperator = false;
+                //
+                expectedOperator = true;
             } else if (checkChar == '*' || checkChar == '/') {
+                //
+                if (!expectedOperator) return "WRONG";
                 if (!stack.isEmpty() && (stack.peek() == '*' || stack.peek() == '/')) {
                     changeStackHead(stack, builder, checkChar);
                 } else {
                     stack.push(checkChar);
                 }
                 isUnaryOperator = true;
+                //
+                expectedOperator = false;
 
             } else if (checkChar == '+' || checkChar == '-') {
+                //
+                if (!expectedOperator) return "WRONG";
                 if (!isUnaryOperator) {
                     if (stack.isEmpty() || stack.peek() == '(') {
                         stack.push(checkChar);
@@ -118,6 +111,8 @@ public class ArithmeticExpression {
                         isUnaryOperator = false;
                     }
                 }
+                //
+                expectedOperator = false;
             }
         }
 
@@ -128,60 +123,8 @@ public class ArithmeticExpression {
             builder.append(cur).append(' ');
         }
 
-        return builder.deleteCharAt(builder.length() - 1).toString();
+        return builder.isEmpty() ? "WRONG" : builder.deleteCharAt(builder.length() - 1).toString();
     }
-
-    /*private static String postfixNotation(String data) {
-
-        Set<Character> set = Set.of('+', '-', '*', '/', ' ', '(', ')');
-        Deque<Character> stack = new ArrayDeque<>();
-        StringBuilder builder = new StringBuilder();
-
-        for (int i = 0; i < data.length(); i++) {
-            char checkChar = data.charAt(i);
-            if (!Character.isDigit(checkChar) && !set.contains(checkChar)) return "WRONG";
-
-            if (Character.isDigit(checkChar)) {
-                builder.append(checkChar);
-                if (i == data.length() - 1 || (i < data.length() - 1 && !Character.isDigit(data.charAt(i + 1)))) {
-                    builder.append(' ');
-                }
-            } else if (checkChar == '(') {
-                stack.push(checkChar);
-            } else if (checkChar == ')') {
-                if (stack.isEmpty()) return "WRONG";
-                while (true) {
-                    char cur = stack.pop();
-                    if (cur != '(') {
-                        builder.append(cur).append(' ');
-                    } else {
-                        break;
-                    }
-                    if (stack.isEmpty()) return "WRONG";
-                }
-            } else if (checkChar == '*' || checkChar == '/') {
-                if (!stack.isEmpty() && (stack.peek() == '*' || stack.peek() == '/')) {
-                    changeStackHead(stack, builder, checkChar);
-                } else {
-                    stack.push(checkChar);
-                }
-            } else if (checkChar == '+' || checkChar == '-') {
-                if (stack.isEmpty() || stack.peek() == '(') {
-                    stack.push(checkChar);
-                } else {
-                    changeStackHead(stack, builder, checkChar);
-                }
-            }
-        }
-
-        while (!stack.isEmpty()) {
-            char cur = stack.pop();
-            if (cur == '(') return "WRONG";
-            builder.append(cur).append(' ');
-        }
-
-        return builder.deleteCharAt(builder.length() - 1).toString();
-    }*/
 
     private static void changeStackHead(Deque<Character> stack, StringBuilder builder, char checkChar) {
         char cur = stack.pop();

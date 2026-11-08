@@ -27,7 +27,18 @@ public class QuickSort {
     // Схема Хоара - OK !!!
     private static void quickSort(int[] data, int leftIndex, int rightIndex) {
         if (rightIndex - leftIndex < 8) {
-            boolean isNeedSort = true;
+            // InsertionSort
+            for (int i = leftIndex + 1; i <= rightIndex; i++) {
+                int checkInt = data[i];
+                int j = i;
+                while (j > 0 && checkInt < data[j - 1]) {
+                    data[j] = data[j - 1];
+                    j--;
+                }
+                data[j] = checkInt;
+            }
+            // BubbleSort
+            /*boolean isNeedSort = true;
             while (isNeedSort) {
                 isNeedSort = false;
                 for (int i = leftIndex; i < rightIndex; i++) {
@@ -36,7 +47,7 @@ public class QuickSort {
                         isNeedSort = true;
                     }
                 }
-            }
+            }*/
         } else {
             int pivotIndex = partition(data, leftIndex, rightIndex);
             if (leftIndex < pivotIndex - 1) {

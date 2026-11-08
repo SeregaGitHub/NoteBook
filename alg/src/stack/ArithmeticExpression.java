@@ -27,94 +27,67 @@ public class ArithmeticExpression {
 
         if (data == null || data.isBlank()) return "WRONG";
 
-        Set<Character> set = Set.of('+', '-', '*', '/', ' ', '(', ')');
+        Set<Character> set = Set.of('+', '-', '*', '/', '(', ')');
         Deque<Character> stack = new ArrayDeque<>();
         StringBuilder builder = new StringBuilder();
 
-        boolean isUnaryOperator = true;
-        boolean expectedOperator = false;
+        boolean expectedOperand = true;
 
         for (int i = 0; i < data.length(); i++) {
             char checkChar = data.charAt(i);
+
+            if (checkChar == ' ') continue;
             if (!Character.isDigit(checkChar) && !set.contains(checkChar)) return "WRONG";
 
             if (Character.isDigit(checkChar)) {
-
-                //if (!isUnaryOperator) return "WRONG";
-                //
-                if (expectedOperator) return "WRONG";
-                builder.append(checkChar);
-
-                if (i == data.length() - 1 || (i < data.length() - 1 && !Character.isDigit(data.charAt(i + 1)))) {
-                    builder.append(' ');
-                    isUnaryOperator = false;
-                    if (!stack.isEmpty() && stack.peek() == '~') {
-                        builder.append('-').append(' ');
-                        stack.pop();
-                    }
-                    //
-                    expectedOperator = true;
+                if (!expectedOperand) return "WRONG";
+                int start = i;
+                while (i < data.length() && Character.isDigit(data.charAt(i))) {
+                    i++;
                 }
+                builder.append(data, start, i).append(' ');
+                i--;
+                expectedOperand = false;
             } else if (checkChar == '(') {
-                //
-                if (expectedOperator) return "WRONG";
+                if (!expectedOperand) return "WRONG";
                 stack.push(checkChar);
-                isUnaryOperator = true;
-                //
-                //expectedOperator = false;
             } else if (checkChar == ')') {
-                if (stack.isEmpty()) return "WRONG";
-                while (true) {
+                if (expectedOperand) return "WRONG";
+                while (!stack.isEmpty() && stack.peek() != '(') {
                     char cur = stack.pop();
-                    if (cur != '(') {
-                        builder.append(cur).append(' ');
-                    } else {
-                        break;
-                    }
-                    if (stack.isEmpty()) return "WRONG";
+                    if (cur == '~') cur = '-';
+                    builder.append(cur).append(' ');
                 }
-                if (!stack.isEmpty() && stack.peek() == '~') {
-                    builder.append('-').append(' ');
-                    stack.pop();
-                }
-                isUnaryOperator = false;
-                //
-                expectedOperator = true;
-            } else if (checkChar == '*' || checkChar == '/') {
-                //
-                if (!expectedOperator) return "WRONG";
-                if (!stack.isEmpty() && (stack.peek() == '*' || stack.peek() == '/')) {
-                    changeStackHead(stack, builder, checkChar);
-                } else {
-                    stack.push(checkChar);
-                }
-                isUnaryOperator = true;
-                //
-                expectedOperator = false;
-
+                if (stack.isEmpty()) return "WRONG";
+                stack.pop();
             } else if (checkChar == '+' || checkChar == '-') {
-                //
-                if (!expectedOperator) return "WRONG";
-                if (!isUnaryOperator) {
-                    if (stack.isEmpty() || stack.peek() == '(') {
-                        stack.push(checkChar);
-                    } else {
-                        changeStackHead(stack, builder, checkChar);
-                    }
-                    isUnaryOperator = true;
-                } else {
-                    if (checkChar == '+') {
-                        continue;
-                    } else {
+                if (expectedOperand) {
+                    if (checkChar == '-') {
                         builder.append('0').append(' ');
                         stack.push('~');
-                        isUnaryOperator = false;
                     }
+                } else {
+                    while (!stack.isEmpty() && stack.peek() != '(') {
+                        char cur = stack.pop();
+                        if (cur == '~') cur = '-';
+                        builder.append(cur).append(' ');
+                    }
+                    stack.push(checkChar);
+                    expectedOperand = true;
                 }
-                //
-                expectedOperator = false;
+            } else if (checkChar == '*' || checkChar == '/') {
+                if (expectedOperand) return "WRONG";
+                while (!stack.isEmpty() && stack.peek() != '(' && stack.peek() != '+' && stack.peek() != '-') {
+                    char cur = stack.pop();
+                    if (cur == '~') cur = '-';
+                    builder.append(cur).append(' ');
+                }
+                stack.push(checkChar);
+                expectedOperand = true;
             }
         }
+
+        if (expectedOperand) return "WRONG";
 
         while (!stack.isEmpty()) {
             char cur = stack.pop();
@@ -124,13 +97,6 @@ public class ArithmeticExpression {
         }
 
         return builder.isEmpty() ? "WRONG" : builder.deleteCharAt(builder.length() - 1).toString();
-    }
-
-    private static void changeStackHead(Deque<Character> stack, StringBuilder builder, char checkChar) {
-        char cur = stack.pop();
-        if (cur == '~') cur = '-';
-        builder.append(cur).append(' ');
-        stack.push(checkChar);
     }
 
     private static boolean getResult(List<String> data, Deque<Integer> stack) {

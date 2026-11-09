@@ -1,0 +1,185 @@
+1. Обычный запрос с access-токеном
+text
+GET http://localhost:11111/api/v1/admin
+Headers: Authorization: Bearer <access_из_ответа_логина>
+Ожидание: 200 OK. Insomnia автоматически прикрепит XSRF-TOKEN cookie (не нужна, но безвредна), refreshToken не уйдёт (у неё Path=/api/v1/auth).
+
+2. Refresh с CSRF-заголовком
+text
+POST http://localhost:11111/api/v1/auth/refresh
+Headers: X-XSRF-TOKEN: <НОВЫЙ_ABC123...>    ← скопировать из Cookies или из Headers
+Ожидание: 200 OK + новый accessToken в теле + новый refreshToken в Set-Cookie (Insomnia обновит jar автоматически). 
+XSRF-TOKEN не изменится — cookie уже есть.
+
+3. Проверка CSRF-защиты (негативный тест)
+text
+POST http://localhost:11111/api/v1/auth/refresh
+(без X-XSRF-TOKEN, или с неверным значением)
+Ожидание: 403 Forbidden от CsrfFilter — запрос не дойдёт до контроллера. В логах — сообщение о несовпадении токена.
+
+4. Проверка Double-Submit через браузер (для cross-origin)
+Если будете тестировать SPA на :12345 — там document.cookie не увидит XSRF-TOKEN (Same-Origin Policy). 
+Именно поэтому ваши правки setHeader + setExposedHeaders важны: SPA прочитает X-XSRF-TOKEN из response-заголовка и использует его вручную.
+
+=============================================================================================================================================
+
+                                        Критичные (без них нельзя говорить «работает»)
+
+1. Reuse detection — главный тест безопасности
+
+Сценарий:
+
+Логин → получили refresh_1
+POST /refresh с refresh_1 → получили refresh_2 (Insomnia обновила cookie)
+Вручную вернуть старый refresh_1 в cookie (или через Cookie Manager, или через Insomnia → Edit cookie)
+POST /refresh с старым refresh_1 + валидным X-XSRF-TOKEN
+
+Ожидание:
+401 Unauthorized с сообщением Session invalidated. Please log in again.
+В логе: REFRESH TOKEN REUSE DETECTED for user 'admin'
+Все refresh-токены пользователя отозваны → следующий /refresh с refresh_2 тоже даст 401 (Your token not found или reuse detected)
+Зачем: это ядро защиты. Если reuse detection не работает — украденный refresh можно использовать бесконечно.
+
+2. Type confusion — access vs refresh
+
+Тест A: access вместо refresh
+
+
+POST /api/v1/auth/refresh
+Cookie: refreshToken=<ACCESS_TOKEN_из_логина>
+Headers: X-XSRF-TOKEN: <валидный>
+Ожидание: 401 Invalid token type — isRefreshToken вернул false (в токене type=access).
+
+Тест B: refresh вместо access
+
+GET /api/v1/admin
+Headers: Authorization: Bearer <REFRESH_TOKEN>
+Ожидание: 401 — JwtAuthenticationFilter видит type != access → не кладёт Authentication в контекст → AuthorizationFilter даёт 401.
+
+Зачем: токены должны быть взаимонезаменяемы. Если access принимается на /refresh — это дыра.
+
+3. Logout + повторное использование refresh
+Сценарий:
+
+Логин → refresh_1
+POST /logout с refresh_1 + валидным X-XSRF-TOKEN → 204
+Insomnia удалила cookie (Max-Age=0)
+Вручную вернуть refresh_1 в cookie
+POST /refresh с refresh_1
+Ожидание: 401 Your token not found — logout удалил токен из хранилища, verify его не находит.
+
+Зачем: logout должен инвалидировать refresh. Если старый refresh продолжает работать — logout бесполезен.
+
+4. Матрица авторизации по ролям
+Для каждой роли проверить все эндпоинты:
+
+Роль	/admin	/technician	/employee	/default
+ADMIN	200 ✅	200 ✅	200 ✅	200 ✅
+TECHNICIAN	403 ❌	200 ✅	200 ✅	200 ✅
+EMPLOYEE	403 ❌	403 ❌	200 ✅	200 ✅
+без токена	401	401	401	401
+Как: логин под technician/employee, взять accessToken, дёрнуть все четыре эндпоинта.
+
+Зачем: проверить, что hasRole/hasAnyRole + префикс ROLE_ работают для всех ролей, а не только для ADMIN. Самая частая ошибка — ROLE_-префикс.
+
+                                                Важные (edge cases)
+
+5. Просроченный access
+
+Как: временно поставить ACCESS_TOKEN_EXPIRATION=5000 (5 сек), залогиниться, подождать 6 сек, дёрнуть /admin.
+Ожидание: 401 Invalid or expired token (через ErrorHandler для JwtException), не 500.
+Зачем: проверить, что JwtAuthenticationFilter корректно ловит ExpiredJwtException и не падает.
+
+6. Просроченный refresh
+
+Как: поставить REFRESH_TOKEN_EXPIRATION=5000, залогиниться, подождать, дёрнуть /refresh.
+Ожидание: 401 Your token is expired (из RefreshTokenService.verify), не 500.
+Зачем: проверить, что isRefreshToken не падает на просроченном токене (через getClaims()), и что verify корректно отдаёт 401.
+
+7. Битый/поддельный токен
+
+Тест A: испортить access
+
+GET /api/v1/admin
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.<испорченный_payload>.xxx
+Ожидание: 401 — JwtException → фильтр не кладёт Authentication → AuthorizationFilter даёт 401.
+
+Тест B: подделать подпись
+Взять валидный access, изменить последние 4 символа (подпись).
+Ожидание: 401 Invalid or expired token (через ErrorHandler).
+Зачем: проверить, что SignatureException/MalformedJwtException дают 401, а не 500.
+
+8. Пустая/отсутствующая cookie при /refresh
+
+Тест A: без cookie
+
+text
+POST /api/v1/auth/refresh
+Headers: X-XSRF-TOKEN: <валидный>
+(без Cookie: refreshToken)
+Ожидание: 401 Refresh token cookie is missing (из AuthController.refresh).
+
+Тест B: без X-XSRF-TOKEN
+
+text
+POST /api/v1/auth/refresh
+Cookie: refreshToken=<валидный>
+(без X-XSRF-TOKEN)
+Ожидание: 403 Forbidden от CsrfFilter — запрос не доходит до контроллера.
+
+Зачем: проверить, что required=false в @CookieValue не даёт NPE и что CSRF реально блокирует.
+
+9. Logout — идемпотентность
+Сценарий:
+
+POST /logout с валидным refresh_1 → 204
+Повторно POST /logout с тем же refresh_1 (вернуть в cookie) → 204 (не 401, не 500)
+Ожидание: второй logout тоже 204 — deleteByStringToken идемпотентен (если токена нет — no-op).
+
+Зачем: повторный logout не должен падать. Пользователь мог дважды нажать «Выйти».
+
+🟢 Опциональные (production-hardening)
+10. Ротация: старый access ещё работает
+Сценарий:
+
+Логин → access_1 (живёт 15 мин)
+Через минуту POST /refresh → access_2
+GET /admin с access_1 → 200 (пока не истёк)
+Ожидание: 200 — это ожидаемое поведение stateless-JWT (мы это обсуждали). Не баг.
+
+Зачем: убедиться, что вы понимаете и принимаете это окно. Если нужен мгновенный отзыв — нужен blacklist/version (отдельная задача).
+
+11. Cookie Path для refresh
+Сценарий:
+
+text
+GET /api/v1/admin
+Cookie: refreshToken=...   (вручную добавить)
+Ожидание: Insomnia не должна прикрепить refreshToken автоматически — у неё Path=/api/v1/auth/, а запрос идёт на /api/v1/admin. Если прикрепит — значит Path не соблюдается (баг клиента или конфига).
+
+Зачем: проверить, что refresh-cookie не утекает на обычные эндпоинты.
+
+12. Несколько циклов refresh
+Сценарий: 5 раз подряд POST /refresh с обновлением cookie.
+Ожидание: все 5 раз 200 OK, каждый раз новый refreshToken в Set-Cookie, XSRF-TOKEN не меняется.
+
+Зачем: проверить, что нет утечки памяти/состояния, и что ротация стабильна.
+
+📋 Минимальный чек-лист (если времени мало)
+Если хотите минимум, но достаточно для уверенности — сделайте эти 6:
+
+#	Тест	Что проверяет
+1	Reuse detection	Кража refresh → отзыв всех сессий
+2	Access вместо refresh на /refresh	type-claim работает
+3	Refresh вместо access на /admin	type-claim работает в обе стороны
+4	Logout + повторный refresh	Logout реально инвалидирует
+5	Матрица ролей (TECHNICIAN → /admin = 403)	hasRole + ROLE_-префикс
+6	/refresh без X-XSRF-TOKEN = 403	CSRF реально блокирует
+🎯 Что не нужно тестировать (уже покрыто или не имеет смысла)
+/auth без CSRF — вы осознанно отключили login CSRF, тест не нужен.
+
+/open без токена = 200 — очевидно из permitAll, но можно дёрнуть для sanity check.
+
+CORS preflight — Insomnia его не делает (не браузер). Проверяется только в браузере (пункт 4 из вашего списка).
+
+SameSite cross-origin — только браузер, не Insomnia.

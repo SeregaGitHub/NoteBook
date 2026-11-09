@@ -1,0 +1,32 @@
+
+
+Цепочка вызовов: 
+    AuthController (логин/пароль) → 
+
+    AuthenticationService (authenticationManager.authenticate()) → 
+
+    AuthenticationManager ->
+
+    вызывает DaoAuthenticationProvider ->
+
+    вызывает UserDetailsService, чтобы получить объект UserDetails (в вашем случае — JwtUserDetails) по указанному логину. 
+    Это именно тот шаг, где используется бин userDetailsService()
+    берёт пароль из полученного UserDetails и сравнивает его с паролем из запроса, используя PasswordEncoder
+    Также проверяется, что аккаунт не заблокирован, не просрочен и т.д. 
+    (методы isAccountNonLocked(), isEnabled() и др. в вашем JwtUserDetails)
+
+    Если все проверки пройдены, DaoAuthenticationProvider создаёт новый объект Authentication 
+    (всё тот же UsernamePasswordAuthenticationToken, 
+    но теперь с флагом authenticated=true и заполненными правами доступа — authorities)
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+В стандартном потоке Spring Security результат аутентификации (объект Authentication) помещается в SecurityContextHolder. 
+В вашей текущей реализации вы этого не делаете, так как ваша цель — просто выдать JWT. 
+Это нормально для stateless-приложения, но стоит помнить, что после вызова authenticationManager.authenticate() 
+в рамках этого же HTTP-запроса SecurityContext не будет содержать информацию о пользователе, 
+пока следующий запрос не пройдёт через ваш JwtAuthenticationFilter
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Затем получаете объект User (в текущей реализации — через userService.getUserByName).
+
+Генерируете JWT-токен в JwtService

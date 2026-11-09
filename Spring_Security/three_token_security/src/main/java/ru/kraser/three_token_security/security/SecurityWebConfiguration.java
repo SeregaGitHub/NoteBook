@@ -55,6 +55,7 @@ public class SecurityWebConfiguration {
                  */
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfRepository())
+                    // для prod можно рассмотреть XorCsrfTokenRequestAttributeHandler() - защита от BREACH-атак
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                         .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy())
                         .requireCsrfProtectionMatcher(request -> {
